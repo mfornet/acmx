@@ -13,6 +13,8 @@
         "onCommand:extension.addProblem",
         "onCommand:extension.addContest",
         "onCommand:extension.runSolution",
+        "onCommand:extension.addTestcase",
+        "onCommand:extension.coding",
         "onCommand:extension.stress",
         "onCommand:extension.upgrade"
     ],
@@ -30,6 +32,14 @@
             {
                 "command": "extension.runSolution",
                 "title": "ACMH: Run"
+            },
+            {
+                "command": "extension.addTestcase",
+                "title": "ACMH: Add Test Case"
+            },
+            {
+                "command": "extension.coding",
+                "title": "ACMH: View: Code"
             },
             {
                 "command": "extension.stress",
