@@ -10,14 +10,34 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onCommand:extension.addProblem",
+        "onCommand:extension.addContest",
+        "onCommand:extension.runSolution",
+        "onCommand:extension.stress",
+        "onCommand:extension.upgrade"
     ],
     "main": "./out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.sayHello",
-                "title": "Hello World"
+                "command": "extension.addProblem",
+                "title": "ACMH: Add Problem"
+            },
+            {
+                "command": "extension.addContest",
+                "title": "ACMH: Add Contest"
+            },
+            {
+                "command": "extension.runSolution",
+                "title": "ACMH: Run"
+            },
+            {
+                "command": "extension.stress",
+                "title": "ACMH: Stress"
+            },
+            {
+                "command": "extension.upgrade",
+                "title": "ACMH: Upgrade"
             }
         ]
     },
