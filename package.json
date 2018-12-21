@@ -13,6 +13,7 @@
         "onCommand:extension.addProblem",
         "onCommand:extension.addContest",
         "onCommand:extension.runSolution",
+        "onCommand:extension.openTestcase",
         "onCommand:extension.addTestcase",
         "onCommand:extension.coding",
         "onCommand:extension.stress",
@@ -23,15 +24,19 @@
         "commands": [
             {
                 "command": "extension.addProblem",
-                "title": "ACMH: Add Problem"
+                "title": "ACMH: New Problem"
             },
             {
                 "command": "extension.addContest",
-                "title": "ACMH: Add Contest"
+                "title": "ACMH: New Contest"
             },
             {
                 "command": "extension.runSolution",
                 "title": "ACMH: Run"
+            },
+            {
+                "command": "extension.openTestcase",
+                "title": "ACMH: Open Test Case"
             },
             {
                 "command": "extension.addTestcase",

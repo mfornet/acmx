@@ -4,12 +4,13 @@
 import * as vscode from 'vscode';
 import * as xpath from 'path';
 import { exec } from 'child_process';
-import { existsSync, mkdir, mkdirSync, writeFile, writeFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 
-// TODO: Compile TODO File for different tasks
 // TODO: Add several checkers and try to infer which is the correct! MACHINE LEARNING
 // TODO: Implement parser for codeforces to test on real cases
 // TODO: Smart ID detection while parsing ContestId & ProblemId (More Machine Learning :)
+// TODO: Move acmh to typescript. How to measure time in typescript???
+// TODO: Find great name/slogan!!! Competitive Programming made simple
 
 const SITES = [
     { label: 'Codeforces', target: 'codeforces' },
@@ -19,7 +20,6 @@ const SITES = [
 
 const TESTCASES = 'testcases';
 const ATTIC = 'attic';
-
 
 function is_problem_folder(path: string) {
     return  existsSync(xpath.join(path, 'sol.cpp')) &&
@@ -89,11 +89,6 @@ async function add_problem() {
     let command = `acmh problem ${site} ${id} -p ${path}`;
 
     await exec(command, async function(error, stdout, stderr) {
-        // TODO: Report errors if provided information is invalid. Maybe remove invalid folders
-        console.log(command);
-        console.log(stdout);
-        console.log(stderr);
-
         await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
         // TODO: How can I have access to new proccess created using `openFolder`?
         // Just want to run two commands below
@@ -132,11 +127,6 @@ async function add_contest() {
     let command = `acmh contest ${site} ${id} -p ${path}`;
 
     await exec(command, async function(error, stdout, stderr) {
-        // TODO: Report errors if provided information is invalid. Maybe remove invalid folders
-        console.log(command);
-        console.log(stdout);
-        console.log(stderr);
-
         await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
     });
 }
@@ -152,11 +142,6 @@ async function run_solution(){
     let command = `acmh run -p ${path}`;
 
     await exec(command, async function(error, stdout, stderr) {
-        // TODO: Report errors if provided information is invalid. Maybe remove invalid folders
-        console.log("COMMAND:" + command);
-        console.log("STDOUT:" + stdout);
-        console.log("STDERR:" + stderr);
-
         let lines = stdout.split('\n');
 
         if (lines[0] === 'ok'){
@@ -175,7 +160,6 @@ async function run_solution(){
                 let cur = xpath.join(path, TESTCASES, `${testid}.cur`);
 
                 // TODO: How to clear opened tabs?
-
                 await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
                 await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.Two);
                 await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Three);
@@ -189,8 +173,38 @@ async function run_solution(){
     });
 }
 
-// TODO: Add handcrafted testcases
-// TODO: Open testcase (useful for debug). Splitted window
+async function open_testcase() {
+    let path = current_problem();
+
+    if (path === undefined){
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let tcs = [];
+
+    // TODO: How to listdir in typescript?
+    let num = 0;
+    while (existsSync(xpath.join(path, TESTCASES, `${num}.in`))){
+        tcs.push({
+            'label' : `${num}`,
+            'target' : `${num}`
+        });
+
+        num += 1
+    }
+
+    let tc = await vscode.window.showQuickPick(tcs, { placeHolder: 'Select testcase' });
+
+    if (tc !== undefined){
+        let inp = xpath.join(path, TESTCASES, `${tc.target}.in`);
+        let out = xpath.join(path, TESTCASES, `${tc.target}.out`);
+
+        await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}]});
+        await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.One);
+        await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Two);
+    }
+}
 
 async function add_testcase() {
     let path = current_problem();
@@ -211,7 +225,7 @@ async function add_testcase() {
     writeFileSync(inp, "");
     writeFileSync(out, "");
 
-    await vscode.commands.executeCommand("vscode.setEditorLayout", { groups: [{}, {}]});
+    await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}]});
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.One);
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Two);
 }
@@ -231,6 +245,7 @@ async function coding() {
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
 }
 
+// TODO: Show time that the program took when it's ok
 async function stress(){
     let path = current_problem();
 
@@ -295,6 +310,7 @@ export function activate(context: vscode.ExtensionContext) {
     let add_problem_commmand = vscode.commands.registerCommand('extension.addProblem', add_problem);
     let add_contest_command = vscode.commands.registerCommand('extension.addContest', add_contest);
     let run_solution_command = vscode.commands.registerCommand('extension.runSolution', run_solution);
+    let open_testcase_command = vscode.commands.registerCommand('extension.openTestcase', open_testcase);
     let add_testcase_command = vscode.commands.registerCommand('extension.addTestcase', add_testcase);
     let coding_command = vscode.commands.registerCommand('extension.coding', coding);
     let stress_command = vscode.commands.registerCommand('extension.stress', stress);
@@ -303,6 +319,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(add_problem_commmand);
     context.subscriptions.push(add_contest_command);
     context.subscriptions.push(run_solution_command);
+    context.subscriptions.push(open_testcase_command);
     context.subscriptions.push(add_testcase_command);
     context.subscriptions.push(coding_command);
     context.subscriptions.push(stress_command);
