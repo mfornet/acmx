@@ -12,7 +12,6 @@ import { Veredict } from './types';
  * TODO: Add several checkers and try to infer which is the correct! [*]
  * TODO: Smart ID detection while parsing ContestId & ProblemId [*]
  * TODO: Find great name/slogan!!! other than acmhelper Competitive Programming made simple
- * TODO: Change mock for personal -> Allow user choose number of problems while creating personal contest
  * TODO: Implement parser for codeforces to test on real cases
  * TODO: Learn how to move static files from `src` to `out`.
  * TODO: Allow programming in other languages than c++

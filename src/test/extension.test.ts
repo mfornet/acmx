@@ -38,10 +38,6 @@ suite("Extension Tests", function () {
         closeSync(currentFd);
     }
 
-    // Defines a Mocha unit test
-    test("learnjs", function() {
-    });
-
     /**
      * core::newArena
      */
@@ -59,6 +55,8 @@ suite("Extension Tests", function () {
         assert.equal(existsSync(join(path, ATTIC)), true);
         assert.equal(existsSync(join(path, TESTCASES)), true);
         assert.equal(existsSync(join(path, 'sol.cpp')), true);
+
+        recRmdir(path);
     });
 
     /**
@@ -78,6 +76,8 @@ suite("Extension Tests", function () {
 
         assert.equal(existsSync(join(path, ATTIC, 'gen.py')), true);
         assert.equal(existsSync(join(path, 'brute.cpp')), true);
+
+        recRmdir(path);
     });
 
     /**
@@ -98,24 +98,35 @@ suite("Extension Tests", function () {
      * core::newProblem
      */
     test("newProblemFromId", function(){
-        let path = join(ARENA);
         let problemId = 'testProblemFromId';
-        newProblemFromId(join(path, problemId), 'personal', problemId);
+        let path = join(ARENA, problemId);
 
-        assert.equal(existsSync(join(path, problemId, 'sol.cpp')), true);
-        assert.equal(existsSync(join(path, problemId, ATTIC)), true);
-        assert.equal(existsSync(join(path, problemId, TESTCASES)), true);
-        assert.equal(readdirSync(join(path, problemId, TESTCASES)).length, 6);
+        assert.equal(existsSync(path), false);
+
+        newProblemFromId(path, 'personal', problemId);
+
+        assert.equal(existsSync(join(path, 'sol.cpp')), true);
+        assert.equal(existsSync(join(path, ATTIC)), true);
+        assert.equal(existsSync(join(path, TESTCASES)), true);
+        assert.equal(readdirSync(join(path, TESTCASES)).length, 6);
+
+        recRmdir(path);
     });
 
     /**
      * core::newProblem
      */
     test("newContestFromId", function(){
-        let path = join(ARENA);
         let contestId = 'testContestFromId';
-        newContestFromId(join(path, contestId), 'personal', 5);
-        assert.equal(readdirSync(join(path, contestId)).length, 5);
+        let path = join(ARENA, contestId);
+
+        assert.equal(existsSync(path), false);
+
+        newContestFromId(path, 'personal', 5);
+
+        assert.equal(readdirSync(path).length, 5);
+
+        recRmdir(path);
     });
 
     /**
@@ -224,6 +235,8 @@ suite("Extension Tests", function () {
         let result = stressSolution(path);
 
         assert.equal(result.status, Veredict.OK);
+
+        recRmdir(path);
     });
 
     test("stressSolutionWA", function() {
@@ -273,5 +286,7 @@ suite("Extension Tests", function () {
         let result = stressSolution(path);
 
         assert.equal(result.status, Veredict.WA);
+
+        recRmdir(path);
     });
 });
