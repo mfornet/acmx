@@ -1,36 +1,4 @@
-export class Problem{
-    name?: string;
-    inputs?: string[];
-    outputs?: string[];
-
-    constructor(name?: string, inputs?: string[], outputs?: string[]){
-        this.name = name;
-        this.inputs = inputs;
-        this.outputs = outputs;
-    }
-}
-
-export class Contest{
-    problems?: Problem[];
-
-    constructor(problems?: Problem[]){
-        this.problems = problems;
-    }
-}
-
-export class SiteDescription{
-    name: string;
-    description: string;
-    contestParser: (contestId: string) => Contest;
-    problemParser: (problemId: string) => Problem;
-
-    constructor(name: string, description: string, contestParser: (contestId: string) => Contest, problemParser: (problemId: string) => Problem){
-        this.name = name;
-        this.description = description;
-        this.contestParser = contestParser;
-        this.problemParser = problemParser;
-    }
-}
+import { SiteDescription, Contest, Problem } from "./types";
 
 /**
  * Register a new site creating an entry in this dictionary.
@@ -44,32 +12,44 @@ export const SITES: SiteDescription[] = [
     new SiteDescription(
         "personal",
         "Not a site. Custom problems and contest.",
-        function(contestId: string) {
-            return new Contest();
+        numProblems => {
+            let problems = [];
+
+            for (let i = 0; i < numProblems; i++) {
+                problems.push(new Problem(`P${i+1}`, ["0\n", "2\n", "9\n"], ["2\n", "4\n", "11\n"]));
+            }
+
+            return new Contest(problems);
         },
-        function(problemId: string) {
-            return new Problem();
-        },
+        problemId => {
+            return new Problem("W", ["0\n", "2\n", "9\n"], ["2\n", "4\n", "11\n"]);
+        }
     ),
 
     new SiteDescription(
         "codeforces",
         "codeforces.com",
-        function(contestId: string) {
+        contestId => {
             return new Contest();
         },
-        function(problemId: string){
+        problemId => {
             return new Problem();
-        }
+        },
     ),
 ];
 
 export function getSite(site: string): SiteDescription  {
+    let result = undefined;
+
     SITES.forEach(siteDescription => {
         if (siteDescription.name === site){
-            return siteDescription;
+            result = siteDescription;
         }
     });
+
+    if (result !== undefined){
+        return result;
+    }
 
     throw new Error("Provided site is invalid");
 }

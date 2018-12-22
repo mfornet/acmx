@@ -2,16 +2,16 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
-import { existsSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { existsSync, writeFileSync, readdirSync } from 'fs';
+import { join, dirname, extname } from 'path';
 import { SITES } from './conn';
+import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension } from './core';
+import { Veredict } from './types';
 
 /**
- * TODO: IMPORTANT: Move acmh to typescript.
  * TODO: Add several checkers and try to infer which is the correct! [*]
  * TODO: Smart ID detection while parsing ContestId & ProblemId [*]
- * TODO: Find great name/slogan!!! Competitive Programming made simple
+ * TODO: Find great name/slogan!!! other than acmhelper Competitive Programming made simple
  * TODO: Change mock for personal -> Allow user choose number of problems while creating personal contest
  * TODO: Implement parser for codeforces to test on real cases
  * TODO: Learn how to move static files from `src` to `out`.
@@ -20,49 +20,45 @@ import { SITES } from './conn';
  * [*] Machine Learning?
  */
 
-// TODO: Erase this. After testing, to avoid catastrophical forgetting.
-// const SITES = [
-//     { label: 'Codeforces', target: 'codeforces' },
-//     { label: 'Mock', description: 'Fake site for experimentation', target: 'mock' },
-// ];
-
 const TESTCASES = 'testcases';
-const ATTIC = 'attic';
 
-function is_problem_folder(path: string) {
+function isProblemFolder(path: string) {
     return  existsSync(join(path, 'sol.cpp')) &&
             existsSync(join(path, 'attic'));
 }
 
-function current_problem() {
+function currentProblem() {
+    // Try to find the problem using current open file
     if (vscode.window.activeTextEditor){
         let path = vscode.window.activeTextEditor.document.uri.path;
 
         const MAX_DEPTH = 3;
 
-        for (let i = 0; i < MAX_DEPTH && !is_problem_folder(path); i++) {
+        for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
             path = dirname(path);
         }
 
-        if (is_problem_folder(path)){
+        if (isProblemFolder(path)){
             return path;
         }
     }
 
+    // Try to find the problem using the current open workspace folder
     if (vscode.workspace.workspaceFolders !== undefined){
         let path = vscode.workspace.workspaceFolders[0].uri.path;
 
         const MAX_DEPTH = 1;
 
-        for (let i = 0; i < MAX_DEPTH && !is_problem_folder(path); i++) {
+        for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
             path = dirname(path);
         }
 
-        if (is_problem_folder(path)){
+        if (isProblemFolder(path)){
             return path;
         }
     }
 
+    // Problem not found
     return undefined;
 }
 
@@ -81,7 +77,7 @@ function quickPickSites() {
 }
 
 // Create a new problem
-async function add_problem() {
+async function addProblem() {
     if (vscode.workspace.workspaceFolders === undefined) {
         vscode.window.showErrorMessage("Open the folder that will contain the problem.");
         return;
@@ -98,7 +94,7 @@ async function add_problem() {
 
     let site = site_info.target;
 
-    // TODO: Provide custom problem id example in placeholder per different site
+    // TODO: IMPORTANT: Provide custom problem id example in placeholder per different site
     let id = await vscode.window.showInputBox({placeHolder: "Problem ID"});
 
     if (id === undefined){
@@ -108,18 +104,16 @@ async function add_problem() {
 
     path = join(path, `${id}`);
 
-    let command = `acmh problem ${site} ${id} -p ${path}`;
+    newProblemFromId(path, site, id);
 
-    await exec(command, async function(error, stdout, stderr) {
-        await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
-        // TODO: How can I have access to new proccess created using `openFolder`?
-        // Just want to run two commands below
-        // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file("sol.cpp"));
-        // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
-    });
+    await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
+    // TODO: How can I have access to new proccess created using `openFolder`?
+    // Just want to run two commands below
+    // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file("sol.cpp"));
+    // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
 }
 
-async function add_contest() {
+async function addContest() {
     if (vscode.workspace.workspaceFolders === undefined) {
         vscode.window.showErrorMessage("Open the folder that will contain the contest.");
         return;
@@ -135,86 +129,105 @@ async function add_contest() {
     }
 
     let site = site_info.target;
+    let id = undefined;
 
-    // TODO: Provide custom contest id example in placeholder per different site
-    let id = await vscode.window.showInputBox({placeHolder: "Contest ID"});
+    if (site === "personal"){
+        let name= await vscode.window.showInputBox({placeHolder: "Contest Name"});
 
-    if (id === undefined){
-        vscode.window.showErrorMessage("Contest ID not provided.");
-        return;
+        if (name === undefined){
+            vscode.window.showErrorMessage("Name not provided.");
+            return;
+        }
+
+        path = join(path, name);
+
+        let probCountStr = await vscode.window.showInputBox({placeHolder: "Number of problems"});
+
+        if (name === undefined){
+            vscode.window.showErrorMessage("Number of problems not provided.");
+            return;
+        }
+
+        id = Number.parseInt(probCountStr!);
+    }
+    else{
+        // TODO: IMPORTANT: Provide custom contest id example in placeholder per different site
+        id = await vscode.window.showInputBox({placeHolder: "Contest ID"});
+
+        if (id === undefined){
+            vscode.window.showErrorMessage("Contest ID not provided.");
+            return;
+        }
+
+        path = join(path, `${id}`);
     }
 
-    path = join(path, `${id}`);
+    newContestFromId(path, site, id);
 
-    let command = `acmh contest ${site} ${id} -p ${path}`;
-
-    await exec(command, async function(error, stdout, stderr) {
-        await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
-    });
+    vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
 }
 
-async function run_solution(){
-    let path = current_problem();
+async function debugTestcase(path: string, tcId: string){
+    // Change editor layout to show failing test
+    await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{ groups: [{}], size: 0.5 }, { groups: [{}, {}, {}], size: 0.5 }] });
+
+    let sol = join(path, `sol.cpp`);
+    let inp = join(path, TESTCASES, `${tcId}.in`);
+    let out = join(path, TESTCASES, `${tcId}.out`);
+    let cur = join(path, TESTCASES, `${tcId}.cur`);
+
+    // TODO: How to clear opened tabs?
+    await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
+    await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.Two);
+    await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Three);
+
+    // This file might not exist!
+    if (existsSync(cur)){
+        await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(cur), vscode.ViewColumn.Four);
+    }
+}
+
+async function runSolution(){
+    let path = currentProblem();
 
     if (path === undefined){
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let command = `acmh run -p ${path}`;
+    let result = testSolution(path);
 
-    await exec(command, async function(error, stdout, stderr) {
-        let lines = stdout.split('\n');
-
-        if (lines[0] === 'ok'){
-            vscode.window.showInformationMessage("OK!");
-        }
-        else{
-            vscode.window.showErrorMessage(`${lines[0]} on test ${lines[1]}`);
-            await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{ groups: [{}], size: 0.5 }, { groups: [{}, {}, {}], size: 0.5 }] });
-
-            // This is always true
-            if (path !== undefined){
-                let testid = lines[1];
-                let sol = join(path, `sol.cpp`);
-                let inp = join(path, TESTCASES, `${testid}.in`);
-                let out = join(path, TESTCASES, `${testid}.out`);
-                let cur = join(path, TESTCASES, `${testid}.cur`);
-
-                // TODO: How to clear opened tabs?
-                await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
-                await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.Two);
-                await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Three);
-
-                // This file might not exist!
-                if (existsSync(cur)){
-                    await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(cur), vscode.ViewColumn.Four);
-                }
-            }
-        }
-    });
+    if (result.status === Veredict.OK){
+        vscode.window.showInformationMessage("OK");
+    }
+    else{
+        vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
+        debugTestcase(path, result.failTcId!);
+    }
 }
 
-async function open_testcase() {
-    let path = current_problem();
+async function openTestcase() {
+    let path = currentProblem();
 
     if (path === undefined){
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let tcs = [];
+    let tcs: any[] = [];
 
-    // TODO: How to listdir in typescript?
-    let num = 0;
-    while (existsSync(join(path, TESTCASES, `${num}.in`))){
-        tcs.push({
-            'label' : `${num}`,
-            'target' : `${num}`
+    // Read testcases
+    readdirSync(join(path, TESTCASES)).
+        filter( function (tcpath) {
+            return extname(tcpath) === '.in';}).
+        map( function(tcpath) {
+            let name = removeExtension(tcpath);
+
+            tcs.push({
+                'label' : name,
+                'target' : name,
+            });
         });
-
-        num += 1
-    }
 
     let tc = await vscode.window.showQuickPick(tcs, { placeHolder: 'Select testcase' });
 
@@ -228,8 +241,8 @@ async function open_testcase() {
     }
 }
 
-async function add_testcase() {
-    let path = current_problem();
+async function addTestcase() {
+    let path = currentProblem();
 
     if (path === undefined){
         vscode.window.showErrorMessage("No active problem");
@@ -253,7 +266,7 @@ async function add_testcase() {
 }
 
 async function coding() {
-    let path = current_problem();
+    let path = currentProblem();
 
     if (path === undefined){
         vscode.window.showErrorMessage("No active problem");
@@ -269,59 +282,33 @@ async function coding() {
 
 // TODO: Show time that the program took when it's ok
 async function stress(){
-    let path = current_problem();
+    let path = currentProblem();
 
     if (path === undefined){
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let command = `acmh stress -p ${path}`;
+    let result = stressSolution(path);
 
-    await exec(command, async function(error, stdout, stderr) {
-        let lines = stdout.split('\n');
-
-        if (lines[0] === 'ok'){
-            vscode.window.showInformationMessage("OK!");
-        }
-        else{
-            vscode.window.showErrorMessage(`${lines[0]} on test ${lines[1]}`);
-            await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{ groups: [{}], size: 0.5 }, { groups: [{}, {}, {}], size: 0.5 }] });
-
-            // This is always true
-            if (path !== undefined){
-                let testid = lines[1];
-                let sol = join(path, `sol.cpp`);
-                let inp = join(path, TESTCASES, `${testid}.in`);
-                let out = join(path, TESTCASES, `${testid}.out`);
-                let cur = join(path, TESTCASES, `${testid}.cur`);
-
-                // TODO: How to clear opened tabs?
-
-                await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
-                await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.Two);
-                await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Three);
-
-                // This file might not exist!
-                if (existsSync(cur)){
-                    await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(cur), vscode.ViewColumn.Four);
-                }
-            }
-        }
-    });
+    if (result.status === Veredict.OK){
+        vscode.window.showInformationMessage("OK");
+    }
+    else{
+        vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
+        debugTestcase(path, result.failTcId!);
+    }
 }
 
 async function upgrade(){
-    let path = current_problem();
+    let path = currentProblem();
 
     if (path === undefined){
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let command = `acmh add --brute --gen -p ${path}`;
-
-    await exec(command, async function(error, stdout, stderr) { });
+    upgradeArena(path);
 }
 
 // this method is called when your extension is activated
@@ -329,23 +316,23 @@ async function upgrade(){
 export function activate(context: vscode.ExtensionContext) {
     console.log('Congratulations, your extension "acmhelper-vscode" is now active!');
 
-    let add_problem_commmand = vscode.commands.registerCommand('extension.addProblem', add_problem);
-    let add_contest_command = vscode.commands.registerCommand('extension.addContest', add_contest);
-    let run_solution_command = vscode.commands.registerCommand('extension.runSolution', run_solution);
-    let open_testcase_command = vscode.commands.registerCommand('extension.openTestcase', open_testcase);
-    let add_testcase_command = vscode.commands.registerCommand('extension.addTestcase', add_testcase);
-    let coding_command = vscode.commands.registerCommand('extension.coding', coding);
-    let stress_command = vscode.commands.registerCommand('extension.stress', stress);
-    let upgrade_command = vscode.commands.registerCommand('extension.upgrade', upgrade);
+    let addProblemCommand = vscode.commands.registerCommand('extension.addProblem', addProblem);
+    let addContestCommand = vscode.commands.registerCommand('extension.addContest', addContest);
+    let runSolutionCommand = vscode.commands.registerCommand('extension.runSolution', runSolution);
+    let openTestcaseCommand = vscode.commands.registerCommand('extension.openTestcase', openTestcase);
+    let addTestcaseCommand = vscode.commands.registerCommand('extension.addTestcase', addTestcase);
+    let codingCommand = vscode.commands.registerCommand('extension.coding', coding);
+    let stressCommand = vscode.commands.registerCommand('extension.stress', stress);
+    let upgradeCommand = vscode.commands.registerCommand('extension.upgrade', upgrade);
 
-    context.subscriptions.push(add_problem_commmand);
-    context.subscriptions.push(add_contest_command);
-    context.subscriptions.push(run_solution_command);
-    context.subscriptions.push(open_testcase_command);
-    context.subscriptions.push(add_testcase_command);
-    context.subscriptions.push(coding_command);
-    context.subscriptions.push(stress_command);
-    context.subscriptions.push(upgrade_command);
+    context.subscriptions.push(addProblemCommand);
+    context.subscriptions.push(addContestCommand);
+    context.subscriptions.push(runSolutionCommand);
+    context.subscriptions.push(openTestcaseCommand);
+    context.subscriptions.push(addTestcaseCommand);
+    context.subscriptions.push(codingCommand);
+    context.subscriptions.push(stressCommand);
+    context.subscriptions.push(upgradeCommand);
 }
 
 // this method is called when your extension is deactivated

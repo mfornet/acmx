@@ -6,19 +6,13 @@
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
 import { dirname, join } from 'path';
-import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution } from '../core';
+import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId } from '../core';
 import { TestcaseResult, Veredict } from '../types';
-import { exists, rmdir, rmdirSync, existsSync, fstat, readdirSync, Stats, unlink, unlinkSync, openSync, writeSync, closeSync, write } from 'fs';
+import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
 const ARENA = join(SRC, 'arena');
 
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-// import * as vscode from 'vscode';
-// import * as myExtension from '../extension';
-
-// Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", function () {
     /**
      * Recursive remove
@@ -98,6 +92,30 @@ suite("Extension Tests", function () {
         // I want to compare `result` & `target`
         target.forEach(name => {assert.notEqual(result.findIndex(tname => { return tname === name; }), -1);});
         result.forEach(name => {assert.notEqual(target.findIndex(tname => { return tname === name; }), -1);});
+    });
+
+    /**
+     * core::newProblem
+     */
+    test("newProblemFromId", function(){
+        let path = join(ARENA);
+        let problemId = 'testProblemFromId';
+        newProblemFromId(join(path, problemId), 'personal', problemId);
+
+        assert.equal(existsSync(join(path, problemId, 'sol.cpp')), true);
+        assert.equal(existsSync(join(path, problemId, ATTIC)), true);
+        assert.equal(existsSync(join(path, problemId, TESTCASES)), true);
+        assert.equal(readdirSync(join(path, problemId, TESTCASES)).length, 6);
+    });
+
+    /**
+     * core::newProblem
+     */
+    test("newContestFromId", function(){
+        let path = join(ARENA);
+        let contestId = 'testContestFromId';
+        newContestFromId(join(path, contestId), 'personal', 5);
+        assert.equal(readdirSync(join(path, contestId)).length, 5);
     });
 
     /**

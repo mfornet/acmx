@@ -1,7 +1,3 @@
-/**
- * TODO: Move all custom types to this folder
- */
-
 export enum Veredict{
     OK,     // Accepted
     WA,     // Wrong Answer
@@ -27,5 +23,39 @@ export class SolutionResult{
     constructor(status: Veredict, failTcId?: string){
         this.status = status;
         this.failTcId = failTcId;
+    }
+}
+
+export class Problem{
+    name?: string;
+    inputs?: string[];
+    outputs?: string[];
+
+    constructor(name?: string, inputs?: string[], outputs?: string[]){
+        this.name = name;
+        this.inputs = inputs;
+        this.outputs = outputs;
+    }
+}
+
+export class Contest{
+    problems?: Problem[];
+
+    constructor(problems?: Problem[]){
+        this.problems = problems;
+    }
+}
+
+export class SiteDescription{
+    name: string;
+    description: string;
+    contestParser: (contestId: string | number) => Contest;
+    problemParser: (problemId: string) => Problem;
+
+    constructor(name: string, description: string, contestParser: (contestId: string | number) => Contest, problemParser: (problemId: string) => Problem){
+        this.name = name;
+        this.description = description;
+        this.contestParser = contestParser;
+        this.problemParser = problemParser;
     }
 }

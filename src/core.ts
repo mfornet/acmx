@@ -1,10 +1,10 @@
 'use strict';
 import { mkdirSync, existsSync, copyFileSync, openSync, readSync, readdirSync, writeSync, closeSync } from "fs";
-import { dirname, join, extname, basename } from "path";
+import { dirname, join, extname } from "path";
 import * as child_process from 'child_process';
 import * as gwen from './gwen';
-import * as conn from './conn';
-import { TestcaseResult, Veredict, SolutionResult } from "./types";
+import { TestcaseResult, Veredict, SolutionResult, Problem, Contest } from "./types";
+import { getSite } from "./conn";
 
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
@@ -20,10 +20,6 @@ function createFolder(path: string){
     }
 }
 
-/**
- * TODO: Comment full code
- * Doc string
- */
 export function newArena(path: string){
     createFolder(path);
 
@@ -36,10 +32,23 @@ export function newArena(path: string){
     copyFileSync(join(SRC, 'static', 'sol.cpp'), join(path, 'sol.cpp'));
 }
 
+export function removeExtension(name: string){
+    let split = name.split('.');
+    if (split.length === 0){
+        return name;
+    }
+    else{
+        split.pop(); // drop extension
+        return split.join('.');
+    }
+}
+
 export function testcasesName(path: string){
     return readdirSync(join(path, TESTCASES)).
-            filter( function (tcpath) { return extname(tcpath) === '.in';}).
-            map( function(tcpath) { return tcpath.split('.')[0]; });
+            filter( function (tcpath) {
+                return extname(tcpath) === '.in';
+            }).
+            map( function(tcpath) { return removeExtension(tcpath); });
 }
 
 function testcases(path: string){
@@ -47,11 +56,11 @@ function testcases(path: string){
         let inp_fd = openSync(join(path, TESTCASES, `${name}.in`), 'r');
         let out_fd = openSync(join(path, TESTCASES, `${name}.out`), 'r');
 
-        let inp_buffer = new Buffer("");
-        let out_buffer = new Buffer("");
+        let inp_buffer = new Buffer(MAX_SIZE_INPUT);
+        let out_buffer = new Buffer(MAX_SIZE_INPUT);
 
-        readSync(inp_fd, inp_buffer, 0, 1 << 30, 0);
-        readSync(out_fd, out_buffer, 0, 1 << 30, 0);
+        readSync(inp_fd, inp_buffer, 0, MAX_SIZE_INPUT, 0);
+        readSync(out_fd, out_buffer, 0, MAX_SIZE_INPUT, 0);
 
         return [
             inp_buffer.toString(),
@@ -86,17 +95,7 @@ export function upgradeArena(path: string) {
     }
 }
 
-// TODO: Test
-function newProblemFromId(path: string, site: string, problemId: string){
-    let siteDesc = conn.getSite(site);
-
-    let problem = siteDesc.problemParser(problemId);
-
-    newProblem(path, problem);
-}
-
-// TODO: Test
-function newProblem(path: string, problem: conn.Problem){
+function newProblem(path: string, problem: Problem){
     newArena(path);
 
     problem.inputs!.forEach((value, index) => {
@@ -110,19 +109,30 @@ function newProblem(path: string, problem: conn.Problem){
     });
 }
 
-// TODO: Test
-function newContestFromId(path: string, site: string, contestId: string){
-    createFolder(path);
-    let siteDesc = conn.getSite(site);
-    let contest = siteDesc.contestParser(contestId);
-    newContest(path, contest);
+export function newProblemFromId(path: string, site: string, problemId: string){
+    let siteDesc = getSite(site);
+
+    let problem = siteDesc.problemParser(problemId);
+
+    newProblem(path, problem);
 }
 
-// TODO: Test
-function newContest(path: string, contest: conn.Contest){
+function newContest(path: string, contest: Contest){
     contest.problems!.forEach(problem => {
         newProblem(join(path, problem.name!), problem);
     });
+}
+
+/**
+ * Create a contest
+ *
+ * @param contestId Can be a number if the site is `personal` and this number denote number of problems
+ */
+export function newContestFromId(path: string, site: string, contestId: string | number){
+    createFolder(path);
+    let siteDesc = getSite(site);
+    let contest = siteDesc.contestParser(contestId);
+    newContest(path, contest);
 }
 
 export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOUT){
@@ -174,7 +184,7 @@ export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOU
 }
 
 function compileCode(pathCode: string, pathOutput: string){
-    // # TODO: Avoid this hardcoded line. Use personalized compile line.
+    // # TODO: Avoid this hardcoded line. Use personalized compile line. increase stack by default
     return child_process.spawnSync("g++", ["-std=c++11", `${pathCode}`, "-o", `${pathOutput}`]);
 }
 
@@ -196,24 +206,32 @@ export function testSolution(path: string){
     let testcasesId = testcasesName(path);
     testcasesId.sort(); // Proccess all testcases in sorted order
 
+    console.log("Test Solution at: ", testcasesId);
+
     let results = [];
+    let fail = undefined;
 
     testcasesId.forEach(tcId => {
         let tcResult = timedRun(path, tcId);
 
         if (tcResult.status !== Veredict.OK){
-            return new SolutionResult(tcResult.status, tcId);
+            fail = new SolutionResult(tcResult.status, tcId);
         }
 
         results.push(tcResult);
     });
 
-    // TODO: Report max time and maybe other stats. Same with stress
-    return new SolutionResult(Veredict.OK);
+    if (fail === undefined){
+        // TODO: IMPORTANT: Report max time and maybe other stats. Same with stress
+        return new SolutionResult(Veredict.OK);
+    }
+    else{
+        return fail;
+    }
 }
 
 function generateTestcase(path: string){
-    // TODO: Revisit this call to python3. How to make it cross platform
+    // TODO: NILOX: Revisit this call to python3. How to make it cross platform
     let genResult = child_process.spawnSync("python3", [join(path, ATTIC, 'gen.py')]);
 
     let currentFd = openSync(join(path, TESTCASES, 'gen.in'), 'w');
@@ -260,7 +278,7 @@ export function stressSolution(path: string, times: number = 10){
         closeSync(inputFd);
 
         // Run without restrictions
-        // TODO: Restrict brute in time, and capture errors
+        // TODO: EASY: Restrict brute in time, and capture errors
         let runResult = child_process.spawnSync(brout, {
             input: tcData,
         });
@@ -282,4 +300,26 @@ export function stressSolution(path: string, times: number = 10){
 
     // TODO: Check testSolution comment on this point
     return new SolutionResult(Veredict.OK);
+}
+
+export function veredictName(veredict: Veredict){
+    switch (veredict) {
+        case Veredict.OK:
+            return "OK";
+
+        case Veredict.WA:
+            return "WA";
+
+        case Veredict.TLE:
+            return "TLE";
+
+        case Veredict.RTE:
+            return "RTE";
+
+        case Veredict.CE:
+            return "CE";
+
+        default:
+            throw new Error("Invalid Veredict");
+    }
 }
