@@ -52,9 +52,10 @@ suite("Extension Tests", function () {
 
         newArena(path);
 
-        assert.equal(existsSync(join(path, ATTIC)), true);
-        assert.equal(existsSync(join(path, TESTCASES)), true);
         assert.equal(existsSync(join(path, 'sol.cpp')), true);
+        assert.equal(existsSync(join(path, ATTIC)), true);
+        assert.equal(existsSync(join(path, ATTIC, 'checker')), true);
+        assert.equal(existsSync(join(path, TESTCASES)), true);
 
         recRmdir(path);
     });

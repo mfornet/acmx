@@ -30,6 +30,7 @@ export function newArena(path: string){
     createFolder(attic);
 
     copyFileSync(join(SRC, 'static', 'sol.cpp'), join(path, 'sol.cpp'));
+    copyFileSync(join(SRC, 'static', 'checker'), join(path, ATTIC, 'checker'));
 }
 
 export function removeExtension(name: string){
@@ -172,8 +173,7 @@ export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOU
     writeSync(currentFd, xresult.stdout);
     closeSync(currentFd);
 
-    // TODO: IMPORTANT: Use custom checker (This is probably only non crossplatform feature)
-    let checker_result = child_process.spawnSync("diff", [tcOutput, tcCurrent]);
+    let checker_result = child_process.spawnSync(join(path, ATTIC, 'checker'), [tcInput, tcCurrent, tcOutput]);
 
     if (checker_result.status !== 0){
         return new TestcaseResult(Veredict.WA);

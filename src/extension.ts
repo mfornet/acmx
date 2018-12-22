@@ -9,8 +9,10 @@ import { newContestFromId, testSolution, veredictName, stressSolution, upgradeAr
 import { Veredict } from './types';
 
 /**
+ * TODO: Allow custom checker easily
  * TODO: Add several checkers and try to infer which is the correct! [*]
  * TODO: Smart ID detection while parsing ContestId & ProblemId [*]
+ * TODO: Smart generator [*]
  * TODO: Find great name/slogan!!! other than acmhelper Competitive Programming made simple
  * TODO: Implement parser for codeforces to test on real cases
  * TODO: Learn how to move static files from `src` to `out`.
