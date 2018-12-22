@@ -2,28 +2,36 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as xpath from 'path';
 import { exec } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { SITES } from './conn';
 
-// TODO: Add several checkers and try to infer which is the correct! MACHINE LEARNING
-// TODO: Implement parser for codeforces to test on real cases
-// TODO: Smart ID detection while parsing ContestId & ProblemId (More Machine Learning :)
-// TODO: Move acmh to typescript. How to measure time in typescript???
-// TODO: Find great name/slogan!!! Competitive Programming made simple
+/**
+ * TODO: IMPORTANT: Move acmh to typescript.
+ * TODO: Add several checkers and try to infer which is the correct! [*]
+ * TODO: Smart ID detection while parsing ContestId & ProblemId [*]
+ * TODO: Find great name/slogan!!! Competitive Programming made simple
+ * TODO: Change mock for personal -> Allow user choose number of problems while creating personal contest
+ * TODO: Implement parser for codeforces to test on real cases
+ * TODO: Learn how to move static files from `src` to `out`.
+ * TODO: Allow programming in other languages than c++
+ *
+ * [*] Machine Learning?
+ */
 
-const SITES = [
-    { label: 'Codeforces', target: 'codeforces' },
-    // TODO: Disable this for real application
-    { label: 'Mock', description: 'Fake site for experimentation', target: 'mock' },
-];
+// TODO: Erase this. After testing, to avoid catastrophical forgetting.
+// const SITES = [
+//     { label: 'Codeforces', target: 'codeforces' },
+//     { label: 'Mock', description: 'Fake site for experimentation', target: 'mock' },
+// ];
 
 const TESTCASES = 'testcases';
 const ATTIC = 'attic';
 
 function is_problem_folder(path: string) {
-    return  existsSync(xpath.join(path, 'sol.cpp')) &&
-            existsSync(xpath.join(path, 'attic'));
+    return  existsSync(join(path, 'sol.cpp')) &&
+            existsSync(join(path, 'attic'));
 }
 
 function current_problem() {
@@ -33,7 +41,7 @@ function current_problem() {
         const MAX_DEPTH = 3;
 
         for (let i = 0; i < MAX_DEPTH && !is_problem_folder(path); i++) {
-            path = xpath.dirname(path);
+            path = dirname(path);
         }
 
         if (is_problem_folder(path)){
@@ -47,7 +55,7 @@ function current_problem() {
         const MAX_DEPTH = 1;
 
         for (let i = 0; i < MAX_DEPTH && !is_problem_folder(path); i++) {
-            path = xpath.dirname(path);
+            path = dirname(path);
         }
 
         if (is_problem_folder(path)){
@@ -56,6 +64,20 @@ function current_problem() {
     }
 
     return undefined;
+}
+
+function quickPickSites() {
+    let sites: any[] = [];
+
+    SITES.forEach(value => {
+        sites.push({
+            "label" : value.name,
+            "target" : value.name,
+            "description" : value.description,
+        });
+    });
+
+    return sites;
 }
 
 // Create a new problem
@@ -67,7 +89,7 @@ async function add_problem() {
 
     let path = vscode.workspace.workspaceFolders[0].uri.path;
 
-    let site_info = await vscode.window.showQuickPick(SITES, { placeHolder: 'Select contest site' });
+    let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
     if (site_info === undefined){
         vscode.window.showErrorMessage("Site not provided.");
@@ -84,7 +106,7 @@ async function add_problem() {
         return;
     }
 
-    path = xpath.join(path, `${id}`);
+    path = join(path, `${id}`);
 
     let command = `acmh problem ${site} ${id} -p ${path}`;
 
@@ -105,7 +127,7 @@ async function add_contest() {
 
     let path = vscode.workspace.workspaceFolders[0].uri.path;
 
-    let site_info = await vscode.window.showQuickPick(SITES, { placeHolder: 'Select contest site' });
+    let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
     if (site_info === undefined){
         vscode.window.showErrorMessage("Site not provided.");
@@ -122,7 +144,7 @@ async function add_contest() {
         return;
     }
 
-    path = xpath.join(path, `${id}`);
+    path = join(path, `${id}`);
 
     let command = `acmh contest ${site} ${id} -p ${path}`;
 
@@ -154,10 +176,10 @@ async function run_solution(){
             // This is always true
             if (path !== undefined){
                 let testid = lines[1];
-                let sol = xpath.join(path, `sol.cpp`);
-                let inp = xpath.join(path, TESTCASES, `${testid}.in`);
-                let out = xpath.join(path, TESTCASES, `${testid}.out`);
-                let cur = xpath.join(path, TESTCASES, `${testid}.cur`);
+                let sol = join(path, `sol.cpp`);
+                let inp = join(path, TESTCASES, `${testid}.in`);
+                let out = join(path, TESTCASES, `${testid}.out`);
+                let cur = join(path, TESTCASES, `${testid}.cur`);
 
                 // TODO: How to clear opened tabs?
                 await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
@@ -185,7 +207,7 @@ async function open_testcase() {
 
     // TODO: How to listdir in typescript?
     let num = 0;
-    while (existsSync(xpath.join(path, TESTCASES, `${num}.in`))){
+    while (existsSync(join(path, TESTCASES, `${num}.in`))){
         tcs.push({
             'label' : `${num}`,
             'target' : `${num}`
@@ -197,8 +219,8 @@ async function open_testcase() {
     let tc = await vscode.window.showQuickPick(tcs, { placeHolder: 'Select testcase' });
 
     if (tc !== undefined){
-        let inp = xpath.join(path, TESTCASES, `${tc.target}.in`);
-        let out = xpath.join(path, TESTCASES, `${tc.target}.out`);
+        let inp = join(path, TESTCASES, `${tc.target}.in`);
+        let out = join(path, TESTCASES, `${tc.target}.out`);
 
         await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}]});
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.One);
@@ -215,12 +237,12 @@ async function add_testcase() {
     }
 
     let index = 0;
-    while (existsSync(xpath.join(path, TESTCASES, `${index}.hand.in`))){
+    while (existsSync(join(path, TESTCASES, `${index}.hand.in`))){
         index += 1;
     }
 
-    let inp = xpath.join(path, TESTCASES, `${index}.hand.in`);
-    let out = xpath.join(path, TESTCASES, `${index}.hand.out`);
+    let inp = join(path, TESTCASES, `${index}.hand.in`);
+    let out = join(path, TESTCASES, `${index}.hand.out`);
 
     writeFileSync(inp, "");
     writeFileSync(out, "");
@@ -240,7 +262,7 @@ async function coding() {
 
     await vscode.commands.executeCommand("vscode.setEditorLayout", { groups: [{}]});
 
-    let sol = xpath.join(path, `sol.cpp`);
+    let sol = join(path, `sol.cpp`);
 
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
 }
@@ -269,10 +291,10 @@ async function stress(){
             // This is always true
             if (path !== undefined){
                 let testid = lines[1];
-                let sol = xpath.join(path, `sol.cpp`);
-                let inp = xpath.join(path, TESTCASES, `${testid}.in`);
-                let out = xpath.join(path, TESTCASES, `${testid}.out`);
-                let cur = xpath.join(path, TESTCASES, `${testid}.cur`);
+                let sol = join(path, `sol.cpp`);
+                let inp = join(path, TESTCASES, `${testid}.in`);
+                let out = join(path, TESTCASES, `${testid}.out`);
+                let cur = join(path, TESTCASES, `${testid}.cur`);
 
                 // TODO: How to clear opened tabs?
 
