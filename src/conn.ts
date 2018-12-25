@@ -1,4 +1,5 @@
 import { SiteDescription, Contest, Problem } from "./types";
+import { CODEFORCES } from "./parsers/codeforces";
 
 /**
  * Register a new site creating an entry in this dictionary.
@@ -26,16 +27,7 @@ export const SITES: SiteDescription[] = [
         }
     ),
 
-    new SiteDescription(
-        "codeforces",
-        "codeforces.com",
-        contestId => {
-            return new Contest();
-        },
-        problemId => {
-            return new Problem();
-        },
-    ),
+    CODEFORCES,
 ];
 
 export function getSite(site: string): SiteDescription  {

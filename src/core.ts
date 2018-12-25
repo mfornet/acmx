@@ -206,8 +206,6 @@ export function testSolution(path: string){
     let testcasesId = testcasesName(path);
     testcasesId.sort(); // Proccess all testcases in sorted order
 
-    console.log("Test Solution at: ", testcasesId);
-
     let results = [];
     let fail = undefined;
 

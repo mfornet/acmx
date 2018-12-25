@@ -9,6 +9,7 @@ import { newContestFromId, testSolution, veredictName, stressSolution, upgradeAr
 import { Veredict } from './types';
 
 /**
+ * TODO: Add How to Use (in the README.) adding own template etc...
  * TODO: Allow custom checker easily
  * TODO: Add several checkers and try to infer which is the correct! [*]
  * TODO: Smart ID detection while parsing ContestId & ProblemId [*]
@@ -17,6 +18,12 @@ import { Veredict } from './types';
  * TODO: Implement parser for codeforces to test on real cases
  * TODO: Learn how to move static files from `src` to `out`.
  * TODO: Allow programming in other languages than c++
+ * TODO: Run testcases in sorted order
+ * TODO: How to use behind proxy
+ *
+ * TODO: When Runtime Error happens show as much output as possible and display the error in the console
+ * TODO: If a solution is run whith an open test, run that test first.
+ * TODO: Figure out something for interactive problems.
  *
  * [*] Machine Learning?
  */

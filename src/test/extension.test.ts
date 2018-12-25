@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import { dirname, join } from 'path';
 import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId } from '../core';
 import { TestcaseResult, Veredict } from '../types';
-import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
+import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync, readSync } from 'fs';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
 const ARENA = join(SRC, 'arena');
@@ -289,5 +289,59 @@ suite("Extension Tests", function () {
         assert.equal(result.status, Veredict.WA);
 
         recRmdir(path);
+    });
+
+    // test("downloading", function(){
+    //     let request = require('sync-request');
+
+    //     console.log("Start downloading...");
+    //     var res = request('GET', 'http://codeforces.com/contest/1081/problem/E');
+    //     console.log("Downloaded...");
+    //     let html: string = res.getBody('utf8');
+
+    //     let fd = openSync("/home/marx/xxx.html", "w");
+    //     writeSync(fd, html);
+    //     closeSync(fd);
+    // });
+
+    function readFile(path: string){
+        let fd = openSync(path, "r");
+        let buffer = new Buffer(1 << 20);
+        readSync(fd, buffer, 0, 1 << 20, 0);
+        let answer = buffer.toString();
+        return answer;
+    }
+
+    test("parsing", function(){
+        let html: string = readFile(join(__dirname, "codeforces.html"));
+        let pos = 0;
+
+        while (true){
+            pos = html.indexOf('<div class="title">Input</div>', pos);
+
+            if (pos === -1){
+                break;
+            }
+
+            let begin_pre = html.indexOf('<pre>', pos);
+            let end_pre = html.indexOf('</pre>', pos);
+
+            let inputTestcase = html.substring(begin_pre + 5, end_pre);
+
+            while (inputTestcase.indexOf('<br />') !== -1){
+                inputTestcase = inputTestcase.replace('<br />', '\n');
+            }
+
+            pos = html.indexOf('<div class="title">Output</div>', pos);
+
+            begin_pre = html.indexOf('<pre>', pos);
+            end_pre = html.indexOf('</pre>', pos);
+
+            let outputTestcase = html.substring(begin_pre + 5, end_pre);
+
+            while (outputTestcase.indexOf('<br />') !== -1){
+                outputTestcase = outputTestcase.replace('<br />', '\n');
+            }
+        }
     });
 });

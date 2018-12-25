@@ -1,8 +1,15 @@
-# acmhelper-vscode README
+# ACM HELPER - README
 
-This is the README for your extension "acmhelper-vscode". After writing up a brief description, we recommend including the following sections.
+**ACMHelper** is tool that allow users to solve problems from several online judges easily. This extension contains awesome features powered with Machine Learning.
 
 ## Features
+
+* Contest/Problem parsing
+* Running solution against testcases automatically
+* Add custom testcases easily
+* Smart veredict reporting (OK, WA, RTE, TLE, CE)
+* Stressing solution against brute using a generator (Useful to find corner cases)
+* Automatic generator creation from inputs/outputs structure
 
 Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 

@@ -1,3 +1,3 @@
 export function create(inputs: string[], outputs: string[]) {
-    return 'print("Hello world!")';
+    return 'import random\nprint(random.randint(1, 100))\n';
 }
