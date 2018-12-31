@@ -1,6 +1,7 @@
 'use strict';
+import * as vscode from 'vscode';
 import { mkdirSync, existsSync, copyFileSync, openSync, readSync, readdirSync, writeSync, closeSync } from "fs";
-import { dirname, join, extname } from "path";
+import { dirname, join, extname, basename } from "path";
 import * as child_process from 'child_process';
 import * as gwen from './gwen';
 import { TestcaseResult, Veredict, SolutionResult, Problem, Contest } from "./types";
@@ -10,8 +11,79 @@ export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
 const SRC = dirname(__filename);
 const TESTCASE_TIMEOUT = 1000;
-// TODO: Revisit this constant. Show specific error to know when this is an issue
+
+// TODO: 001
 const MAX_SIZE_INPUT = 1024;
+
+function isProblemFolder(path: string) {
+    return  existsSync(join(path, 'sol.cpp')) &&
+            existsSync(join(path, 'attic'));
+}
+
+function isTestcase(path: string){
+    let ext = extname(path);
+    return ext === '.in' || ext === '.out' || ext === '.real';
+}
+
+export function currentTestcase() {
+    let answer: string | undefined = undefined;
+
+    // Try to find an open testcase
+    if (vscode.window.activeTextEditor){
+        let path = vscode.window.activeTextEditor.document.uri.path;
+
+        if (isTestcase(path)){
+            answer = removeExtension(basename(path));
+        }
+    }
+
+    // Try to find the test case watching the current open workspace folder
+    if (vscode.workspace.workspaceFolders !== undefined){
+        vscode.workspace.workspaceFolders.forEach(function(fd){
+            if (answer === undefined && isTestcase(fd.uri.path)){
+                answer = removeExtension(basename(fd.uri.path));
+            }
+        });
+    }
+
+    // Test case not found
+    return answer;
+}
+
+export function currentProblem() {
+    // Try to find the problem using current open file
+    if (vscode.window.activeTextEditor){
+        let path = vscode.window.activeTextEditor.document.uri.path;
+
+        const MAX_DEPTH = 3;
+
+        for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
+            path = dirname(path);
+        }
+
+        if (isProblemFolder(path)){
+            return path;
+        }
+    }
+
+    // Try to find the problem using the current open workspace folder
+    if (vscode.workspace.workspaceFolders !== undefined){
+        let path = vscode.workspace.workspaceFolders[0].uri.path;
+
+        const MAX_DEPTH = 1;
+
+        for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
+            path = dirname(path);
+        }
+
+        if (isProblemFolder(path)){
+            return path;
+        }
+    }
+
+    // Problem not found
+    return undefined;
+}
 
 function createFolder(path: string){
     if (!existsSync(path)){
@@ -139,7 +211,7 @@ export function newContestFromId(path: string, site: string, contestId: string |
 export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOUT){
     let tcInput = join(path, TESTCASES, `${tcName}.in`);
     let tcOutput = join(path, TESTCASES, `${tcName}.out`);
-    let tcCurrent = join(path, TESTCASES, `${tcName}.cur`);
+    let tcCurrent = join(path, TESTCASES, `${tcName}.real`);
 
     let inputFd = openSync(tcInput, 'r');
     let buffer = new Buffer(MAX_SIZE_INPUT);
@@ -184,7 +256,7 @@ export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOU
 }
 
 function compileCode(pathCode: string, pathOutput: string){
-    // # TODO: Avoid this hardcoded line. Use personalized compile line. increase stack by default
+    // TODO: 002
     return child_process.spawnSync("g++", ["-std=c++11", `${pathCode}`, "-o", `${pathOutput}`]);
 }
 
@@ -204,23 +276,36 @@ export function testSolution(path: string){
     }
 
     let testcasesId = testcasesName(path);
-    testcasesId.sort(); // Proccess all testcases in sorted order
+    // Proccess all testcases in sorted order
+    testcasesId.sort();
+
+    // Run current test case first (if it exists)
+    let startTc = currentTestcase();
+
+    if (startTc !== undefined){
+        testcasesId = testcasesId.reverse().filter(name => name !== startTc);
+        testcasesId.push(startTc);
+        testcasesId = testcasesId.reverse();
+    }
 
     let results = [];
-    let fail = undefined;
+    let fail: SolutionResult | undefined = undefined;
 
     testcasesId.forEach(tcId => {
-        let tcResult = timedRun(path, tcId);
+        // Run while there none have failed already
+        if (fail === undefined){
+            let tcResult = timedRun(path, tcId);
 
-        if (tcResult.status !== Veredict.OK){
-            fail = new SolutionResult(tcResult.status, tcId);
+            if (tcResult.status !== Veredict.OK){
+                fail = new SolutionResult(tcResult.status, tcId);
+            }
+
+            results.push(tcResult);
         }
-
-        results.push(tcResult);
     });
 
     if (fail === undefined){
-        // TODO: IMPORTANT: Report max time and maybe other stats. Same with stress
+        // TODO: 003
         return new SolutionResult(Veredict.OK);
     }
     else{
@@ -229,7 +314,7 @@ export function testSolution(path: string){
 }
 
 function generateTestcase(path: string){
-    // TODO: NILOX: Revisit this call to python3. How to make it cross platform
+    // TODO: 004
     let genResult = child_process.spawnSync("python3", [join(path, ATTIC, 'gen.py')]);
 
     let currentFd = openSync(join(path, TESTCASES, 'gen.in'), 'w');
@@ -276,7 +361,7 @@ export function stressSolution(path: string, times: number = 10){
         closeSync(inputFd);
 
         // Run without restrictions
-        // TODO: EASY: Restrict brute in time, and capture errors
+        // TODO: 005
         let runResult = child_process.spawnSync(brout, {
             input: tcData,
         });
@@ -296,7 +381,6 @@ export function stressSolution(path: string, times: number = 10){
         history.push(result);
     }
 
-    // TODO: Check testSolution comment on this point
     return new SolutionResult(Veredict.OK);
 }
 

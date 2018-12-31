@@ -1,76 +1,13 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { existsSync, writeFileSync, readdirSync } from 'fs';
-import { join, dirname, extname } from 'path';
+import { join, extname } from 'path';
 import { SITES } from './conn';
 import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension } from './core';
 import { Veredict } from './types';
-
-/**
- * TODO: When Compilation Error throw a better error.
- * TODO: Add How to Use (in the README.) adding own template etc...
- * TODO: Allow custom checker easily
- * TODO: Add several checkers and try to infer which is the correct! [*]
- * TODO: Smart ID detection while parsing ContestId & ProblemId [*]
- * TODO: Smart generator [*]
- * TODO: Find great name/slogan!!! other than acmhelper Competitive Programming made simple
- * TODO: Implement parser for codeforces to test on real cases
- * TODO: Learn how to move static files from `src` to `out`.
- * TODO: Allow programming in other languages than c++
- * TODO: IMPORTANT: Run testcases in sorted order
- * TODO: If a solution is run whith an open test, run that test first.
- * TODO: How to use behind proxy?
- * TODO: EASY: Change extension from `cur` to `real`
- *
- * TODO: When Runtime Error happens show as much output as possible and display the error in the console
- * TODO: Figure out something for interactive problems.
- *
- * [*] Machine Learning?
- */
+import { currentProblem } from './core';
 
 const TESTCASES = 'testcases';
-
-function isProblemFolder(path: string) {
-    return  existsSync(join(path, 'sol.cpp')) &&
-            existsSync(join(path, 'attic'));
-}
-
-function currentProblem() {
-    // Try to find the problem using current open file
-    if (vscode.window.activeTextEditor){
-        let path = vscode.window.activeTextEditor.document.uri.path;
-
-        const MAX_DEPTH = 3;
-
-        for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
-            path = dirname(path);
-        }
-
-        if (isProblemFolder(path)){
-            return path;
-        }
-    }
-
-    // Try to find the problem using the current open workspace folder
-    if (vscode.workspace.workspaceFolders !== undefined){
-        let path = vscode.workspace.workspaceFolders[0].uri.path;
-
-        const MAX_DEPTH = 1;
-
-        for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
-            path = dirname(path);
-        }
-
-        if (isProblemFolder(path)){
-            return path;
-        }
-    }
-
-    // Problem not found
-    return undefined;
-}
 
 function quickPickSites() {
     let sites: any[] = [];
@@ -104,7 +41,7 @@ async function addProblem() {
 
     let site = site_info.target;
 
-    // TODO: IMPORTANT: Provide custom problem id example in placeholder per different site
+    // TODO: 006
     let id = await vscode.window.showInputBox({placeHolder: "Problem ID"});
 
     if (id === undefined){
@@ -117,7 +54,7 @@ async function addProblem() {
     newProblemFromId(path, site, id);
 
     await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
-    // TODO: How can I have access to new proccess created using `openFolder`?
+    // TODO: 007
     // Just want to run two commands below
     // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file("sol.cpp"));
     // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
@@ -161,7 +98,7 @@ async function addContest() {
         id = Number.parseInt(probCountStr!);
     }
     else{
-        // TODO: IMPORTANT: Provide custom contest id example in placeholder per different site
+        // TODO: 008
         id = await vscode.window.showInputBox({placeHolder: "Contest ID"});
 
         if (id === undefined){
@@ -184,9 +121,8 @@ async function debugTestcase(path: string, tcId: string){
     let sol = join(path, `sol.cpp`);
     let inp = join(path, TESTCASES, `${tcId}.in`);
     let out = join(path, TESTCASES, `${tcId}.out`);
-    let cur = join(path, TESTCASES, `${tcId}.cur`);
+    let cur = join(path, TESTCASES, `${tcId}.real`);
 
-    // TODO: How to clear opened tabs?
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.Two);
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Three);
@@ -290,7 +226,6 @@ async function coding() {
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
 }
 
-// TODO: Show time that the program took when it's ok
 async function stress(){
     let path = currentProblem();
 

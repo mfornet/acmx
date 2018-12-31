@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import { dirname, join } from 'path';
 import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId } from '../core';
 import { TestcaseResult, Veredict } from '../types';
-import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync, readSync, fstat } from 'fs';
+import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync, readSync } from 'fs';
 // import { request } from 'http';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
@@ -90,7 +90,7 @@ suite("Extension Tests", function () {
         let result = testcasesName(path);
         let target = ["0", "1", "2"];
 
-        // TODO: How to check if two arrays are equal
+        // TODO: 010
         // I want to compare `result` & `target`
         target.forEach(name => {assert.notEqual(result.findIndex(tname => { return tname === name; }), -1);});
         result.forEach(name => {assert.notEqual(target.findIndex(tname => { return tname === name; }), -1);});
@@ -302,7 +302,6 @@ suite("Extension Tests", function () {
 
     test("downloading", async function(){
         let request = require('request');
-        // TODO: How to unittest an async call
         // let statusCode = undefined;
 
         await request('http://codeforces.com/contest/1081/problem/E', function(error: any, response: any, body: any){

@@ -1,6 +1,6 @@
 import { SiteDescription, Contest, Problem } from "../types";
 
-// TODO: Use sync requests
+// TODO: 009
 const request = require('request');
 
 /**
