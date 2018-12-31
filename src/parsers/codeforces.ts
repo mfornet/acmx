@@ -1,7 +1,7 @@
 import { SiteDescription, Contest, Problem } from "../types";
 
 // TODO: Use sync requests
-const request = require('sync-request');
+const request = require('request');
 
 /**
  * contestId: ${contest}
@@ -11,14 +11,30 @@ const request = require('sync-request');
  * http://codeforces.com/contest/1081/
  */
 function parseContest(contestId: string | number) {
-    let problemsId: string[] = [];
-
     let problems: Problem[] = [];
 
-    problemsId.forEach(problemId => {
+    let res = request('GET', `http://codeforces.com/contest/${contestId}`);
+    let body = res.getBody('utf8');
+
+    console.log(body);
+
+    let pos = body!.indexOf('<option value="generalAnnouncement" data-problem-name="" >', 0) + 1;
+
+    while (true){
+        let option_begin = body!.indexOf('option value="', pos) + 14;
+        let option_end = body!.indexOf('" data-problem-name', option_begin);
+
+        if (option_begin === -1 || option_end === -1){
+            break;
+        }
+
+        pos = option_end;
+
+        let problemId = body!.substring(option_begin, option_end);
+
         let prob = parseProblem(`${contestId}-${problemId}`);
         problems.push(prob);
-    });
+    }
 
     return new Contest(problems);
 }
@@ -36,8 +52,8 @@ function parseProblem(problemId: string) {
     let problem = data[1];
 
     var res = request('GET', `http://codeforces.com/contest/${contest}/problem/${problem}`);
-
     let html: string = res.getBody('utf8');
+
     let pos = 0;
 
     let inputs = [];

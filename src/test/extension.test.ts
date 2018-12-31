@@ -8,7 +8,8 @@ import * as assert from 'assert';
 import { dirname, join } from 'path';
 import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId } from '../core';
 import { TestcaseResult, Veredict } from '../types';
-import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync, readSync } from 'fs';
+import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync, readSync, fstat } from 'fs';
+// import { request } from 'http';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
 const ARENA = join(SRC, 'arena');
@@ -291,19 +292,6 @@ suite("Extension Tests", function () {
         recRmdir(path);
     });
 
-    // test("downloading", function(){
-    //     let request = require('sync-request');
-
-    //     console.log("Start downloading...");
-    //     var res = request('GET', 'http://codeforces.com/contest/1081/problem/E');
-    //     console.log("Downloaded...");
-    //     let html: string = res.getBody('utf8');
-
-    //     let fd = openSync("/home/marx/xxx.html", "w");
-    //     writeSync(fd, html);
-    //     closeSync(fd);
-    // });
-
     function readFile(path: string){
         let fd = openSync(path, "r");
         let buffer = new Buffer(1 << 20);
@@ -311,6 +299,21 @@ suite("Extension Tests", function () {
         let answer = buffer.toString();
         return answer;
     }
+
+    test("downloading", async function(){
+        let request = require('request');
+        // TODO: How to unittest an async call
+        // let statusCode = undefined;
+
+        await request('http://codeforces.com/contest/1081/problem/E', function(error: any, response: any, body: any){
+        // let x = request('http://localhost:8000/libros', function(error: any, response: any, body: any) {
+            // console.log(">>>" + response.statusCode);
+            // statusCode = response.statusCode;
+            writeFile(join(SRC, "codeforces.html"), body);
+        });
+
+        // assert.equal(statusCode, 200);
+    });
 
     test("parsing", function(){
         let html: string = readFile(join(__dirname, "codeforces.html"));
@@ -343,5 +346,15 @@ suite("Extension Tests", function () {
                 outputTestcase = outputTestcase.replace('<br />', '\n');
             }
         }
+    });
+
+    test("parsingLocalhost", function(){
+        let request = require('request');
+
+        request('http://localhost:8000/libros', function (error: any, response: any, body: any) {
+            // console.log('error:', error);
+            // console.log('statusCode:', response && response.statusCode);
+            // console.log('body:', body);
+        });
     });
 });
