@@ -2,7 +2,8 @@
     "name": "acmhelper-vscode",
     "displayName": "acmhelper-vscode",
     "description": "Competitive Programming made simple",
-    "version": "1.0.0",
+    "publisher": "marx24",
+    "version": "0.1.0",
     "engines": {
         "vscode": "^1.30.0"
     },
