@@ -19,10 +19,12 @@ export class TestcaseResult{
 export class SolutionResult{
     status: Veredict;
     failTcId?: string;
+    maxTime?: number;
 
-    constructor(status: Veredict, failTcId?: string){
+    constructor(status: Veredict, failTcId?: string, maxTime?: number){
         this.status = status;
         this.failTcId = failTcId;
+        this.maxTime = maxTime;
     }
 }
 

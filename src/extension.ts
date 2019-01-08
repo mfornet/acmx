@@ -144,7 +144,7 @@ async function runSolution(){
     let result = testSolution(path);
 
     if (result.status === Veredict.OK){
-        vscode.window.showInformationMessage("OK");
+        vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
     else{
         vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
@@ -237,7 +237,7 @@ async function stress(){
     let result = stressSolution(path);
 
     if (result.status === Veredict.OK){
-        vscode.window.showInformationMessage("OK");
+        vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
     else{
         vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);

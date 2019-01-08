@@ -272,7 +272,7 @@ export function testSolution(path: string){
     let xresult = compileCode(sol, out);
 
     if (xresult.status !== 0){
-        return new SolutionResult(Veredict.CE);
+        throw new Error("Compilation Error. sol.cpp");
     }
 
     let testcasesId = testcasesName(path);
@@ -288,7 +288,7 @@ export function testSolution(path: string){
         testcasesId = testcasesId.reverse();
     }
 
-    let results = [];
+    let results: TestcaseResult[] = [];
     let fail: SolutionResult | undefined = undefined;
 
     testcasesId.forEach(tcId => {
@@ -305,8 +305,15 @@ export function testSolution(path: string){
     });
 
     if (fail === undefined){
+        let maxTime = 0;
+        for (let i = 0; i < results.length; i++){
+            if (results[i].spanTime! > maxTime){
+                maxTime = results[i].spanTime!;
+            }
+        }
+
         // TODO: 003
-        return new SolutionResult(Veredict.OK);
+        return new SolutionResult(Veredict.OK, undefined, maxTime);
     }
     else{
         return fail;
@@ -347,7 +354,7 @@ export function stressSolution(path: string, times: number = 10){
         throw new Error("Compilation Error. brute.cpp");
     }
 
-    let history = [];
+    let results = [];
 
     for (let index = 0; index < times; index++) {
         // Generate input testcase
@@ -378,10 +385,17 @@ export function stressSolution(path: string, times: number = 10){
             return new SolutionResult(result.status, 'gen');
         }
 
-        history.push(result);
+        results.push(result);
     }
 
-    return new SolutionResult(Veredict.OK);
+    let maxTime = 0;
+    for (let i = 0; i < results.length; i++){
+        if (results[i].spanTime! > maxTime){
+            maxTime = results[i].spanTime!;
+        }
+    }
+
+    return new SolutionResult(Veredict.OK, undefined, maxTime);
 }
 
 export function veredictName(veredict: Veredict){
