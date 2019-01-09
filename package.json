@@ -10,7 +10,7 @@
         "vscode": "^1.30.0"
     },
     "author": {
-		"name": "marx"
+		"name": "Marcelo Fornet"
 	},
     "categories": [
         "Other"
@@ -39,6 +39,7 @@
 						"description": "Maximum time limit in seconds to run the program on each test case.",
 						"scope": "resource"
                     },
+
 					"acmx.execution.compileCpp": {
                         "type": "string",
 						"default": "g++ -std=c++11 $PROGRAM -o $OUTPUT",
@@ -49,6 +50,13 @@
                         "type": "string",
 						"default": "/usr/bin/python3",
 						"description": "Path to python executable.",
+						"scope": "resource"
+                    },
+
+					"acmx.configuration.templatePath": {
+                        "type": "string",
+						"default": "",
+						"description": "Path to template file. Leave empty to use default template.",
 						"scope": "resource"
 					}
 				}

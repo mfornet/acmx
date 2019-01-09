@@ -109,7 +109,13 @@ export function newArena(path: string){
     let attic = join(path, ATTIC);
     createFolder(attic);
 
-    copyFileSync(join(SRC, 'static', 'sol.cpp'), join(path, 'sol.cpp'));
+    let templatePath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration').get('templatePath');
+
+    if (templatePath! === ""){
+        templatePath = join(SRC, 'static', 'sol.cpp');
+    }
+
+    copyFileSync(templatePath!, join(path, 'sol.cpp'));
     copyFileSync(join(SRC, 'static', 'checker'), join(path, ATTIC, 'checker'));
 }
 
