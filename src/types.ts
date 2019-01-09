@@ -54,14 +54,21 @@ export class Contest{
 export class SiteDescription{
     name: string;
     description: string;
+    contestIdPlaceholder: string;
+    problemIdPlaceholder: string;
     contestParser: (contestId: string) => Promise<Contest>;
     problemParser: (problemId: string) => Promise<Problem>;
 
     constructor(name: string, description: string,
+                contestIdPlaceholder: string, problemIdPlaceholder: string,
                 contestParser: (contestId: string) => Promise<Contest>,
                 problemParser: (problemId: string) => Promise<Problem>){
         this.name = name;
         this.description = description;
+
+        this.contestIdPlaceholder = contestIdPlaceholder;
+        this.problemIdPlaceholder = problemIdPlaceholder;
+
         this.contestParser = contestParser;
         this.problemParser = problemParser;
     }

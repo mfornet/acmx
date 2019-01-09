@@ -9,6 +9,8 @@ import { CODEFORCES } from "./parsers/codeforces";
 const PERSONAL = new SiteDescription(
     "personal",
     "Not a site. Custom problems and contest.",
+    "Contest name",
+    "Problem name",
     async numProblems => {
         let total = Number.parseInt(numProblems);
 
@@ -21,7 +23,7 @@ const PERSONAL = new SiteDescription(
         return new Contest(problems);
     },
     async problemId => {
-        return new Problem("W", "W", ["0\n", "2\n", "9\n"], ["2\n", "4\n", "11\n"]);
+        return new Problem(problemId, problemId, ["0\n", "2\n", "9\n"], ["2\n", "4\n", "11\n"]);
     }
 );
 

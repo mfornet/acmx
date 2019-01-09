@@ -24,6 +24,7 @@
         "onCommand:extension.coding",
         "onCommand:extension.stress",
         "onCommand:extension.upgrade",
+        "onCommand:extension.compile",
         "onCommand:extension.debugTest"
     ],
     "main": "./out/extension",
@@ -31,35 +32,39 @@
         "commands": [
             {
                 "command": "extension.addProblem",
-                "title": "ACMH: New Problem"
+                "title": "ACMX: New Problem"
             },
             {
                 "command": "extension.addContest",
-                "title": "ACMH: New Contest"
+                "title": "ACMX: New Contest"
             },
             {
                 "command": "extension.runSolution",
-                "title": "ACMH: Run"
+                "title": "ACMX: Run"
             },
             {
                 "command": "extension.openTestcase",
-                "title": "ACMH: Open Test Case"
+                "title": "ACMX: Open Test Case"
             },
             {
                 "command": "extension.addTestcase",
-                "title": "ACMH: Add Test Case"
+                "title": "ACMX: Add Test Case"
             },
             {
                 "command": "extension.coding",
-                "title": "ACMH: View: Code"
+                "title": "ACMX: View: Code"
             },
             {
                 "command": "extension.stress",
-                "title": "ACMH: Stress"
+                "title": "ACMX: Stress"
             },
             {
                 "command": "extension.upgrade",
-                "title": "ACMH: Upgrade"
+                "title": "ACMX: Upgrade"
+            },
+            {
+                "command": "extension.compile",
+                "title": "ACMX: Compile"
             }
         ]
     },

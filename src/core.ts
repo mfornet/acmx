@@ -4,8 +4,7 @@ import { mkdirSync, existsSync, copyFileSync, openSync, readSync, readdirSync, w
 import { dirname, join, extname, basename } from "path";
 import * as child_process from 'child_process';
 import * as gwen from './gwen';
-import { TestcaseResult, Veredict, SolutionResult, Problem, Contest } from "./types";
-import { getSite } from "./conn";
+import { TestcaseResult, Veredict, SolutionResult, Problem, Contest, SiteDescription } from "./types";
 
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
@@ -182,12 +181,14 @@ function newProblem(path: string, problem: Problem){
     });
 }
 
-export async function newProblemFromId(path: string, site: string, problemId: string){
-    let siteDesc = getSite(site);
+export async function newProblemFromId(path: string, site: SiteDescription, problemId: string){
+    let problem = await site.problemParser(problemId);
 
-    let problem = await siteDesc.problemParser(problemId);
+    path = join(path, problem.identifier!);
 
     newProblem(path, problem);
+
+    return path;
 }
 
 function newContest(path: string, contest: Contest){
@@ -201,10 +202,9 @@ function newContest(path: string, contest: Contest){
  *
  * @param contestId Can be a number if the site is `personal` and this number denote number of problems
  */
-export async function newContestFromId(path: string, site: string, contestId: string){
+export async function newContestFromId(path: string, site: SiteDescription, contestId: string){
     createFolder(path);
-    let siteDesc = getSite(site);
-    let contest = await siteDesc.contestParser(contestId);
+    let contest = await site.contestParser(contestId);
     newContest(path, contest);
 }
 
@@ -255,7 +255,7 @@ export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOU
     }
 }
 
-function compileCode(pathCode: string, pathOutput: string){
+export function compileCode(pathCode: string, pathOutput: string){
     // TODO: 002
     return child_process.spawnSync("g++", ["-std=c++11", `${pathCode}`, "-o", `${pathOutput}`]);
 }

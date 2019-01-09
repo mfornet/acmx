@@ -4,8 +4,9 @@ import { existsSync, writeFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
 import { SITES } from './conn';
 import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension } from './core';
-import { Veredict } from './types';
-import { currentProblem } from './core';
+import { Veredict, SiteDescription } from './types';
+import { currentProblem, compileCode, ATTIC } from './core';
+import { getSite } from "./conn";
 
 const TESTCASES = 'testcases';
 
@@ -39,21 +40,18 @@ async function addProblem() {
         return;
     }
 
-    let site = site_info.target;
+    let site: SiteDescription = getSite(site_info.target);
 
-    // TODO: 006
-    let id = await vscode.window.showInputBox({placeHolder: "Problem ID"});
+    let id = await vscode.window.showInputBox({placeHolder: site.problemIdPlaceholder});
 
     if (id === undefined){
         vscode.window.showErrorMessage("Problem ID not provided.");
         return;
     }
 
-    path = join(path, `${id}`);
+    let problemPath = await newProblemFromId(path, site, id);
 
-    await newProblemFromId(path, site, id);
-
-    await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
+    await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(problemPath));
     // TODO: 007
     // Just want to run two commands below
     // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file("sol.cpp"));
@@ -75,11 +73,11 @@ async function addContest() {
         return;
     }
 
-    let site = site_info.target;
+    let site = getSite(site_info.target);
     let id = undefined;
 
-    if (site === "personal"){
-        let name= await vscode.window.showInputBox({placeHolder: "Contest Name"});
+    if (site.name === "personal"){
+        let name= await vscode.window.showInputBox({placeHolder: site.contestIdPlaceholder});
 
         if (name === undefined){
             vscode.window.showErrorMessage("Name not provided.");
@@ -98,8 +96,7 @@ async function addContest() {
         id = probCountStr!;
     }
     else{
-        // TODO: 008
-        id = await vscode.window.showInputBox({placeHolder: "Contest ID"});
+        id = await vscode.window.showInputBox({placeHolder: site.contestIdPlaceholder});
 
         if (id === undefined){
             vscode.window.showErrorMessage("Contest ID not provided.");
@@ -149,6 +146,32 @@ async function runSolution(){
     else{
         vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
         debugTestcase(path, result.failTcId!);
+    }
+}
+
+async function compile(){
+    let path = currentProblem();
+
+    if (path === undefined){
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let sol = join(path, 'sol.cpp');
+    let out = join(path, ATTIC, 'sol');
+
+    if (!existsSync(sol)){
+        throw new Error("Open a coding environment first.");
+    }
+
+    // Compile solution
+    let xresult = compileCode(sol, out);
+
+    if (xresult.status !== 0){
+        throw new Error("Compilation Error. sol.cpp");
+    }
+    else{
+        vscode.window.showInformationMessage("Compilation successfully.");
     }
 }
 
@@ -257,9 +280,7 @@ async function upgrade(){
 }
 
 async function debugTest(){
-    // let contest = await parseContest("1081");
-    console.log("HEY");
-    // await parseProblem("1081-E");
+    console.log("no bugs :O");
 }
 
 // this method is called when your extension is activated
@@ -273,6 +294,7 @@ export function activate(context: vscode.ExtensionContext) {
     let codingCommand = vscode.commands.registerCommand('extension.coding', coding);
     let stressCommand = vscode.commands.registerCommand('extension.stress', stress);
     let upgradeCommand = vscode.commands.registerCommand('extension.upgrade', upgrade);
+    let compileCommand = vscode.commands.registerCommand('extension.compile', compile);
 
     let debugTestCommand = vscode.commands.registerCommand('extension.debugTest', debugTest);
 
@@ -284,6 +306,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(codingCommand);
     context.subscriptions.push(stressCommand);
     context.subscriptions.push(upgradeCommand);
+    context.subscriptions.push(compileCommand);
+
     context.subscriptions.push(debugTestCommand);
 }
 

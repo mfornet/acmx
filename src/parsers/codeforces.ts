@@ -85,6 +85,8 @@ export async function parseProblem(problemId: string) {
 export const CODEFORCES = new SiteDescription(
         "codeforces",
         "codeforces.com",
+        "{contest id} (Ex: 1095)",
+        "{contest id}-{problem id} (Ex: 1095-A)",
         parseContest,
         parseProblem,
     );

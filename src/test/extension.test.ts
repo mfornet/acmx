@@ -9,6 +9,7 @@ import { dirname, join } from 'path';
 import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId } from '../core';
 import { TestcaseResult, Veredict } from '../types';
 import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
+import { getSite } from '../conn';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
 const ARENA = join(SRC, 'arena');
@@ -108,7 +109,7 @@ suite("Extension Tests", function () {
         let path = join(ARENA, problemId);
 
         assert.equal(existsSync(path), false);
-        await newProblemFromId(path, 'personal', problemId);
+        await newProblemFromId(ARENA, getSite('personal'), problemId);
 
         assert.equal(existsSync(join(path, 'sol.cpp')), true, "Solution not found.");
         assert.equal(existsSync(join(path, ATTIC)), true, "Attic not found.");
@@ -127,7 +128,7 @@ suite("Extension Tests", function () {
 
         assert.equal(existsSync(path), false);
 
-        await newContestFromId(path, 'personal', "5");
+        await newContestFromId(path, getSite('personal'), "5");
 
         assert.equal(readdirSync(path).length, "5");
 
