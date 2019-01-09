@@ -13,6 +13,7 @@
 * Add several checkers and try to infer which is the correct!
 * Fix name of new problems after calling addProblem
 * Add Compile command
+* Find small case where the code is failing
 
 * [001](/src/core.ts): Revisit this constant. Show specific error to know when this is an issue. Add in settings
 * [002](/src/core.ts): Avoid this hardcoded line. Use personalized compile line. increase stack by default. This involve allowing different languages
