@@ -11,5 +11,3 @@
 * Smart veredict reporting (OK, WA, RTE, TLE, CE)
 * Stressing solution against brute using a generator (Useful to find corner cases)
 * (WIP) Automatic generator creation from inputs/outputs structure
-
------------------------------------------------------------------------------------------------------------

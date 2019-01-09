@@ -5,9 +5,13 @@
     "icon": "images/icpc-logo-nobg.png",
     "publisher": "marx24",
     "version": "0.1.1",
+	"license": "MIT",
     "engines": {
         "vscode": "^1.30.0"
     },
+    "author": {
+		"name": "marx"
+	},
     "categories": [
         "Other"
     ],
@@ -70,6 +74,10 @@
         "type": "git",
 		"url": "https://github.com/mfornet/acmx.git"
     },
+	"bugs": {
+		"url": "https://github.com/mfornet/acmx/issues",
+		"email": "mfornet94@gmail.com"
+	},
     "devDependencies": {
         "@types/got": "^9.3.0",
         "@types/mocha": "^2.2.42",
