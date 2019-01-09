@@ -18,7 +18,8 @@
         "onCommand:extension.addTestcase",
         "onCommand:extension.coding",
         "onCommand:extension.stress",
-        "onCommand:extension.upgrade"
+        "onCommand:extension.upgrade",
+        "onCommand:extension.debugTest"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -65,13 +66,17 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^3.1.4",
-        "vscode": "^1.1.25",
-        "tslint": "^5.8.0",
+        "@types/got": "^9.3.0",
+        "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.25",
-        "@types/mocha": "^2.2.42"
+        "tslint": "^5.8.0",
+        "typescript": "^3.1.4",
+        "vscode": "^1.1.25"
     },
     "dependencies": {
-        "sync-request": "^6.0.0"
+        "got": "^9.5.0",
+        "jssoup": "0.0.10",
+        "sync-request": "^6.0.0",
+        "unescape": "^1.0.1"
     }
 }

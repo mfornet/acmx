@@ -51,7 +51,7 @@ async function addProblem() {
 
     path = join(path, `${id}`);
 
-    newProblemFromId(path, site, id);
+    await newProblemFromId(path, site, id);
 
     await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
     // TODO: 007
@@ -95,7 +95,7 @@ async function addContest() {
             return;
         }
 
-        id = Number.parseInt(probCountStr!);
+        id = probCountStr!;
     }
     else{
         // TODO: 008
@@ -109,7 +109,7 @@ async function addContest() {
         path = join(path, `${id}`);
     }
 
-    newContestFromId(path, site, id);
+    await newContestFromId(path, site, id);
 
     vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
 }
@@ -256,11 +256,15 @@ async function upgrade(){
     upgradeArena(path);
 }
 
+async function debugTest(){
+    // let contest = await parseContest("1081");
+    console.log("HEY");
+    // await parseProblem("1081-E");
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Congratulations, your extension "acmhelper-vscode" is now active!');
-
     let addProblemCommand = vscode.commands.registerCommand('extension.addProblem', addProblem);
     let addContestCommand = vscode.commands.registerCommand('extension.addContest', addContest);
     let runSolutionCommand = vscode.commands.registerCommand('extension.runSolution', runSolution);
@@ -270,6 +274,8 @@ export function activate(context: vscode.ExtensionContext) {
     let stressCommand = vscode.commands.registerCommand('extension.stress', stress);
     let upgradeCommand = vscode.commands.registerCommand('extension.upgrade', upgrade);
 
+    let debugTestCommand = vscode.commands.registerCommand('extension.debugTest', debugTest);
+
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
     context.subscriptions.push(runSolutionCommand);
@@ -278,6 +284,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(codingCommand);
     context.subscriptions.push(stressCommand);
     context.subscriptions.push(upgradeCommand);
+    context.subscriptions.push(debugTestCommand);
 }
 
 // this method is called when your extension is deactivated

@@ -182,17 +182,17 @@ function newProblem(path: string, problem: Problem){
     });
 }
 
-export function newProblemFromId(path: string, site: string, problemId: string){
+export async function newProblemFromId(path: string, site: string, problemId: string){
     let siteDesc = getSite(site);
 
-    let problem = siteDesc.problemParser(problemId);
+    let problem = await siteDesc.problemParser(problemId);
 
     newProblem(path, problem);
 }
 
 function newContest(path: string, contest: Contest){
     contest.problems!.forEach(problem => {
-        newProblem(join(path, problem.name!), problem);
+        newProblem(join(path, problem.identifier!), problem);
     });
 }
 
@@ -201,10 +201,10 @@ function newContest(path: string, contest: Contest){
  *
  * @param contestId Can be a number if the site is `personal` and this number denote number of problems
  */
-export function newContestFromId(path: string, site: string, contestId: string | number){
+export async function newContestFromId(path: string, site: string, contestId: string){
     createFolder(path);
     let siteDesc = getSite(site);
-    let contest = siteDesc.contestParser(contestId);
+    let contest = await siteDesc.contestParser(contestId);
     newContest(path, contest);
 }
 

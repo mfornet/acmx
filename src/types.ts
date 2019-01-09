@@ -29,11 +29,14 @@ export class SolutionResult{
 }
 
 export class Problem{
+    // Identifier will be used as folder name
+    identifier?: string;
     name?: string;
     inputs?: string[];
     outputs?: string[];
 
-    constructor(name?: string, inputs?: string[], outputs?: string[]){
+    constructor(identifier?: string, name?: string, inputs?: string[], outputs?: string[]){
+        this.identifier = identifier;
         this.name = name;
         this.inputs = inputs;
         this.outputs = outputs;
@@ -51,10 +54,12 @@ export class Contest{
 export class SiteDescription{
     name: string;
     description: string;
-    contestParser: (contestId: string | number) => Contest;
-    problemParser: (problemId: string) => Problem;
+    contestParser: (contestId: string) => Promise<Contest>;
+    problemParser: (problemId: string) => Promise<Problem>;
 
-    constructor(name: string, description: string, contestParser: (contestId: string | number) => Contest, problemParser: (problemId: string) => Problem){
+    constructor(name: string, description: string,
+                contestParser: (contestId: string) => Promise<Contest>,
+                problemParser: (problemId: string) => Promise<Problem>){
         this.name = name;
         this.description = description;
         this.contestParser = contestParser;

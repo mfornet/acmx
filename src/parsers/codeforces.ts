@@ -1,7 +1,9 @@
 import { SiteDescription, Contest, Problem } from "../types";
 
-// TODO: 009
-const request = require('request');
+import * as vscode from 'vscode';
+import JSSoup from 'jssoup';
+import * as got from 'got';
+import { getText } from './util';
 
 /**
  * contestId: ${contest}
@@ -10,29 +12,28 @@ const request = require('request');
  * Example:
  * http://codeforces.com/contest/1081/
  */
-function parseContest(contestId: string | number) {
+export async function parseContest(contestId: string) {
+    let url = `http://codeforces.com/contest/${contestId}`;
+    let response = await got.get(url);
+
+    if (response.statusCode !== 200){
+        throw new Error(`Contest ${url} not downloaded. ${response.statusCode}`);
+    }
+
+    vscode.window.showInformationMessage(`Downloading contest ${contestId}...`);
+
+    let soup = new JSSoup(response.body);
+    let problemsTable = soup.find("table", "problems");
     let problems: Problem[] = [];
+    let problemSection = problemsTable.findAll("td", "id");
 
-    let res = request('GET', `http://codeforces.com/contest/${contestId}`);
-    let body = res.getBody('utf8');
+    for (let i = 0; i < problemSection.length; i++){
+        let section = problemSection[i];
+        let hrefData = section.find("a").attrs.href.split('/');
+        let pid = hrefData[hrefData.length - 1];
+        console.log(`Problem ${contestId}-${pid}`);
 
-    console.log(body);
-
-    let pos = body!.indexOf('<option value="generalAnnouncement" data-problem-name="" >', 0) + 1;
-
-    while (true){
-        let option_begin = body!.indexOf('option value="', pos) + 14;
-        let option_end = body!.indexOf('" data-problem-name', option_begin);
-
-        if (option_begin === -1 || option_end === -1){
-            break;
-        }
-
-        pos = option_end;
-
-        let problemId = body!.substring(option_begin, option_end);
-
-        let prob = parseProblem(`${contestId}-${problemId}`);
+        let prob = await parseProblem(contestId + "-" + pid);
         problems.push(prob);
     }
 
@@ -46,51 +47,39 @@ function parseContest(contestId: string | number) {
  * Example:
  * http://codeforces.com/contest/1081/problem/E
  */
-function parseProblem(problemId: string) {
+export async function parseProblem(problemId: string) {
     let data = problemId.split('-');
     let contest = data[0];
-    let problem = data[1];
+    let pid = data[1];
 
-    var res = request('GET', `http://codeforces.com/contest/${contest}/problem/${problem}`);
-    let html: string = res.getBody('utf8');
+    let url = `http://codeforces.com/contest/${contest}/problem/${pid}`;
+    let response = await got.get(url);
 
-    let pos = 0;
-
-    let inputs = [];
-    let outputs = [];
-
-    while (true){
-        pos = html.indexOf('<div class="title">Input</div>', pos);
-
-        if (pos === -1){
-            break;
-        }
-
-        let begin_pre = html.indexOf('<pre>', pos);
-        let end_pre = html.indexOf('</pre>', pos);
-
-        let inputTestcase = html.substring(begin_pre + 5, end_pre);
-
-        while (inputTestcase.indexOf('<br />') !== -1){
-            inputTestcase = inputTestcase.replace('<br />', '\n');
-        }
-
-        pos = html.indexOf('<div class="title">Output</div>', pos);
-
-        begin_pre = html.indexOf('<pre>', pos);
-        end_pre = html.indexOf('</pre>', pos);
-
-        let outputTestcase = html.substring(begin_pre + 5, end_pre);
-
-        while (outputTestcase.indexOf('<br />') !== -1){
-            outputTestcase = outputTestcase.replace('<br />', '\n');
-        }
-
-        inputs.push(inputTestcase);
-        outputs.push(outputTestcase);
+    if (response.statusCode !== 200){
+        throw new Error(`Problem ${url} not downloaded. ${response.statusCode}`);
     }
 
-    return new Problem(problem, inputs, outputs);
+    let soup = new JSSoup(response.body);
+    let problemDescription = soup.find("div", "problemindexholder");
+
+    let name = problemDescription.find("div", "title").text;
+
+    let inputTC: string[] = [];
+    let outputTC: string[] = [];
+
+    problemDescription.findAll("div", "input").forEach((element: any) =>{
+        let tc = element.find("pre");
+        inputTC.push(getText(tc));
+    });
+
+    problemDescription.findAll("div", "output").forEach((element: any) =>{
+        let tc = element.find("pre");
+        outputTC.push(getText(tc));
+    });
+
+    vscode.window.showInformationMessage(`Downloaded problem ${problemId}!`);
+
+    return new Problem(pid, name, inputTC, outputTC);
 }
 
 export const CODEFORCES = new SiteDescription(
