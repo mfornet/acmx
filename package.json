@@ -2,7 +2,7 @@
     "name": "acmx",
     "displayName": "acmX",
     "description": "Competitive Programming made simple",
-    "icon": "images/icpc-logo-nobg.png",
+    "icon": "images/logo.png",
     "publisher": "marx24",
     "version": "0.1.1",
 	"license": "MIT",
