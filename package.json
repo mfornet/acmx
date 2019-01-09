@@ -2,8 +2,9 @@
     "name": "acmx",
     "displayName": "acmX",
     "description": "Competitive Programming made simple",
+    "icon": "images/icpc-logo-nobg.png",
     "publisher": "marx24",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "engines": {
         "vscode": "^1.30.0"
     },
