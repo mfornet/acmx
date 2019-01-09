@@ -34,9 +34,8 @@ The environment structure is the following:
             sol.cpp
             brute.cpp
             attic/
-                sol
-                brout
                 gen.py
+                ...
             testcases/
                 1.in
                 1.out
@@ -56,15 +55,17 @@ Create a file with your template. In settings change `acmx.configuration.templat
 
 ## Commands
 
-* acmx.addProblem (**New Problem**):
-* acmx.addContest (**New Contest**):
-* acmx.runSolution (**Run**):
-* acmx.openTestcase (**Open Test Case**):
-* acmx.addTestcase (**Add Test Case**):
-* acmx.coding (**View: Code**):
-* acmx.stress (**Stress**):
-* acmx.upgrade (**Upgrade**):
-* acmx.compile (**Compile**):
+Call this commands from the command pallete (`Ctrl + Shift + P`).
+
+* acmx.addProblem (**ACMX: New Problem**): Create a new problem. Make environment skeleton and download testcases.
+* acmx.addContest (**ACMX: New Contest**): Create a new contest. Make environment skeleton and download testcases.
+* acmx.runSolution (**ACMX: Run**): Compile and run current solution against testcases.
+* acmx.openTestcase (**ACMX: Open Test Case**): Open a paticular testcase.
+* acmx.addTestcase (**ACMX: Add Test Case**): Add a new testcase.
+* acmx.coding (**ACMX: View: Code**): Return to 1 column layout (better to code).
+* acmx.stress (**ACMX: Stress**): Run the solution against correct program using testcases from generator. Useful to find failing and corner cases. Must call upgrade first.
+* acmx.upgrade (**ACMX: Upgrade**): Create aditionals files before calling `Stress`
+* acmx.compile (**ACMX: Compile**): Compile `sol.cpp`.
 
 ## Settings
 

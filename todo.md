@@ -1,7 +1,6 @@
 # List of TODO
 
-* **IMPORTANT** Add How to Use (in the README.) How to add own template etc...
-* **WOW** Use this tool: [caide-cpp-inliner](https://github.com/slycelote/caide-cpp-inliner).  Suggestion from jcg
+* **WOW** Use this tool: [caide-cpp-inliner](https://github.com/slycelote/caide-cpp-inliner). Suggestion from jcg
 * When a new view is activated (after run or view:code) close all open tabs. (also (maybe) collapse everything not related to the problem)
 * Allow programming in other languages than c++
 
