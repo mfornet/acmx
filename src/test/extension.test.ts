@@ -6,7 +6,7 @@
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
 import { dirname, join } from 'path';
-import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId } from '../core';
+import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId, getTimeout } from '../core';
 import { TestcaseResult, Veredict } from '../types';
 import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
 import { getSite } from '../conn';
@@ -144,7 +144,7 @@ suite("Extension Tests", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'A');
         let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId);
+        let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
         assert.equal(result.status, Veredict.OK);
     });
 
@@ -152,7 +152,7 @@ suite("Extension Tests", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'B');
         let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId);
+        let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
         assert.equal(result.status, Veredict.WA);
     });
 
@@ -160,7 +160,7 @@ suite("Extension Tests", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'C');
         let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId);
+        let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
         assert.equal(result.status, Veredict.RTE);
     });
 

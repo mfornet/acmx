@@ -9,10 +9,19 @@ import { TestcaseResult, Veredict, SolutionResult, Problem, Contest, SiteDescrip
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
 const SRC = dirname(__filename);
-const TESTCASE_TIMEOUT = 1000;
 
-// TODO: 001
-const MAX_SIZE_INPUT = 1024;
+export function getTimeout(){
+    let timeout: number|undefined = vscode.workspace.getConfiguration('acmx.run').get('timeLimit');
+    timeout = timeout! * 1000;
+    return timeout;
+}
+
+/**
+ * Can only handle testcases of at most 512MB
+ */
+function getMaxSizeInput(){
+    return 512 * 1024;
+}
 
 function isProblemFolder(path: string) {
     return  existsSync(join(path, 'sol.cpp')) &&
@@ -128,11 +137,11 @@ function testcases(path: string){
         let inp_fd = openSync(join(path, TESTCASES, `${name}.in`), 'r');
         let out_fd = openSync(join(path, TESTCASES, `${name}.out`), 'r');
 
-        let inp_buffer = new Buffer(MAX_SIZE_INPUT);
-        let out_buffer = new Buffer(MAX_SIZE_INPUT);
+        let inp_buffer = new Buffer(getMaxSizeInput());
+        let out_buffer = new Buffer(getMaxSizeInput());
 
-        readSync(inp_fd, inp_buffer, 0, MAX_SIZE_INPUT, 0);
-        readSync(out_fd, out_buffer, 0, MAX_SIZE_INPUT, 0);
+        readSync(inp_fd, inp_buffer, 0, getMaxSizeInput(), 0);
+        readSync(out_fd, out_buffer, 0, getMaxSizeInput(), 0);
 
         return [
             inp_buffer.toString(),
@@ -208,14 +217,21 @@ export async function newContestFromId(path: string, site: SiteDescription, cont
     newContest(path, contest);
 }
 
-export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOUT){
+/**
+ *
+ * @param path
+ * @param tcName
+ * @param timeout in miliseconds
+ */
+export function timedRun(path: string, tcName: string, timeout: number){
+
     let tcInput = join(path, TESTCASES, `${tcName}.in`);
     let tcOutput = join(path, TESTCASES, `${tcName}.out`);
     let tcCurrent = join(path, TESTCASES, `${tcName}.real`);
 
     let inputFd = openSync(tcInput, 'r');
-    let buffer = new Buffer(MAX_SIZE_INPUT);
-    readSync(inputFd, buffer, 0, MAX_SIZE_INPUT, 0);
+    let buffer = new Buffer(getMaxSizeInput());
+    readSync(inputFd, buffer, 0, getMaxSizeInput(), 0);
     let tcData = buffer.toString();
     closeSync(inputFd);
 
@@ -256,8 +272,17 @@ export function timedRun(path: string, tcName: string, timeout = TESTCASE_TIMEOU
 }
 
 export function compileCode(pathCode: string, pathOutput: string){
-    // TODO: 002
-    return child_process.spawnSync("g++", ["-std=c++11", `${pathCode}`, "-o", `${pathOutput}`]);
+    let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution').get('compileCpp');
+    let splitedInstruction = instruction!.split(' ');
+
+    for (let i = 0; i < splitedInstruction.length; ++i){
+        splitedInstruction[i] = splitedInstruction[i].replace('$PROGRAM', pathCode).replace('$OUTPUT', pathOutput);
+    }
+
+    let program = splitedInstruction[0];
+    let args = splitedInstruction.slice(1);
+
+    return child_process.spawnSync(program, args);
 }
 
 export function testSolution(path: string){
@@ -294,7 +319,7 @@ export function testSolution(path: string){
     testcasesId.forEach(tcId => {
         // Run while there none have failed already
         if (fail === undefined){
-            let tcResult = timedRun(path, tcId);
+            let tcResult = timedRun(path, tcId, getTimeout());
 
             if (tcResult.status !== Veredict.OK){
                 fail = new SolutionResult(tcResult.status, tcId);
@@ -312,7 +337,6 @@ export function testSolution(path: string){
             }
         }
 
-        // TODO: 003
         return new SolutionResult(Veredict.OK, undefined, maxTime);
     }
     else{
@@ -321,8 +345,8 @@ export function testSolution(path: string){
 }
 
 function generateTestcase(path: string){
-    // TODO: 004
-    let genResult = child_process.spawnSync("python3", [join(path, ATTIC, 'gen.py')]);
+    let python: string | undefined = vscode.workspace.getConfiguration('acmx.execution').get('pythonPath');
+    let genResult = child_process.spawnSync(python!, [join(path, ATTIC, 'gen.py')]);
 
     let currentFd = openSync(join(path, TESTCASES, 'gen.in'), 'w');
     writeSync(currentFd, genResult.stdout);
@@ -362,8 +386,8 @@ export function stressSolution(path: string, times: number = 10){
 
         // Generate output testcase from brute.cpp
         let inputFd = openSync(join(path, TESTCASES, 'gen.in'), 'r');
-        let buffer = new Buffer(MAX_SIZE_INPUT);
-        readSync(inputFd, buffer, 0, MAX_SIZE_INPUT, 0);
+        let buffer = new Buffer(getMaxSizeInput());
+        readSync(inputFd, buffer, 0, getMaxSizeInput(), 0);
         let tcData = buffer.toString();
         closeSync(inputFd);
 
@@ -379,7 +403,7 @@ export function stressSolution(path: string, times: number = 10){
         closeSync(currentFd);
 
         // Check sol.cpp report same result than brute.cpp
-        let result = timedRun(path, 'gen');
+        let result = timedRun(path, 'gen', getTimeout());
 
         if (result.status !== Veredict.OK){
             return new SolutionResult(result.status, 'gen');

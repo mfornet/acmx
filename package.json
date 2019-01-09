@@ -29,6 +29,31 @@
     ],
     "main": "./out/extension",
     "contributes": {
+        "configuration": [
+			{
+				"title": "acmX",
+				"properties": {
+					"acmx.run.timeLimit": {
+						"type": "number",
+						"default": 2,
+						"description": "Maximum time limit in seconds to run the program on each test case.",
+						"scope": "resource"
+                    },
+					"acmx.execution.compileCpp": {
+                        "type": "string",
+						"default": "g++ -std=c++11 $PROGRAM -o $OUTPUT",
+						"description": "Command to compile the program. Refer to the code as $PROGRAM, and output file as $OUTPUT.",
+						"scope": "resource"
+					},
+					"acmx.execution.pythonPath": {
+                        "type": "string",
+						"default": "/usr/bin/python3",
+						"description": "Path to python executable.",
+						"scope": "resource"
+					}
+				}
+            }
+        ],
         "commands": [
             {
                 "command": "extension.addProblem",
