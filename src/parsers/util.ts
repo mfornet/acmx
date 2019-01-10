@@ -17,7 +17,7 @@ export function getText(htmlNode: any){
         }
     });
 
-    let pData = data.join();
+    let pData = data.join("");
 
     return unescape(pData, undefined);
 }
