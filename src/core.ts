@@ -10,6 +10,14 @@ export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
 const SRC = dirname(__filename);
 
+/**
+ * Name of program file. Take extension dynamically from configuration
+ */
+export function solFile(){
+    let extension: string|undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('extension');
+    return 'sol.' + extension;
+}
+
 export function getTimeout(){
     let timeout: number|undefined = vscode.workspace.getConfiguration('acmx.run', null).get('timeLimit');
     timeout = timeout! * 1000;
@@ -24,7 +32,7 @@ function getMaxSizeInput(){
 }
 
 function isProblemFolder(path: string) {
-    return  existsSync(join(path, 'sol.cpp')) &&
+    return  existsSync(join(path, solFile())) &&
             existsSync(join(path, 'attic'));
 }
 
@@ -112,10 +120,10 @@ export function newArena(path: string){
     let templatePath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('templatePath');
 
     if (templatePath! === ""){
-        templatePath = join(SRC, 'static', 'sol.cpp');
+        templatePath = join(SRC, 'static', solFile());
     }
 
-    copyFileSync(templatePath!, join(path, 'sol.cpp'));
+    copyFileSync(templatePath!, join(path, solFile()));
     copyFileSync(join(SRC, 'static', 'checker'), join(path, ATTIC, 'checker'));
 }
 
@@ -161,7 +169,7 @@ export function upgradeArena(path: string) {
 
     if (!existsSync(brute)){
         // Create brute.cpp file
-        copyFileSync(join(SRC, 'static', 'sol.cpp'), brute);
+        copyFileSync(join(SRC, 'static', solFile()), brute);
     }
 
     let generator = join(path, 'gen.py');
@@ -282,7 +290,7 @@ export function timedRun(path: string, tcName: string, timeout: number){
 }
 
 export function compileCode(pathCode: string, pathOutput: string){
-    let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution', null).get('compileCpp');
+    let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution', null).get('compile');
     let splitedInstruction = instruction!.split(' ');
 
     for (let i = 0; i < splitedInstruction.length; ++i){
@@ -296,7 +304,7 @@ export function compileCode(pathCode: string, pathOutput: string){
 }
 
 export function testSolution(path: string){
-    let sol = join(path, 'sol.cpp');
+    let sol = join(path, solFile());
     let out = join(path, ATTIC, 'sol');
 
     if (!existsSync(sol)){
@@ -307,7 +315,7 @@ export function testSolution(path: string){
     let xresult = compileCode(sol, out);
 
     if (xresult.status !== 0){
-        throw new Error("Compilation Error. sol.cpp");
+        throw new Error(`Compilation Error. ${sol}`);
     }
 
     let testcasesId = testcasesName(path);
@@ -364,7 +372,7 @@ function generateTestcase(path: string){
 }
 
 export function stressSolution(path: string, times: number = 10){
-    let sol = join(path, 'sol.cpp');
+    let sol = join(path, solFile());
     let out = join(path, ATTIC, 'sol');
     let brute = join(path, 'brute.cpp');
 
@@ -380,12 +388,12 @@ export function stressSolution(path: string, times: number = 10){
 
     let solCompileResult = compileCode(sol, out);
     if (solCompileResult.status !== 0){
-        throw new Error("Compilation Error. sol.cpp");
+        throw new Error(`Compilation Error. ${sol}`);
     }
 
     let bruteCompileResult = compileCode(brute, brout);
     if (bruteCompileResult.status !== 0){
-        throw new Error("Compilation Error. brute.cpp");
+        throw new Error(`Compilation Error. ${brute}`);
     }
 
     let results = [];
@@ -412,7 +420,7 @@ export function stressSolution(path: string, times: number = 10){
         writeSync(currentFd, runResult.stdout);
         closeSync(currentFd);
 
-        // Check sol.cpp report same result than brute.cpp
+        // Check sol report same result than brute
         let result = timedRun(path, 'gen', getTimeout());
 
         if (result.status !== Veredict.OK){

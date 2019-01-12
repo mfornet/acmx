@@ -7,6 +7,9 @@ All notable updates and fixes to the "acmX" extension will be documented in this
 * Users can create empty contest to be filled manually. Rename `personal` to `empty`.
 * New configuration to set solutions folder. Important to set it before using the tool.
 * Create contest with better names.
+* Allow multiple languages. See [languages](doc/languages.md)
+* Add two mini-tutorials and improve readme.
+* Add key bindings for frequent commands.
 
 ## 0.1.4
 

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { existsSync, writeFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
 import { SITES } from './conn';
-import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension } from './core';
+import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile } from './core';
 import { Veredict, SiteDescription } from './types';
 import { currentProblem, compileCode, ATTIC } from './core';
 import { getSite } from "./conn";
@@ -50,7 +50,7 @@ async function addProblem() {
     await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(problemPath));
     // TODO: 007
     // Just want to run two commands below
-    // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file("sol.cpp"));
+    // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(solFile()));
     // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
 }
 
@@ -101,7 +101,7 @@ async function debugTestcase(path: string, tcId: string){
     // Change editor layout to show failing test
     await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{ groups: [{}], size: 0.5 }, { groups: [{}, {}, {}], size: 0.5 }] });
 
-    let sol = join(path, `sol.cpp`);
+    let sol = join(path, solFile());
     let inp = join(path, TESTCASES, `${tcId}.in`);
     let out = join(path, TESTCASES, `${tcId}.out`);
     let cur = join(path, TESTCASES, `${tcId}.real`);
@@ -143,7 +143,7 @@ async function compile(){
         return;
     }
 
-    let sol = join(path, 'sol.cpp');
+    let sol = join(path, solFile());
     let out = join(path, ATTIC, 'sol');
 
     if (!existsSync(sol)){
@@ -154,7 +154,7 @@ async function compile(){
     let xresult = compileCode(sol, out);
 
     if (xresult.status !== 0){
-        throw new Error("Compilation Error. sol.cpp");
+        throw new Error(`Compilation Error. ${sol}`);
     }
     else{
         vscode.window.showInformationMessage("Compilation successfully.");
@@ -230,7 +230,7 @@ async function coding() {
 
     await vscode.commands.executeCommand("vscode.setEditorLayout", { groups: [{}]});
 
-    let sol = join(path, `sol.cpp`);
+    let sol = join(path, solFile());
 
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
 }

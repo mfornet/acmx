@@ -5,13 +5,13 @@
     "icon": "images/logo.png",
     "publisher": "marx24",
     "version": "0.1.4",
-	"license": "MIT",
+    "license": "MIT",
     "engines": {
         "vscode": "^1.30.0"
     },
     "author": {
-		"name": "Marcelo Fornet"
-	},
+        "name": "Marcelo Fornet"
+    },
     "categories": [
         "Other"
     ],
@@ -30,42 +30,46 @@
     "main": "./out/extension",
     "contributes": {
         "configuration": [
-			{
-				"title": "acmX",
-				"properties": {
-					"acmx.run.timeLimit": {
-						"type": "number",
-						"default": 2,
-						"description": "Maximum time limit in seconds to run the program on each test case.",
-						"scope": "resource"
+            {
+                "title": "acmX",
+                "properties": {
+                    "acmx.run.timeLimit": {
+                        "type": "number",
+                        "default": 2,
+                        "description": "Maximum time limit in seconds to run the program on each test case.",
+                        "scope": "resource"
                     },
-
-					"acmx.execution.compileCpp": {
+                    "acmx.execution.compile": {
                         "type": "string",
-						"default": "g++ -std=c++11 $PROGRAM -o $OUTPUT",
-						"description": "Command to compile the program. Refer to the code as $PROGRAM, and output file as $OUTPUT.",
-						"scope": "resource"
-					},
-					"acmx.execution.pythonPath": {
-                        "type": "string",
-						"default": "/usr/bin/python3",
-						"description": "Path to python executable.",
-						"scope": "resource"
+                        "default": "g++ -std=c++11 $PROGRAM -o $OUTPUT",
+                        "description": "Command to compile the program. Refer to the code as $PROGRAM, and output file as $OUTPUT.",
+                        "scope": "resource"
                     },
-
-					"acmx.configuration.templatePath": {
+                    "acmx.execution.pythonPath": {
                         "type": "string",
-						"default": "",
-						"description": "Path to template file. Leave empty to use default template.",
-						"scope": "resource"
-					},
-					"acmx.configuration.solutionPath": {
+                        "default": "/usr/bin/python3",
+                        "description": "Path to python executable.",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.templatePath": {
                         "type": "string",
-						"default": ".",
-						"description": "Path to folder where contest will be created and stored. To set active workspace use `.`",
-						"scope": "resource"
-					}
-				}
+                        "default": "",
+                        "description": "Path to template file. Leave empty to use default template.",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.solutionPath": {
+                        "type": "string",
+                        "default": ".",
+                        "description": "Path to folder where contest will be created and stored. To set active workspace use `.`",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.extension": {
+                        "type": "string",
+                        "default": "cpp",
+                        "description": "Extension of the programming language you will use to code solutions. Default `cpp` for c++",
+                        "scope": "resource"
+                    }
+                }
             }
         ],
         "commands": [
@@ -105,6 +109,24 @@
                 "command": "acmx.compile",
                 "title": "ACMX: Compile"
             }
+        ],
+        "keybindings": [
+            {
+                "command": "acmx.compile",
+                "key": "ctrl+alt+b"
+            },
+            {
+                "command": "acmx.runSolution",
+                "key": "ctrl+alt+l"
+            },
+            {
+                "command": "acmx.stress",
+                "key": "ctrl+alt+k"
+            },
+            {
+                "command": "acmx.coding",
+                "key": "ctrl+alt+o"
+            }
         ]
     },
     "scripts": {
@@ -116,12 +138,12 @@
     },
     "repository": {
         "type": "git",
-		"url": "https://github.com/mfornet/acmx.git"
+        "url": "https://github.com/mfornet/acmx.git"
     },
-	"bugs": {
-		"url": "https://github.com/mfornet/acmx/issues",
-		"email": "mfornet94@gmail.com"
-	},
+    "bugs": {
+        "url": "https://github.com/mfornet/acmx/issues",
+        "email": "mfornet94@gmail.com"
+    },
     "devDependencies": {
         "@types/got": "^9.3.0",
         "@types/mocha": "^2.2.42",
