@@ -16,16 +16,16 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.addProblem",
-        "onCommand:extension.addContest",
-        "onCommand:extension.runSolution",
-        "onCommand:extension.openTestcase",
-        "onCommand:extension.addTestcase",
-        "onCommand:extension.coding",
-        "onCommand:extension.stress",
-        "onCommand:extension.upgrade",
-        "onCommand:extension.compile",
-        "onCommand:extension.debugTest"
+        "onCommand:acmx.addProblem",
+        "onCommand:acmx.addContest",
+        "onCommand:acmx.runSolution",
+        "onCommand:acmx.openTestcase",
+        "onCommand:acmx.addTestcase",
+        "onCommand:acmx.coding",
+        "onCommand:acmx.stress",
+        "onCommand:acmx.upgrade",
+        "onCommand:acmx.compile",
+        "onCommand:acmx.debugTest"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -58,45 +58,51 @@
 						"default": "",
 						"description": "Path to template file. Leave empty to use default template.",
 						"scope": "resource"
+					},
+					"acmx.configuration.solutionPath": {
+                        "type": "string",
+						"default": ".",
+						"description": "Path to folder where contest will be created and stored. To set active workspace use `.`",
+						"scope": "resource"
 					}
 				}
             }
         ],
         "commands": [
             {
-                "command": "extension.addProblem",
+                "command": "acmx.addProblem",
                 "title": "ACMX: New Problem"
             },
             {
-                "command": "extension.addContest",
+                "command": "acmx.addContest",
                 "title": "ACMX: New Contest"
             },
             {
-                "command": "extension.runSolution",
+                "command": "acmx.runSolution",
                 "title": "ACMX: Run"
             },
             {
-                "command": "extension.openTestcase",
+                "command": "acmx.openTestcase",
                 "title": "ACMX: Open Test Case"
             },
             {
-                "command": "extension.addTestcase",
+                "command": "acmx.addTestcase",
                 "title": "ACMX: Add Test Case"
             },
             {
-                "command": "extension.coding",
+                "command": "acmx.coding",
                 "title": "ACMX: View: Code"
             },
             {
-                "command": "extension.stress",
+                "command": "acmx.stress",
                 "title": "ACMX: Stress"
             },
             {
-                "command": "extension.upgrade",
+                "command": "acmx.upgrade",
                 "title": "ACMX: Upgrade"
             },
             {
-                "command": "extension.compile",
+                "command": "acmx.compile",
                 "title": "ACMX: Compile"
             }
         ]

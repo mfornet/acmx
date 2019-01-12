@@ -26,13 +26,6 @@ function quickPickSites() {
 
 // Create a new problem
 async function addProblem() {
-    if (vscode.workspace.workspaceFolders === undefined) {
-        vscode.window.showErrorMessage("Open the folder that will contain the problem.");
-        return;
-    }
-
-    let path = vscode.workspace.workspaceFolders[0].uri.path;
-
     let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
     if (site_info === undefined){
@@ -49,6 +42,9 @@ async function addProblem() {
         return;
     }
 
+    let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
+    path = join(path!, site.name, 'single');
+
     let problemPath = await newProblemFromId(path, site, id);
 
     await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(problemPath));
@@ -59,13 +55,7 @@ async function addProblem() {
 }
 
 async function addContest() {
-    if (vscode.workspace.workspaceFolders === undefined) {
-        vscode.window.showErrorMessage("Open the folder that will contain the contest.");
-        return;
-    }
-
-    let path = vscode.workspace.workspaceFolders[0].uri.path;
-
+    let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
     let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
     if (site_info === undefined){
@@ -76,15 +66,13 @@ async function addContest() {
     let site = getSite(site_info.target);
     let id = undefined;
 
-    if (site.name === "personal"){
+    if (site.name === "empty"){
         let name= await vscode.window.showInputBox({placeHolder: site.contestIdPlaceholder});
 
         if (name === undefined){
             vscode.window.showErrorMessage("Name not provided.");
             return;
         }
-
-        path = join(path, name);
 
         let probCountStr = await vscode.window.showInputBox({placeHolder: "Number of problems"});
 
@@ -93,7 +81,7 @@ async function addContest() {
             return;
         }
 
-        id = probCountStr!;
+        id = name + '-' + probCountStr!;
     }
     else{
         id = await vscode.window.showInputBox({placeHolder: site.contestIdPlaceholder});
@@ -102,13 +90,11 @@ async function addContest() {
             vscode.window.showErrorMessage("Contest ID not provided.");
             return;
         }
-
-        path = join(path, `${id}`);
     }
 
-    await newContestFromId(path, site, id);
+    let contestPath = await newContestFromId(path!, site, id);
 
-    vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(path));
+    vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(contestPath));
 }
 
 async function debugTestcase(path: string, tcId: string){
@@ -286,17 +272,17 @@ async function debugTest(){
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    let addProblemCommand = vscode.commands.registerCommand('extension.addProblem', addProblem);
-    let addContestCommand = vscode.commands.registerCommand('extension.addContest', addContest);
-    let runSolutionCommand = vscode.commands.registerCommand('extension.runSolution', runSolution);
-    let openTestcaseCommand = vscode.commands.registerCommand('extension.openTestcase', openTestcase);
-    let addTestcaseCommand = vscode.commands.registerCommand('extension.addTestcase', addTestcase);
-    let codingCommand = vscode.commands.registerCommand('extension.coding', coding);
-    let stressCommand = vscode.commands.registerCommand('extension.stress', stress);
-    let upgradeCommand = vscode.commands.registerCommand('extension.upgrade', upgrade);
-    let compileCommand = vscode.commands.registerCommand('extension.compile', compile);
+    let addProblemCommand = vscode.commands.registerCommand('acmx.addProblem', addProblem);
+    let addContestCommand = vscode.commands.registerCommand('acmx.addContest', addContest);
+    let runSolutionCommand = vscode.commands.registerCommand('acmx.runSolution', runSolution);
+    let openTestcaseCommand = vscode.commands.registerCommand('acmx.openTestcase', openTestcase);
+    let addTestcaseCommand = vscode.commands.registerCommand('acmx.addTestcase', addTestcase);
+    let codingCommand = vscode.commands.registerCommand('acmx.coding', coding);
+    let stressCommand = vscode.commands.registerCommand('acmx.stress', stress);
+    let upgradeCommand = vscode.commands.registerCommand('acmx.upgrade', upgrade);
+    let compileCommand = vscode.commands.registerCommand('acmx.compile', compile);
 
-    let debugTestCommand = vscode.commands.registerCommand('extension.debugTest', debugTest);
+    let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
 
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);

@@ -11,7 +11,7 @@ export const ATTIC = 'attic';
 const SRC = dirname(__filename);
 
 export function getTimeout(){
-    let timeout: number|undefined = vscode.workspace.getConfiguration('acmx.run').get('timeLimit');
+    let timeout: number|undefined = vscode.workspace.getConfiguration('acmx.run', null).get('timeLimit');
     timeout = timeout! * 1000;
     return timeout;
 }
@@ -109,7 +109,7 @@ export function newArena(path: string){
     let attic = join(path, ATTIC);
     createFolder(attic);
 
-    let templatePath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration').get('templatePath');
+    let templatePath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('templatePath');
 
     if (templatePath! === ""){
         templatePath = join(SRC, 'static', 'sol.cpp');
@@ -164,7 +164,7 @@ export function upgradeArena(path: string) {
         copyFileSync(join(SRC, 'static', 'sol.cpp'), brute);
     }
 
-    let generator = join(path, ATTIC, 'gen.py');
+    let generator = join(path, 'gen.py');
 
     if (!existsSync(generator)){
         // Create generator
@@ -215,12 +215,16 @@ function newContest(path: string, contest: Contest){
 /**
  * Create a contest
  *
- * @param contestId Can be a number if the site is `personal` and this number denote number of problems
+ * @param contestId Id of the contest that user want to retrieve.
  */
 export async function newContestFromId(path: string, site: SiteDescription, contestId: string){
-    createFolder(path);
     let contest = await site.contestParser(contestId);
-    newContest(path, contest);
+    let contestPath = join(path, site.name, contest.name);
+
+    createFolder(contestPath);
+
+    newContest(contestPath, contest);
+    return contestPath;
 }
 
 /**
@@ -250,17 +254,17 @@ export function timedRun(path: string, tcName: string, timeout: number){
         killSignal: "SIGTERM"
     });
 
+    let spanTime = new Date().getTime() - startTime;
+
     // Check if an error happened
     if (xresult.status !== 0){
-        if (xresult.error === undefined){
+        if (spanTime < timeout){
             return new TestcaseResult(Veredict.RTE);
         }
         else{
             return new TestcaseResult(Veredict.TLE);
         }
     }
-
-    let spanTime = new Date().getTime() - startTime;
 
     // Check output is ok
     let currentFd = openSync(tcCurrent, 'w');
@@ -278,7 +282,7 @@ export function timedRun(path: string, tcName: string, timeout: number){
 }
 
 export function compileCode(pathCode: string, pathOutput: string){
-    let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution').get('compileCpp');
+    let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution', null).get('compileCpp');
     let splitedInstruction = instruction!.split(' ');
 
     for (let i = 0; i < splitedInstruction.length; ++i){
@@ -351,8 +355,8 @@ export function testSolution(path: string){
 }
 
 function generateTestcase(path: string){
-    let python: string | undefined = vscode.workspace.getConfiguration('acmx.execution').get('pythonPath');
-    let genResult = child_process.spawnSync(python!, [join(path, ATTIC, 'gen.py')]);
+    let python: string | undefined = vscode.workspace.getConfiguration('acmx.execution', null).get('pythonPath');
+    let genResult = child_process.spawnSync(python!, [join(path, 'gen.py')]);
 
     let currentFd = openSync(join(path, TESTCASES, 'gen.in'), 'w');
     writeSync(currentFd, genResult.stdout);

@@ -44,9 +44,11 @@ export class Problem{
 }
 
 export class Contest{
-    problems?: Problem[];
+    name: string;
+    problems: Problem[];
 
-    constructor(problems?: Problem[]){
+    constructor(name: string, problems: Problem[]){
+        this.name = name;
         this.problems = problems;
     }
 }

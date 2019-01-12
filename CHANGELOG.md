@@ -2,6 +2,12 @@
 
 All notable updates and fixes to the "acmX" extension will be documented in this file.
 
+## 0.1.5
+
+* Users can create empty contest to be filled manually. Rename `personal` to `empty`.
+* New configuration to set solutions folder. Important to set it before using the tool.
+* Create contest with better names.
+
 ## 0.1.4
 
 * Fix problem in Codeforces parser

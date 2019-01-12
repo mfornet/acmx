@@ -9,10 +9,12 @@ import { dirname, join } from 'path';
 import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId, getTimeout } from '../core';
 import { TestcaseResult, Veredict } from '../types';
 import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
-import { getSite } from '../conn';
+import { getSite, SITES, PERSONAL } from '../conn';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
 const ARENA = join(SRC, 'arena');
+
+SITES.push(PERSONAL);
 
 suite("Extension Tests", function () {
     /**
@@ -78,7 +80,7 @@ suite("Extension Tests", function () {
         newArena(path);
         upgradeArena(path);
 
-        assert.equal(existsSync(join(path, ATTIC, 'gen.py')), true);
+        assert.equal(existsSync(join(path, 'gen.py')), true);
         assert.equal(existsSync(join(path, 'brute.cpp')), true);
 
         recRmdir(path);
@@ -237,7 +239,7 @@ suite("Extension Tests", function () {
         );
 
         // populate gen.py
-        writeFile(join(path, ATTIC, 'gen.py'),
+        writeFile(join(path, 'gen.py'),
         `import random\n` +
         `print(random.randint(0, 99))\n`
         );

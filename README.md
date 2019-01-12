@@ -24,30 +24,29 @@
 
 * Add more testcases than provided in statement using `Add Test Case`, or modify and see existing testcases by calling `Open Test Case`.
 
-* If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrage` to create both generator (`attic/gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python, and correct program must be written in C++. After both codes are ready just call `Stress` and your original code will be tested on random test cases from generator against correct solution.
+* If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrage` to create both generator (`gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python, and correct program must be written in C++. After both codes are ready just call `Stress` and your original code will be tested on random test cases from generator against correct solution.
 
 The environment structure is the following:
 
 ```file
-    contest/
-        problemA/
+    round-525/
+        A/
             sol.cpp
             brute.cpp
-            attic/
-                gen.py
-                ...
+            gen.py
+            attic/...
             testcases/
                 1.in
                 1.out
                 1.real
                 ...
-        problemB/...
-        problemC/...
-        problemD/...
-        problemE/...
+        B/...
+        C/...
+        D/...
+        E/...
 ```
 
-Certainly **acmX** can be (and hopefully will be) extended so that it fits everyones pipeline. If **acmX** almost fit yours, feel free to improve it and make a PR! I'll be happy to hear from you and give you support.
+Certainly **acmX** can be (and hopefully will be) extended so that it fits everyones pipeline. If **acmX** almost fit yours, feel free to improve it and make a PR! I'll be happy to hear from you and give you support. If you find any issue report it at [github issue tracker](https://github.com/mfornet/acmx/issues).
 
 ## Default template is awful, how can I change it
 

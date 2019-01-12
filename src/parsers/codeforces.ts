@@ -37,7 +37,10 @@ export async function parseContest(contestId: string) {
         problems.push(prob);
     }
 
-    return new Contest(problems);
+    let name: string = soup.find("div", "sidebar").find("a").text;
+    name = name.toLowerCase().replace(' ', '-');
+
+    return new Contest(name, problems);
 }
 
 /**
