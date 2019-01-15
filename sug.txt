@@ -1,0 +1,43 @@
+Sugerencias [jcg]:
+1. Tener un fichero de configuracion por proyecto. El motivo es que puede ser que quiera compilar o annadir flags diferentes segun el proyecto, y no es conveniente estar cambiando la configuracion global. Esta claro que si algunos parametros no aparecen en la configuracion local se tendran en cuentas la del global.
+
+2. A la hora de parsear un problema deberias parsear tambien el tiempo y la memoria de la que se dispone.. La memoria no es tan importante porque a la hora de ejecutar no seria muy necesario verificarla (aunque puede ser un detalle muy util que se pueda hacerlo). Pero el tiempo cambia segun el problema, y entonces estoy en una situacion similar a la del punto 1. Por lo que cada problema quizas tambien tenga que tener un .json con algunas propiedades (en el siguiente punto hablo de algo que tambien puede ir aca)
+
+3. Implementar algunos checkers por defecto (el testlib trae algunos), ademas de los mas comunes seria util tener uno que realizara comparaciones de doubles con la precision requerida por el user de acuerdo al problema. o incluso que el user pueda implementar su checker cumpliendo ciertos convenios.
+
+4. Creo que la forma de presentar los errores a la hora de ejecutar para comprobar los test se puede hacer mejor. En lugar de como se hace ahora (abriendo el caso donde falla en caso de que falle) no ofrece mucha informacion. Siguiendo el mismo formato que el CHelper, seria mas util abrir una ventana y en ella presentar un resumen de la ejecucion de todos los casos de prueba, por ejemplo:
+Test #0
+Input:
+2 3
+1 2 3
+
+Expected output:
+34
+
+Actual output:
+32
+
+Result: Wrong Answer
+Time: 0.000005s
+=============================
+Test #1:
+.......
+
+
+=============================
+*****************************
+Some cases failed:
+Maximal time: 0.000005s
+
+Asi es mas comodo a la hora de cerrarlo (como esta en la version actual no me gusta) y se puede apreciar mas informacion. Nota, si el input o el output es muy grande tener cuidado de no presentarlo completo.
+
+5. No se muy bien como se hace el stress testing, pero creo que quizas el user pueda especificar la cantidad de veces que se debe ejecutar o si hay un cierto tiempo global maximo para que se detenga.
+
+6. A la hora de annadir un contest tambien se podria sacar un ventana donde el user pudiese seleccionar que problemas del contest importar.
+
+7. Poder annadir casos en los que no se conozca el output (esto es util a la hora de testear). Por eso al annadir un caso de prueba seria conveniente no hacerlo en ficheros independientes, sino a traves de una ventana, en la que puedas administrar todos los test del problema (annadir, eliminar), y especificar por cada test si se conoce el output (como en el chelper). Por ejemplo, la ventana contiene 2 columnas, en la primera el nombre de cada test y en la segunda dividida en dos partes el input y el output (con la opcion de omitirlo)
+
+8. Hacer mejor la estructura de un proyecto, creo que tener una carpeta por cada problema no es la mejor solucion. Quizas tener una carpeta con los test (de todos los problemas en su subcarpeta correspondiente), otra con los src de cada problema (aca si todos en la misma carpeta), otro para el "codigo final" de cada problema (suponiendo que en algun momento implementes la funcionalidad de hacer "includes" de headers de team reference en los codigos usando caide), asi el codigo "simple" aparece en un lado y el que vas e enviar en otro.
+
+Creo que por el momento es suficiente, tengo mas cosas pero son mas de facilidades que de "must have" como las que te acabo de mencionar. Deja para despues implementar la opcion de importar codigo desde otros hpp (usando el caide).
+

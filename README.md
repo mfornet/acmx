@@ -24,7 +24,7 @@
 
 * Add more testcases than provided in statement using `Add Test Case`, or modify and see existing testcases by calling `Open Test Case`.
 
-* If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrage` to create both generator (`gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python, and correct program must be written in C++. After both codes are ready just call `Stress` and your original code will be tested on random test cases from generator against correct solution.
+* If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrage` to create both generator (`gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python. After both codes are ready call `Stress` and your original code will be tested on random test cases from generator against correct solution.
 
 The environment structure is the following:
 
@@ -54,13 +54,13 @@ You need to tell **acmX** which folder are you going to use, to save all the pro
 
 * Open settings (from command palette) or `Ctrl+,`
 * Go to `acmx.configuration.solutionPath`
-* Set this value to the path you are going to use to store contests and problems. (e.g. `/path/to/my/solutions`)
+* Set this value to the path you are going to use for storing contests and problems. (e.g. `/path/to/my/solutions`)
 
-I encourage everyone to read and change [all settings](#settings) so you can customize **acmX** for you. Anyway, after updating `acmx.configuration.solutionPath` it should work good for C++ users.
+I encourage everyone to read and change [all settings](#settings) before first use. Anyway, after updating `acmx.configuration.solutionPath` it should work good for C++ users.
 
 ## Default template is awful, how can I change it
 
-Create a file with your template. In settings change `acmx.configuration.templatePath` to the path of your templates file.
+Create a file with your template. In settings, set `acmx.configuration.templatePath` to the path to your template.
 
 ## What is contest id on each platform
 
@@ -69,6 +69,10 @@ You can find this information for every supported platform [here](doc/platforms-
 ## I code in java, can I use this tool
 
 Yes, of course, and any other language you want. Just make sure to update your [language configuration](doc/languages.md) setting.
+
+## This problem has multiple correct answers, what can I do
+
+TODO: Coming soon. Read minitutorial on configuring custom checker.
 
 ## Commands
 
