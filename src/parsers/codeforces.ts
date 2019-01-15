@@ -23,6 +23,10 @@ export async function parseContest(contestId: string) {
     vscode.window.showInformationMessage(`Downloading contest ${contestId}...`);
 
     let soup = new JSSoup(response.body);
+
+    let name: string = soup.find("div", {"id" : "sidebar"}).find("a").text;
+    name = name.toLowerCase().replace(' ', '-');
+
     let problemsTable = soup.find("table", "problems");
     let problems: Problem[] = [];
     let problemSection = problemsTable.findAll("td", "id");
@@ -36,9 +40,6 @@ export async function parseContest(contestId: string) {
         let prob = await parseProblem(contestId + "-" + pid);
         problems.push(prob);
     }
-
-    let name: string = soup.find("div", "sidebar").find("a").text;
-    name = name.toLowerCase().replace(' ', '-');
 
     return new Contest(name, problems);
 }
