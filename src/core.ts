@@ -46,7 +46,7 @@ export function currentTestcase() {
 
     // Try to find an open testcase
     if (vscode.window.activeTextEditor){
-        let path = vscode.window.activeTextEditor.document.uri.path;
+        let path = vscode.window.activeTextEditor.document.uri.fsPath;
 
         if (isTestcase(path)){
             answer = removeExtension(basename(path));
@@ -56,8 +56,8 @@ export function currentTestcase() {
     // Try to find the test case watching the current open workspace folder
     if (vscode.workspace.workspaceFolders !== undefined){
         vscode.workspace.workspaceFolders.forEach(function(fd){
-            if (answer === undefined && isTestcase(fd.uri.path)){
-                answer = removeExtension(basename(fd.uri.path));
+            if (answer === undefined && isTestcase(fd.uri.fsPath)){
+                answer = removeExtension(basename(fd.uri.fsPath));
             }
         });
     }
@@ -69,7 +69,7 @@ export function currentTestcase() {
 export function currentProblem() {
     // Try to find the problem using current open file
     if (vscode.window.activeTextEditor){
-        let path = vscode.window.activeTextEditor.document.uri.path;
+        let path = vscode.window.activeTextEditor.document.uri.fsPath;
 
         const MAX_DEPTH = 3;
 
@@ -84,7 +84,7 @@ export function currentProblem() {
 
     // Try to find the problem using the current open workspace folder
     if (vscode.workspace.workspaceFolders !== undefined){
-        let path = vscode.workspace.workspaceFolders[0].uri.path;
+        let path = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
         const MAX_DEPTH = 1;
 
