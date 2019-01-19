@@ -1,6 +1,11 @@
 # Change Log
 
-All notable updates and fixes to the "acmX" extension will be documented in this file.
+Notable updates of **acmX**
+
+## 0.1.6
+
+* Fix bug in windows detecting problem path
+* Compile checker on user side to support multiple OS
 
 ## 0.1.5
 
