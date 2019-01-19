@@ -108,6 +108,48 @@ function createFolder(path: string){
     }
 }
 
+function globalAtticPath(){
+    let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
+
+    return join(path!, ATTIC);
+}
+
+/**
+ * Create default environment that let acmX run properly
+ */
+export function initAcmX(){
+    // Create global attic.
+    let globalAttic = globalAtticPath();
+    createFolder(globalAttic);
+
+    // Create checker folder
+    let checkerFolder = join(globalAttic, 'checkers');
+    createFolder(checkerFolder);
+
+    // Copy testlibe
+    let testlib = 'testlib.h';
+    if (!existsSync(join(checkerFolder, testlib))){
+        copyFileSync(join(SRC, 'static', 'checkers', testlib),
+                     join(checkerFolder, testlib));
+    }
+
+    // Create wcmp checker
+    let checkerName = 'wcmp.cpp';
+    if (!existsSync(join(checkerFolder, checkerName))){
+        copyFileSync(join(SRC, 'static', 'checkers', checkerName),
+                     join(checkerFolder, checkerName));
+    }
+
+    // Compile checker
+    let compiledName = 'wcmp.exe';
+    if (!existsSync(join(checkerFolder, compiledName))){
+        let checkerPath = join(checkerFolder, checkerName);
+        let compiledPath = join(checkerFolder, compiledName);
+
+        child_process.spawnSync("g++", ["-std=c++11", `${checkerPath}`, "-o", `${compiledPath}`]);
+    }
+}
+
 export function newArena(path: string){
     createFolder(path);
 
@@ -124,7 +166,6 @@ export function newArena(path: string){
     }
 
     copyFileSync(templatePath!, join(path, solFile()));
-    copyFileSync(join(SRC, 'static', 'checker'), join(path, ATTIC, 'checker'));
 }
 
 export function removeExtension(name: string){
@@ -279,7 +320,9 @@ export function timedRun(path: string, tcName: string, timeout: number){
     writeSync(currentFd, xresult.stdout);
     closeSync(currentFd);
 
-    let checker_result = child_process.spawnSync(join(path, ATTIC, 'checker'), [tcInput, tcCurrent, tcOutput]);
+    let checker = join(globalAtticPath(), 'checkers', 'wcmp.exe');
+
+    let checker_result = child_process.spawnSync(checker, [tcInput, tcCurrent, tcOutput]);
 
     if (checker_result.status !== 0){
         return new TestcaseResult(Veredict.WA);

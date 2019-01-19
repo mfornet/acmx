@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { existsSync, writeFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
 import { SITES } from './conn';
-import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile } from './core';
+import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX } from './core';
 import { Veredict, SiteDescription } from './types';
 import { currentProblem, compileCode, ATTIC } from './core';
 import { getSite } from "./conn";
@@ -272,6 +272,8 @@ async function debugTest(){
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    initAcmX();
+
     let addProblemCommand = vscode.commands.registerCommand('acmx.addProblem', addProblem);
     let addContestCommand = vscode.commands.registerCommand('acmx.addContest', addContest);
     let runSolutionCommand = vscode.commands.registerCommand('acmx.runSolution', runSolution);
