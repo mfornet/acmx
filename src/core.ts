@@ -162,7 +162,7 @@ export function newArena(path: string){
     let templatePath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('templatePath');
 
     if (templatePath! === ""){
-        templatePath = join(SRC, 'static', solFile());
+        templatePath = join(SRC, 'static', 'template.cpp');
     }
 
     copyFileSync(templatePath!, join(path, solFile()));
