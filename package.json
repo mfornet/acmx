@@ -4,7 +4,7 @@
     "description": "Competitive Programming made simple",
     "icon": "images/logo.png",
     "publisher": "marx24",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "license": "MIT",
     "engines": {
         "vscode": "^1.30.0"
