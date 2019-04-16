@@ -2,11 +2,9 @@
 import * as vscode from 'vscode';
 import { existsSync, writeFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
-import { SITES } from './conn';
-import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX } from './core';
+import { SITES, getSite } from './conn';
+import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC } from './core';
 import { Veredict, SiteDescription } from './types';
-import { currentProblem, compileCode, ATTIC } from './core';
-import { getSite } from "./conn";
 
 const TESTCASES = 'testcases';
 
@@ -243,7 +241,14 @@ async function stress(){
         return;
     }
 
-    let result = stressSolution(path);
+    let stressTimes: number | undefined = vscode.workspace.getConfiguration('acmx.stress', null).get('times');
+
+    // Use default
+    if (stressTimes === undefined){
+        stressTimes = 10;
+    }
+
+    let result = stressSolution(path, stressTimes);
 
     if (result.status === Veredict.OK){
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);

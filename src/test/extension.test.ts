@@ -44,6 +44,13 @@ suite("Extension Tests", function () {
     }
 
     /**
+     * core::initAcmX
+     */
+    test("initAcmX", function(){
+        // TODO
+    });
+
+    /**
      * core::newArena
      */
     test("newArena", function(){
@@ -59,7 +66,6 @@ suite("Extension Tests", function () {
 
         assert.equal(existsSync(join(path, 'sol.cpp')), true);
         assert.equal(existsSync(join(path, ATTIC)), true);
-        assert.equal(existsSync(join(path, ATTIC, 'checker')), true);
         assert.equal(existsSync(join(path, TESTCASES)), true);
 
         recRmdir(path);
@@ -122,17 +128,21 @@ suite("Extension Tests", function () {
     });
 
     /**
-     * core::newProblem
+     * core::newContestFromId
      */
     test("newContestFromId", async function(){
         let contestId = 'testContestFromId';
         let path = join(ARENA, contestId);
 
+        if (existsSync(path)){
+            recRmdir(path);
+        }
+
         assert.equal(existsSync(path), false);
 
-        await newContestFromId(path, getSite('personal'), "5");
+        await newContestFromId(path, getSite('empty'), "5");
 
-        assert.equal(readdirSync(path).length, "5");
+        assert.equal(readdirSync(path).length, 1);
 
         recRmdir(path);
     });
@@ -244,7 +254,7 @@ suite("Extension Tests", function () {
         `print(random.randint(0, 99))\n`
         );
 
-        let result = stressSolution(path);
+        let result = stressSolution(path, 10);
 
         assert.equal(result.status, Veredict.OK);
 
@@ -295,7 +305,7 @@ suite("Extension Tests", function () {
         `print(random.randint(0, 99))\n`
         );
 
-        let result = stressSolution(path);
+        let result = stressSolution(path, 10);
 
         assert.equal(result.status, Veredict.WA);
 

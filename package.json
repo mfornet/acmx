@@ -39,6 +39,12 @@
                         "description": "Maximum time limit in seconds to run the program on each test case.",
                         "scope": "resource"
                     },
+                    "acmx.stress.times": {
+                        "type": "number",
+                        "default": 10,
+                        "description": "Number of times to run the solution in stress mode.",
+                        "scope": "resource"
+                    },
                     "acmx.execution.compile": {
                         "type": "string",
                         "default": "g++ -std=c++11 $PROGRAM -o $OUTPUT",

@@ -108,9 +108,13 @@ function createFolder(path: string){
     }
 }
 
-function globalAtticPath(){
+/**
+ * Path to common attic for every problem.
+ *
+ * @param testingPath Use for unit tests
+ */
+function globalAtticPath(testingPath: string | undefined = undefined){
     let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
-
     return join(path!, ATTIC);
 }
 
@@ -210,7 +214,7 @@ export function upgradeArena(path: string) {
 
     if (!existsSync(brute)){
         // Create brute.cpp file
-        copyFileSync(join(SRC, 'static', solFile()), brute);
+        copyFileSync(join(SRC, 'static', 'template.cpp'), brute);
     }
 
     let generator = join(path, 'gen.py');
@@ -414,7 +418,7 @@ function generateTestcase(path: string){
     closeSync(currentFd);
 }
 
-export function stressSolution(path: string, times: number = 10){
+export function stressSolution(path: string, times: number){
     let sol = join(path, solFile());
     let out = join(path, ATTIC, 'sol');
     let brute = join(path, 'brute.cpp');

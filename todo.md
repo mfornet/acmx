@@ -7,6 +7,8 @@
 * [005](/src/core.ts): Restrict brute in time, and capture errors
   * Allow stopping a running program (such as sol.cpp/brute.cpp/gen.py/etc...)
 * [007](/src/extension.ts): How can I have access to new proccess created using `openFolder`?
+* Add Telegram group join link in the Readme
+* Add gif to README. Gif should be a tutorial (how to use).
 
 ## QUICK TODO
 

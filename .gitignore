@@ -1,4 +1,11 @@
-out
+# Extra
 node_modules
-.vscode-test/
+
+# Extension
 *.vsix
+out
+
+# IDE
+.vscode
+.vscode-test/
+
