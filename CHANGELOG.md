@@ -2,6 +2,11 @@
 
 Notable updates of **acmX**
 
+## 0.2.0
+
+* Integration with Competitive-Companion. Parsing problems and contests is delegated to this tool.
+* Generators are created automatically inspecting testcases. This is resolved with `tcgen`.
+
 ## 0.1.6
 
 * Fix bug in windows detecting problem path
