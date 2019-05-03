@@ -169,7 +169,11 @@ export function newArena(path: string){
         templatePath = join(SRC, 'static', 'template.cpp');
     }
 
-    copyFileSync(templatePath!, join(path, solFile()));
+    let solution = join(path, solFile());
+
+    if (!existsSync(solution)){
+        copyFileSync(templatePath!, join(path, solFile()));
+    }
 }
 
 export function removeExtension(name: string){
@@ -191,25 +195,23 @@ export function testcasesName(path: string){
             map( function(tcpath) { return removeExtension(tcpath); });
 }
 
-function testcases(path: string){
-    return testcasesName(path).map(function (name){
-        let inp_fd = openSync(join(path, TESTCASES, `${name}.in`), 'r');
-        let out_fd = openSync(join(path, TESTCASES, `${name}.out`), 'r');
+// function testcases(path: string){
+//     return testcasesName(path).map(function (name){
+//         let inp_fd = openSync(join(path, TESTCASES, `${name}.in`), 'r');
+//         let out_fd = openSync(join(path, TESTCASES, `${name}.out`), 'r');
 
-        // TODO: Don't create buffer from constructor. See warning:
-        // (node:17458) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
-        let inp_buffer = new Buffer(getMaxSizeInput());
-        let out_buffer = new Buffer(getMaxSizeInput());
+//         let inp_buffer = new Buffer(getMaxSizeInput());
+//         let out_buffer = new Buffer(getMaxSizeInput());
 
-        readSync(inp_fd, inp_buffer, 0, getMaxSizeInput(), 0);
-        readSync(out_fd, out_buffer, 0, getMaxSizeInput(), 0);
+//         readSync(inp_fd, inp_buffer, 0, getMaxSizeInput(), 0);
+//         readSync(out_fd, out_buffer, 0, getMaxSizeInput(), 0);
 
-        return [
-            inp_buffer.toString(),
-            out_buffer.toString()
-        ];
-    });
-}
+//         return [
+//             inp_buffer.toString(),
+//             out_buffer.toString()
+//         ];
+//     });
+// }
 
 export function upgradeArena(path: string) {
     let brute = join(path, 'brute.cpp');
@@ -222,18 +224,8 @@ export function upgradeArena(path: string) {
     let generator = join(path, 'gen.py');
 
     if (!existsSync(generator)){
-        // Create generator
-        let inputs: string[] = [];
-        let outputs: string[] = [];
-
-        testcases(path).forEach(function(testcases){
-            inputs.push(testcases[0]);
-            outputs.push(testcases[1]);
-        });
-
-        let generator_template = gwen.create(inputs, outputs);
-        let generator_fd = openSync(generator, 'w');
-        writeSync(generator_fd, generator_template);
+        // TODO: If generator already exist ask whether to overwrite or not.
+        gwen.create(path, generator);
     }
 }
 
@@ -312,10 +304,12 @@ export async function newContestFromId(path: string, site: SiteDescription, cont
  * @param timeout in miliseconds
  */
 export function timedRun(path: string, tcName: string, timeout: number){
-
     let tcInput = join(path, TESTCASES, `${tcName}.in`);
     let tcOutput = join(path, TESTCASES, `${tcName}.out`);
     let tcCurrent = join(path, TESTCASES, `${tcName}.real`);
+
+    // TODO: Don't create Buffer from constructor `new Buffer()`. See warning:
+    // (node:17458) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
 
     let inputFd = openSync(tcInput, 'r');
     let buffer = new Buffer(getMaxSizeInput());
