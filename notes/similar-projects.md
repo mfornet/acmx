@@ -1,4 +1,4 @@
-# Similar projects
+# Ecosystem
 
 * [CHelper](https://github.com/EgorKulikov/idea-chelper/)
 * [JHelper](https://github.com/AlexeyDmitriev/JHelper)
@@ -7,4 +7,3 @@
 * [Ineffable](https://codeforces.com/blog/entry/19083)
 * [Hightail](https://codeforces.com/blog/entry/13141)
 * [Competitive-Companion](https://github.com/jmerle/competitive-companion)
-

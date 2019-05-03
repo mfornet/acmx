@@ -85,7 +85,7 @@ Call this commands from the command pallete (`Ctrl + Shift + P`).
 * acmx.addTestcase (**ACMX: Add Test Case**): Add a new testcase.
 * acmx.coding (**ACMX: View: Code**): Return to 1 column layout (better to code).
 * acmx.stress (**ACMX: Stress**): Run the solution against correct program using testcases from generator. Useful to find failing and corner cases. Must call upgrade first.
-* acmx.upgrade (**ACMX: Upgrade**): Create aditionals files before calling `Stress`
+* acmx.upgrade (**ACMX: Upgrade**): Create aditionals files before calling `Stress`.
 * acmx.compile (**ACMX: Compile**): Compile `sol.cpp`.
 
 ## Settings

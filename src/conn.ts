@@ -1,5 +1,5 @@
 import { SiteDescription, Contest, Problem } from "./types";
-import { CODEFORCES } from "./parsers/codeforces";
+// import { CODEFORCES } from "./parsers/codeforces";
 
 /**
  * Not a real site.
@@ -66,7 +66,7 @@ const EMPTY = new SiteDescription(
  */
 export const SITES: SiteDescription[] = [
     EMPTY,
-    CODEFORCES,
+    // CODEFORCES,
 ];
 
 export function getSite(site: string): SiteDescription  {

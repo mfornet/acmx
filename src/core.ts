@@ -196,6 +196,8 @@ function testcases(path: string){
         let inp_fd = openSync(join(path, TESTCASES, `${name}.in`), 'r');
         let out_fd = openSync(join(path, TESTCASES, `${name}.out`), 'r');
 
+        // TODO: Don't create buffer from constructor. See warning:
+        // (node:17458) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
         let inp_buffer = new Buffer(getMaxSizeInput());
         let out_buffer = new Buffer(getMaxSizeInput());
 
@@ -263,6 +265,29 @@ function newContest(path: string, contest: Contest){
     contest.problems!.forEach(problem => {
         newProblem(join(path, problem.identifier!), problem);
     });
+}
+
+export function newProblemFromCompanion(config: any){
+    console.log(config);
+
+    let _path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
+    let path = _path!;
+
+    let contestPath = join(path, config.group);
+    createFolder(contestPath);
+
+    let problemPath = join(contestPath, config.name);
+    let inputs: string[] = [];
+    let outputs: string[] = [];
+
+    config.tests.forEach(function(testcase: any){
+        inputs.push(testcase.input);
+        outputs.push(testcase.output);
+    });
+
+    newProblem(problemPath, new Problem(config.name, config.name, inputs, outputs));
+
+    return contestPath;
 }
 
 /**

@@ -16,16 +16,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:acmx.addProblem",
-        "onCommand:acmx.addContest",
-        "onCommand:acmx.runSolution",
-        "onCommand:acmx.openTestcase",
-        "onCommand:acmx.addTestcase",
-        "onCommand:acmx.coding",
-        "onCommand:acmx.stress",
-        "onCommand:acmx.upgrade",
-        "onCommand:acmx.compile",
-        "onCommand:acmx.debugTest"
+        "*"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -73,6 +64,12 @@
                         "type": "string",
                         "default": "cpp",
                         "description": "Extension of the programming language you will use to code solutions. Default `cpp` for c++",
+                        "scope": "resource"
+                    },
+                    "acmx.companion.port": {
+                        "type": "number",
+                        "default": 10042,
+                        "description": "Point competitive-companion service to this port.",
                         "scope": "resource"
                     }
                 }
@@ -156,12 +153,14 @@
         "@types/node": "^8.10.25",
         "tslint": "^5.8.0",
         "typescript": "^3.1.4",
-        "vscode": "^1.1.25"
+        "vscode": "^1.1.33"
     },
     "dependencies": {
         "got": "^9.5.0",
         "jssoup": "0.0.10",
         "sync-request": "^6.0.0",
-        "unescape": "^1.0.1"
+        "unescape": "^1.0.1",
+        "express": "^4.16.4",
+        "body-parser": "^1.18.3"
     }
 }

@@ -1,6 +1,5 @@
 # List of TODO
 
-* **WOW** Use this tool: [caide-cpp-inliner](https://github.com/slycelote/caide-cpp-inliner). Suggestion from jcg. Also find https://github.com/slycelote/caide
 * When a new view is activated (after run or view:code) close all open tabs. (also (maybe) collapse everything not related to the problem)
 * Implement parser for codeforces-gym/codechef/atcoder/matcomgrader/coj (which are most popular online judges currently)
 

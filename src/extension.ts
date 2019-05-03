@@ -5,6 +5,7 @@ import { join, extname } from 'path';
 import { SITES, getSite } from './conn';
 import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC } from './core';
 import { Veredict, SiteDescription } from './types';
+import { startCompetitiveCompanionService } from './companion';
 
 const TESTCASES = 'testcases';
 
@@ -278,6 +279,7 @@ async function debugTest(){
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
     initAcmX();
+    startCompetitiveCompanionService();
 
     let addProblemCommand = vscode.commands.registerCommand('acmx.addProblem', addProblem);
     let addContestCommand = vscode.commands.registerCommand('acmx.addContest', addContest);
