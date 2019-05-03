@@ -130,7 +130,7 @@ export function initAcmX(){
     let checkerFolder = join(globalAttic, 'checkers');
     createFolder(checkerFolder);
 
-    // Copy testlibe
+    // Copy testlib
     let testlib = 'testlib.h';
     if (!existsSync(join(checkerFolder, testlib))){
         copyFileSync(join(SRC, 'static', 'checkers', testlib),

@@ -4,8 +4,7 @@
 
 ## Features
 
-* Contest/Problem parsing. Current sites supported:
-  * [Codeforces](http://codeforces.com)
+* Contest/Problem parsing. (Through [Competitive-Companion)](https://github.com/jmerle/competitive-companion) extension.)
 * Running solution against testcases automatically
 * Add custom testcases easily
 * Smart veredict reporting (OK, WA, RTE, TLE, CE)
@@ -16,11 +15,13 @@
 
 **acmX** have been designed to run automatically boilerplate actions [I](https://codeforces.com/profile/marX) repeat often in competitive programming. Next is the expected pipeline to interact with it. It is important that you [setup some configurations](#getting-started) before start using the tool.
 
-* Create a contest calling `New Contest` or maybe a single problem calling `New Problem`. Testcases are downloaded automatically :)
+* Open Visual Studio Code
+
+* Open online contest/problem you want to solve and click on competitive-companion extension button. All problems along with the testcases are downloaded and you are ready to code.
 
 * Start coding awesome solution inside file `sol.cpp`.
 
-* After you finish the code call `Run` and automatically your program will be compiled and run against every testcases. If the solutions seems to be ok, it will be reported otherwise you will see failing testcase in a *cool layout*. You can always go back to original layout calling `View: Code`.
+* After you finish call `Run` and automatically your program will be compiled and run against every testcases. If the solutions is ok, it will be reported otherwise you will see failing testcase in a *cool layout*. You can always go back to original layout calling `View: Code`.
 
 * Add more testcases than provided in statement using `Add Test Case`, or modify and see existing testcases by calling `Open Test Case`.
 
@@ -50,11 +51,18 @@ Certainly **acmX** can be (and hopefully will be) extended so that it fits every
 
 ## Getting started
 
-You need to tell **acmX** which folder are you going to use, to save all the problems and contests. To do that:
+You need to tell **acmX** which folder are you going to use to save all the problems and contests. To do that:
 
 * Open settings (from command palette) or `Ctrl+,`
 * Go to `acmx.configuration.solutionPath`
 * Set this value to the path you are going to use for storing contests and problems. (e.g. `/path/to/my/solutions`)
+
+Parsing problems and contests is done via [Competitive-Companion](https://github.com/jmerle/competitive-companion) extension. To use it with `acmX`:
+
+* Install the extension for your browser:
+  * [Chrome](https://chrome.google.com/webstore/detail/competitive-companion/cjnmckjndlpiamhfimnnjmnckgghkjbl)
+  * [Firefox](https://addons.mozilla.org/en-US/firefox/addon/competitive-companion/)
+* [Change the port used by the extension](https://github.com/jmerle/competitive-companion#custom-tools) to 10042. This is the port used by default in `acmX`. If you want to use any other port, open settings and update `acmx.companion.port`. This require to reset vscode to take effect. You should also change the port on the extension.
 
 I encourage everyone to read and change [all settings](#settings) before first use. Anyway, after updating `acmx.configuration.solutionPath` it should work good for C++ users.
 
