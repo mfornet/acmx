@@ -5,6 +5,7 @@ import { dirname, join, extname, basename } from "path";
 import * as child_process from 'child_process';
 import * as gwen from './gwen';
 import { TestcaseResult, Veredict, SolutionResult, Problem, Contest, SiteDescription } from "./types";
+const md5File = require('md5-file');
 
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
@@ -320,7 +321,6 @@ function get_checker_path() {
 
     if (existsSync(potential_checker_path)) {
         let checker_output = join(path, ATTIC, 'checker.exe');
-        // TODO: Only compile on changes.
         compileCode(potential_checker_path, checker_output);
         return checker_output;
     }
@@ -386,6 +386,29 @@ export function timedRun(path: string, tcName: string, timeout: number){
 }
 
 export function compileCode(pathCode: string, pathOutput: string){
+    let pathCodeMD5 = pathCode + '.md5';
+    let md5data = "";
+
+    if (existsSync(pathCodeMD5)) {
+        let codeMD5fd = openSync(pathCodeMD5, 'r');
+        let buffer = new Buffer(getMaxSizeInput());
+        readSync(codeMD5fd, buffer, 0, 32, 0);
+        md5data = buffer.toString().slice(0, 32);
+        closeSync(codeMD5fd);
+    }
+
+    let codeMD5 = md5File.sync(pathCode);
+
+    if (codeMD5 === md5data) {
+        return {
+            'status' : 0
+        };
+    }
+
+    let codeMD5fd = openSync(pathCodeMD5, 'w');
+    writeSync(codeMD5fd, codeMD5 + '\n');
+    closeSync(codeMD5fd);
+
     let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution', null).get('compile');
     let splitedInstruction = instruction!.split(' ');
 

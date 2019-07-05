@@ -93,7 +93,7 @@ Yes, of course, and any other language you want. Just make sure to update your [
 
 ## This problem has multiple correct answers, what can I do
 
-TODO: Coming soon. Read minitutorial on configuring custom checker.
+Set checker properly for this problemm via **ACMX: Set Checker**. Checkers can use [testlib.h](https://github.com/MikeMirzayanov/testlib) which is recommended.
 
 ## Commands
 
@@ -106,6 +106,7 @@ Call this commands from the command pallete (`Ctrl + Shift + P`).
 * acmx.addTestcase (**ACMX: Add Test Case**): Add a new testcase.
 * acmx.coding (**ACMX: View: Code**): Return to 1 column layout (better to code).
 * acmx.stress (**ACMX: Stress**): Run the solution against correct program using testcases from generator. Useful to find failing and corner cases. Must call upgrade first.
+* acmx.setChecker (**ACMX: Set Checker**): Create checker file. Allow to select a checker among a pool of custom checkers.
 * acmx.upgrade (**ACMX: Upgrade**): Create aditionals files before calling `Stress`.
 * acmx.compile (**ACMX: Compile**): Compile `sol.cpp`.
 

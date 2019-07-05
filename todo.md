@@ -23,9 +23,5 @@ This can be done creating such configurations globally and udpating them per wor
 
 * Make a new command to open particular settings of a problem
 
-* [ ] Checker
-  * [ ] Allow custom checker implemented with testlib.
-  * [ ] Try to figure out correct checker.
-  * [ ] Create few cool checkers such as only first token or accept everything.
 * [ ] Allow multiple solutions. (Don't check on this case. Try to figure out if this is the case)
 * [ ] Is interactive (Don't check on this case. Try to figure out if this is the case)
