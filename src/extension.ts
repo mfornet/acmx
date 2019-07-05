@@ -1,9 +1,9 @@
 'use strict';
 import * as vscode from 'vscode';
-import { existsSync, writeFileSync, readdirSync } from 'fs';
+import { existsSync, writeFileSync, readdirSync, copyFileSync } from 'fs';
 import { join, extname } from 'path';
 import { SITES, getSite } from './conn';
-import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC } from './core';
+import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC, SRC } from './core';
 import { Veredict, SiteDescription } from './types';
 import { startCompetitiveCompanionService } from './companion';
 
@@ -271,6 +271,46 @@ async function upgrade(){
     upgradeArena(path);
 }
 
+function fileList(dir: string): string[]{
+    return readdirSync(dir).reduce((list: string[], file: string) => {
+        return list.concat([file]);
+    }, []);
+}
+
+async function setChecker(){
+    let path = currentProblem();
+
+    if (path === undefined){
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let all_checkers_plain = fileList(join(SRC, 'static', 'checkers'))
+                                .filter((name: string) => name !== 'testlib.h')
+                                .map((name: string) => name.slice(0, name.length - 4));
+
+    let all_checkers = all_checkers_plain.map((value: string) => {
+        return {
+            'label' : value,
+            'target' : value + '.cpp'
+        };
+    });
+
+    let checker_info = await vscode.window.showQuickPick(all_checkers, { placeHolder: 'Select custom checker.' });
+
+    if (checker_info === undefined){
+        vscode.window.showErrorMessage("Checker not provided.");
+        return;
+    }
+
+    let checker = checker_info.target;
+
+    let checker_path = join(SRC, 'static', 'checkers', checker);
+    let checker_dest = join(path, ATTIC, 'checker.cpp');
+
+    copyFileSync(checker_path, checker_dest);
+}
+
 async function debugTest(){
     console.log("no bugs :O");
 }
@@ -290,6 +330,7 @@ export function activate(context: vscode.ExtensionContext) {
     let stressCommand = vscode.commands.registerCommand('acmx.stress', stress);
     let upgradeCommand = vscode.commands.registerCommand('acmx.upgrade', upgrade);
     let compileCommand = vscode.commands.registerCommand('acmx.compile', compile);
+    let setCheckerCommand = vscode.commands.registerCommand('acmx.setChecker', setChecker);
 
     let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
 
@@ -302,6 +343,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(stressCommand);
     context.subscriptions.push(upgradeCommand);
     context.subscriptions.push(compileCommand);
+    context.subscriptions.push(setCheckerCommand);
 
     context.subscriptions.push(debugTestCommand);
 }

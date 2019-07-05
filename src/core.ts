@@ -8,7 +8,7 @@ import { TestcaseResult, Veredict, SolutionResult, Problem, Contest, SiteDescrip
 
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
-const SRC = dirname(__filename);
+export const SRC = dirname(__filename);
 
 /**
  * Name of program file. Take extension dynamically from configuration
@@ -214,6 +214,7 @@ export function testcasesName(path: string){
 // }
 
 export function upgradeArena(path: string) {
+    // Create brute force solution
     let brute = join(path, 'brute.cpp');
 
     if (!existsSync(brute)){
@@ -221,11 +222,21 @@ export function upgradeArena(path: string) {
         copyFileSync(join(SRC, 'static', 'template.cpp'), brute);
     }
 
+    // Create test case generator
     let generator = join(path, 'gen.py');
 
     if (!existsSync(generator)){
         // TODO: If generator already exist ask whether to overwrite or not.
         gwen.create(path, generator);
+    }
+
+    // Create checker for multiple answers.
+    let checker = join(path, ATTIC, 'checker.cpp');
+
+    if (!existsSync(checker)){
+        let testlib_path = join(path, ATTIC, 'testlib.h');
+        copyFileSync(join(SRC, 'static', 'checkers', 'wcmp.cpp'), checker);
+        copyFileSync(join(SRC, 'static', 'checkers', 'testlib.h'), testlib_path);
     }
 }
 
@@ -297,6 +308,26 @@ export async function newContestFromId(path: string, site: SiteDescription, cont
     return contestPath;
 }
 
+function get_checker_path() {
+    let path = currentProblem();
+    let default_checker = join(globalAtticPath(), 'checkers', 'wcmp.exe');
+
+    if (path === undefined) {
+        return default_checker;
+    }
+
+    let potential_checker_path = join(path, ATTIC, 'checker.cpp');
+
+    if (existsSync(potential_checker_path)) {
+        let checker_output = join(path, ATTIC, 'checker.exe');
+        // TODO: Only compile on changes.
+        compileCode(potential_checker_path, checker_output);
+        return checker_output;
+    }
+
+    return default_checker;
+}
+
 /**
  *
  * @param path
@@ -343,9 +374,8 @@ export function timedRun(path: string, tcName: string, timeout: number){
     writeSync(currentFd, xresult.stdout);
     closeSync(currentFd);
 
-    let checker = join(globalAtticPath(), 'checkers', 'wcmp.exe');
-
-    let checker_result = child_process.spawnSync(checker, [tcInput, tcCurrent, tcOutput]);
+    let checker_path = get_checker_path();
+    let checker_result = child_process.spawnSync(checker_path, [tcInput, tcCurrent, tcOutput]);
 
     if (checker_result.status !== 0){
         return new TestcaseResult(Veredict.WA);

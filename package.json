@@ -111,6 +111,10 @@
             {
                 "command": "acmx.compile",
                 "title": "ACMX: Compile"
+            },
+            {
+                "command": "acmx.setChecker",
+                "title": "ACMX: Set Checker"
             }
         ],
         "keybindings": [
@@ -129,6 +133,10 @@
             {
                 "command": "acmx.coding",
                 "key": "ctrl+alt+o"
+            },
+            {
+                "command": "acmx.upgrade",
+                "key": "ctrl+alt+u"
             }
         ]
     },

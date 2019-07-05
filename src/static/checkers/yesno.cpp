@@ -23,5 +23,11 @@ int main(int argc, char * argv[])
     if (ja != pa)
         quitf(_wa, "expected %s, found %s", compress(ja).c_str(), compress(pa).c_str());
 
+    // ignore extra tokens
+    // while (!ans.seekEof())
+    //     ans.skipChar();
+    // while (!ouf.seekEof())
+    //     ouf.skipChar();
+
     quitf(_ok, "answer is %s", ja.c_str());
 }
