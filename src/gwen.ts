@@ -7,7 +7,7 @@ const DEFAULT = 'import random\n\nprint(random.randint(1, 100))\n';
 
 export function create(problemPath: string, outputPath: string) {
     let tcPath = join(problemPath, TESTCASES);
-    let exitCode = spawnSync("python", ["-m", `tcgen`, "--path", `${tcPath}`, "--output", `${outputPath}`]);
+    let exitCode = spawnSync("python3", ["-m", `tcgen`, "--path", `${tcPath}`, "--output", `${outputPath}`]);
 
     console.log("exticode:", exitCode);
 
