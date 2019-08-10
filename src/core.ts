@@ -5,6 +5,7 @@ import { dirname, join, extname, basename } from "path";
 import * as child_process from 'child_process';
 import * as gwen from './gwen';
 import { TestcaseResult, Veredict, SolutionResult, Problem, Contest, SiteDescription } from "./types";
+import { ceTerminal, stderrTerminal } from './terminal';
 const md5File = require('md5-file');
 
 export const TESTCASES = 'testcases';
@@ -359,6 +360,13 @@ export function timedRun(path: string, tcName: string, timeout: number){
 
     let spanTime = new Date().getTime() - startTime;
 
+    if (xresult.stderr.length > 0) {
+        let stderrTer = stderrTerminal();
+        let escaped_output = escape_double_ticks(xresult.stderr.toString());
+        stderrTer.sendText(`echo "${escaped_output}"`);
+        stderrTer.show();
+    }
+
     // Check if an error happened
     if (xresult.status !== 0){
         if (spanTime < timeout){
@@ -383,6 +391,13 @@ export function timedRun(path: string, tcName: string, timeout: number){
     else{
         return new TestcaseResult(Veredict.OK, spanTime);
     }
+}
+
+function escape_double_ticks(text: string) {
+    text = text.toString();
+    // text = text.replace('"', '\"');
+    console.log(text);
+    return text;
 }
 
 export function compileCode(pathCode: string, pathOutput: string){
@@ -419,7 +434,17 @@ export function compileCode(pathCode: string, pathOutput: string){
     let program = splitedInstruction[0];
     let args = splitedInstruction.slice(1);
 
-    return child_process.spawnSync(program, args);
+    let result =  child_process.spawnSync(program, args);
+
+    if (result.status !== 0) {
+        // Write to the compile error terminal
+        let ter = ceTerminal();
+        let escaped_output = escape_double_ticks(result.stderr);
+        ter.sendText(`echo "${escaped_output}"`);
+        ter.show();
+    }
+
+    return result;
 }
 
 export function testSolution(path: string){

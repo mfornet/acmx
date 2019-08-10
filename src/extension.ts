@@ -6,6 +6,7 @@ import { SITES, getSite } from './conn';
 import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC, SRC } from './core';
 import { Veredict, SiteDescription } from './types';
 import { startCompetitiveCompanionService } from './companion';
+import { hideTerminals } from './terminal';
 
 const TESTCASES = 'testcases';
 
@@ -219,28 +220,8 @@ async function addTestcase() {
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Two);
 }
 
-function getTerminal() {
-    let target = undefined;
-
-    vscode.window.terminals.forEach(value => {
-        if (value.name === 'acmx-output') {
-            target = value;
-        }
-    });
-
-    if (target === undefined) {
-        target = vscode.window.createTerminal("acmx-output");
-    }
-
-    return target;
-}
-
 async function coding() {
-    let terminal = getTerminal();
-
-    let result = terminal.sendText('echo "Hello"');
-    terminal.show();
-    console.log(result);
+    hideTerminals();
 
     let path = currentProblem();
 
@@ -337,6 +318,7 @@ async function debugTest(){
     console.log("no bugs :O");
 }
 
+// TODO: Make all the code async.
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
