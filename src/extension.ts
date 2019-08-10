@@ -219,7 +219,29 @@ async function addTestcase() {
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Two);
 }
 
+function getTerminal() {
+    let target = undefined;
+
+    vscode.window.terminals.forEach(value => {
+        if (value.name === 'acmx-output') {
+            target = value;
+        }
+    });
+
+    if (target === undefined) {
+        target = vscode.window.createTerminal("acmx-output");
+    }
+
+    return target;
+}
+
 async function coding() {
+    let terminal = getTerminal();
+
+    let result = terminal.sendText('echo "Hello"');
+    terminal.show();
+    console.log(result);
+
     let path = currentProblem();
 
     if (path === undefined){

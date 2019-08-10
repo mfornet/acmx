@@ -11,8 +11,6 @@
 
 ## QUICK TODO
 
-* Use better names for single problems.
-* Test add problem/add contest with codeforces problems (mostly folder and names where are created)
 * Test and provide example using other languages.
 * Copy to clipboard (smart copy in the future with tool suggested by jcg) (Find in examples, create shortcut)
 
