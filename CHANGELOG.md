@@ -2,6 +2,10 @@
 
 Notable updates of **acmX**
 
+## 0.2.3
+
+* Show compilation error and stderr on the terminal.
+
 ## 0.2.0
 
 * Integration with Competitive-Companion. Parsing problems and contests is delegated to this tool.

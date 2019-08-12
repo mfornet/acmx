@@ -83,10 +83,6 @@ To install `tcgen` just run:
 
 Create a file with your template. In settings, set `acmx.configuration.templatePath` to the path to your template.
 
-## What is contest id on each platform
-
-You can find this information for every supported platform [here](doc/platforms-id.md).
-
 ## I code in java, can I use this tool
 
 Yes, of course, and any other language you want. Just make sure to update your [language configuration](doc/languages.md) setting.
@@ -118,3 +114,5 @@ Call this commands from the command pallete (`Ctrl + Shift + P`).
 * **acmx.run.timetimeLimit**: Maximum time limit in seconds to run the program on each test case.
 * **acmx.execution.compile**: Command to compile C++ programs. Refer to the code as $PROGRAM, and output file as $OUTPUT.
 * **acmx.execution.pythonPath**: Path to python executable. This will be used to run generator.
+* **acmx.stress.times**: Number of times to run solution on random generated test cases against
+  brute solution.
