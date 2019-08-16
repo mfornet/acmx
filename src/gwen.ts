@@ -1,5 +1,6 @@
 import { openSync, writeSync } from "fs";
 import { spawnSync } from "child_process";
+import * as vscode from 'vscode';
 import { TESTCASES } from "./core";
 import { join } from "path";
 
