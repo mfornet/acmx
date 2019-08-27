@@ -12,6 +12,10 @@
 * Stressing solution against brute using a generator (Useful to find corner cases)
 * (WIP) Automatic generator creation from inputs/outputs structure
 
+## Join the conversation
+
+We have a group to discuss about this tool in Telegram. [Join here](https://t.me/acm_x).
+
 ## How am I supposed to use **acmX**
 
 **acmX** have been designed to run automatically boilerplate actions [I](https://codeforces.com/profile/marX) repeat often in competitive programming. Next is the expected pipeline to interact with it. It is important that you [setup some configurations](#getting-started) before start using the tool.
