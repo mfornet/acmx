@@ -4,13 +4,12 @@
 
 ## Features
 
-* Contest/Problem parsing. (Through [Competitive-Companion)](https://github.com/jmerle/competitive-companion) extension.)
-* Running solution against testcases automatically
-* Add custom testcases easily
-* Veredict reporting (OK, WA, RTE, TLE, CE)
+* Contest/Problem parsing. (Through [Competitive-Companion](https://github.com/jmerle/competitive-companion) extension).
+* Running solution against testcases automatically.
+* Add custom testcases easily.
+* Veredict reporting (OK, WA, RTE, TLE, CE).
 * Smart generator creation. Testcases generator is created using `tcgen` program synthesis tool by inspecting testcases.
-* Stressing solution against brute using a generator (Useful to find corner cases)
-* (WIP) Automatic generator creation from inputs/outputs structure
+* Stressing solution against brute using a generator (Useful to find corner cases).
 
 ## Join the conversation
 
@@ -26,7 +25,7 @@ We have a group to discuss about this tool in Telegram. [Join here](https://t.me
 
 * Start coding awesome solution inside file `sol.cpp`.
 
-* After you finish call `Run` and automatically your program will be compiled and run against every testcases. If the solutions is ok, it will be reported otherwise you will see failing testcase in a *cool layout*. You can always go back to original layout calling `View: Code`.
+* After you finish call `Run` and automatically your program will be compiled and run against every testcases. If the solutions is right, it will be reported as `Ok` otherwise you will see failing testcase in a *cool layout*. You can always go back to original layout calling `View: Code`.
 
 * Add more testcases than provided in statement using `Add Test Case`, or modify and see existing testcases by calling `Open Test Case`.
 
@@ -67,13 +66,13 @@ Parsing problems and contests is done via [Competitive-Companion](https://github
 * Install the extension for your browser:
   * [Chrome](https://chrome.google.com/webstore/detail/competitive-companion/cjnmckjndlpiamhfimnnjmnckgghkjbl)
   * [Firefox](https://addons.mozilla.org/en-US/firefox/addon/competitive-companion/)
-* [Change the port used by the extension](https://github.com/jmerle/competitive-companion#custom-tools) to 10042. This is the port used by default in `acmX`. If you want to use any other port, open settings and update `acmx.companion.port`. This require to reset vscode to take effect. You should also change the port on the extension.
+* [Change the port used by the extension](https://github.com/jmerle/competitive-companion#custom-tools) to 10042. This is the port used by default in `acmX`. If you want to use any other port, open settings and update `acmx.companion.port`. This require restart vscode to take effect. You should also change the port on the extension.
 
 I encourage everyone to read and change [all settings](#settings) before first use. Anyway, after updating `acmx.configuration.solutionPath` it should work good for C++ users.
 
 ## How does stressing the solution work
 
-To stress the solution your code is compared to a correct code against a larga sample of testcases. In order to do that you should execute `ACMX: Upgrade` from the command pallete. Two files will be created.
+To stress the solution your code is compared to a correct code against a large sample of testcases. In order to do that you should execute `ACMX: Upgrade` from the command pallete. Two files will be created.
 
 * `brute.cpp` This should be a correct solution. A code that is expected to report correct output. It doesn't matter if it's slow as long as you only check this program against small testcases.
 * `gen.py` Every time this code is executed is expected to print a random testcases.
