@@ -383,7 +383,7 @@ export function timedRun(path: string, tcName: string, timeout: number){
     closeSync(currentFd);
 
     let checker_path = get_checker_path();
-    let checker_result = child_process.spawnSync(checker_path, [tcInput, tcOutput, tcCurrent]);
+    let checker_result = child_process.spawnSync(checker_path, [tcInput, tcCurrent, tcOutput]);
 
     if (checker_result.status !== 0){
         return new TestcaseResult(Veredict.WA);
