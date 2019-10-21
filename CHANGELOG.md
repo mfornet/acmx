@@ -2,6 +2,15 @@
 
 Notable updates of **acmX**
 
+## 0.2.5
+
+* Build executable in windows properly.
+* Warn user when there is no testcases available.
+
+## 0.2.4
+
+* Fix checker parameter order.
+
 ## 0.2.3
 
 * Show compilation error and stderr on the terminal.
@@ -31,7 +40,7 @@ Notable updates of **acmX**
 
 ## 0.1.3
 
-* Create settings that allow easy customization of tempate path, compilation line and max running time.
+* Create settings that allow easy customization of template path, compilation line and max running time.
 * How to use in README.md (enumerate all commands)
 
 ## 0.1.2
@@ -46,4 +55,4 @@ Notable updates of **acmX**
 * Stress solution using brute solution and generator.
 * Measure program time.
 * Add manual testcases.
-* Proccess test cases in sortede order (specially starting from open testcase).
+* Process test cases in sorted order (specially starting from open testcase).
