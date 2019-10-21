@@ -3,8 +3,8 @@ import * as vscode from 'vscode';
 import { existsSync, writeFileSync, readdirSync, copyFileSync } from 'fs';
 import { join, extname } from 'path';
 import { SITES, getSite } from './conn';
-import { newContestFromId, testSolution, veredictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC, SRC } from './core';
-import { Veredict, SiteDescription } from './types';
+import { newContestFromId, testSolution, verdictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC, SRC } from './core';
+import { Verdict, SiteDescription } from './types';
 import { startCompetitiveCompanionService } from './companion';
 import { hideTerminals } from './terminal';
 
@@ -126,14 +126,14 @@ async function runSolution(){
 
     let result = testSolution(path);
 
-    if (result.status === Veredict.OK){
+    if (result.status === Verdict.OK){
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
-    else if (result.status === Veredict.NO_TESTCASES){
+    else if (result.status === Verdict.NO_TESTCASES){
         vscode.window.showErrorMessage(`No testcases.`);
     }
     else{
-        vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
+        vscode.window.showErrorMessage(`${verdictName(result.status)} on test ${result.failTcId}`);
         debugTestcase(path, result.failTcId!);
     }
 }
@@ -257,11 +257,11 @@ async function stress(){
 
     let result = stressSolution(path, stressTimes);
 
-    if (result.status === Veredict.OK){
+    if (result.status === Verdict.OK){
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
     else{
-        vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
+        vscode.window.showErrorMessage(`${verdictName(result.status)} on test ${result.failTcId}`);
         debugTestcase(path, result.failTcId!);
     }
 }

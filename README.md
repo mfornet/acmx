@@ -7,7 +7,7 @@
 * Contest/Problem parsing. (Through [Competitive-Companion](https://github.com/jmerle/competitive-companion) extension).
 * Running solution against testcases automatically.
 * Add custom testcases easily.
-* Veredict reporting (OK, WA, RTE, TLE, CE).
+* Verdict reporting (OK, WA, RTE, TLE, CE).
 * Smart generator creation. Testcases generator is created using `tcgen` program synthesis tool by inspecting testcases.
 * Stressing solution against brute using a generator (Useful to find corner cases).
 
@@ -29,7 +29,7 @@ We have a group to discuss about this tool in Telegram. [Join here](https://t.me
 
 * Add more testcases than provided in statement using `Add Test Case`, or modify and see existing testcases by calling `Open Test Case`.
 
-* If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrage` to create both generator (`gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python. After both codes are ready call `Stress` and your original code will be tested on random test cases from generator against correct solution.
+* If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrade` to create both generator (`gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python. After both codes are ready call `Stress` and your original code will be tested on random test cases from generator against correct solution.
 
 The environment structure is the following:
 
@@ -51,7 +51,7 @@ The environment structure is the following:
         E/...
 ```
 
-Certainly **acmX** can be (and hopefully will be) extended so that it fits everyones pipeline. If **acmX** almost fit yours, feel free to improve it and make a PR! I'll be happy to hear from you and give you support. If you find any issue report it at [github issue tracker](https://github.com/mfornet/acmx/issues).
+Certainly **acmX** can be (and hopefully will be) extended so that it fits everyone pipeline. If **acmX** almost fit yours, feel free to improve it and make a PR! I'll be happy to hear from you and give you support. If you find any issue report it at [github issue tracker](https://github.com/mfornet/acmx/issues).
 
 ## Getting started
 
@@ -72,7 +72,7 @@ I encourage everyone to read and change [all settings](#settings) before first u
 
 ## How does stressing the solution work
 
-To stress the solution your code is compared to a correct code against a large sample of testcases. In order to do that you should execute `ACMX: Upgrade` from the command pallete. Two files will be created.
+To stress the solution your code is compared to a correct code against a large sample of testcases. In order to do that you should execute `ACMX: Upgrade` from the command palette. Two files will be created.
 
 * `brute.cpp` This should be a correct solution. A code that is expected to report correct output. It doesn't matter if it's slow as long as you only check this program against small testcases.
 * `gen.py` Every time this code is executed is expected to print a random testcases.
@@ -92,21 +92,21 @@ Yes, of course, and any other language you want. Just make sure to update your [
 
 ## This problem has multiple correct answers, what can I do
 
-Set checker properly for this problemm via **ACMX: Set Checker**. Checkers can use [testlib.h](https://github.com/MikeMirzayanov/testlib) which is recommended.
+Set checker properly for this problem via **ACMX: Set Checker**. Checkers can use [testlib.h](https://github.com/MikeMirzayanov/testlib) which is recommended.
 
 ## Commands
 
-Call this commands from the command pallete (`Ctrl + Shift + P`).
+Call this commands from the command palette (`Ctrl + Shift + P`).
 
 * acmx.addProblem (**ACMX: New Problem**): Create a new problem. Make environment skeleton and download testcases.
 * acmx.addContest (**ACMX: New Contest**): Create a new contest. Make environment skeleton and download testcases.
 * acmx.runSolution (**ACMX: Run**): Compile and run current solution against testcases.
-* acmx.openTestcase (**ACMX: Open Test Case**): Open a paticular testcase.
+* acmx.openTestcase (**ACMX: Open Test Case**): Open a particular testcase.
 * acmx.addTestcase (**ACMX: Add Test Case**): Add a new testcase.
 * acmx.coding (**ACMX: View: Code**): Return to 1 column layout (better to code).
 * acmx.stress (**ACMX: Stress**): Run the solution against correct program using testcases from generator. Useful to find failing and corner cases. Must call upgrade first.
 * acmx.setChecker (**ACMX: Set Checker**): Create checker file. Allow to select a checker among a pool of custom checkers.
-* acmx.upgrade (**ACMX: Upgrade**): Create aditionals files before calling `Stress`.
+* acmx.upgrade (**ACMX: Upgrade**): Create additional files before calling `Stress`.
 * acmx.compile (**ACMX: Compile**): Compile `sol.cpp`.
 
 ## Settings
@@ -114,7 +114,7 @@ Call this commands from the command pallete (`Ctrl + Shift + P`).
 * **acmx.configuration.templatePath**: Path to template file. Leave empty to use default template.
 * **acmx.configuration.solutionPath**: Path to folder where contest will be created and stored. To set active workspace use `.`
 * **acmx.configuration.extension**: Extension of the programming language you will use to code solutions. Default `cpp` for c++
-* **acmx.run.timetimeLimit**: Maximum time limit in seconds to run the program on each test case.
+* **acmx.run.timeLimit**: Maximum time limit in seconds to run the program on each test case.
 * **acmx.execution.compile**: Command to compile C++ programs. Refer to the code as $PROGRAM, and output file as $OUTPUT.
 * **acmx.execution.pythonPath**: Path to python executable. This will be used to run generator.
 * **acmx.stress.times**: Number of times to run solution on random generated test cases against

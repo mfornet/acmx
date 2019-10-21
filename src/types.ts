@@ -1,4 +1,4 @@
-export enum Veredict{
+export enum Verdict{
     OK,     // Accepted
     WA,     // Wrong Answer
     TLE,    // Time Limit Exceeded
@@ -8,21 +8,21 @@ export enum Veredict{
 }
 
 export class TestcaseResult{
-    status: Veredict;
+    status: Verdict;
     spanTime?: number;
 
-    constructor(status: Veredict, spanTime?: number){
+    constructor(status: Verdict, spanTime?: number){
         this.status = status;
         this.spanTime = spanTime;
     }
 }
 
 export class SolutionResult{
-    status: Veredict;
+    status: Verdict;
     failTcId?: string;
     maxTime?: number;
 
-    constructor(status: Veredict, failTcId?: string, maxTime?: number){
+    constructor(status: Verdict, failTcId?: string, maxTime?: number){
         this.status = status;
         this.failTcId = failTcId;
         this.maxTime = maxTime;

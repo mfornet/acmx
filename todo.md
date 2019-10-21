@@ -5,7 +5,7 @@
 
 * [005](/src/core.ts): Restrict brute in time, and capture errors
   * Allow stopping a running program (such as sol.cpp/brute.cpp/gen.py/etc...)
-* [007](/src/extension.ts): How can I have access to new proccess created using `openFolder`?
+* [007](/src/extension.ts): How can I have access to new process created using `openFolder`?
 * Add Telegram group join link in the Readme
 * Add gif to README. Gif should be a tutorial (how to use).
 
@@ -17,7 +17,7 @@
 ## Settings
 
 Particular settings (per problem) configuration on current workspace.
-This can be done creating such configurations globally and udpating them per workspace (only problem here is that in one workspace might coexist several programs so best answer is probably creating a config file inside each problem and access them through cool UI settings provided by VSCode. This can be done since GitLens already do that.) Store also problem name on this config file, maybe URL.
+This can be done creating such configurations globally and updating them per workspace (only problem here is that in one workspace might coexist several programs so best answer is probably creating a config file inside each problem and access them through cool UI settings provided by VSCode. This can be done since GitLens already do that.) Store also problem name on this config file, maybe URL.
 
 * Make a new command to open particular settings of a problem
 

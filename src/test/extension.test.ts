@@ -7,7 +7,7 @@
 import * as assert from 'assert';
 import { dirname, join } from 'path';
 import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId, getTimeout } from '../core';
-import { TestcaseResult, Veredict } from '../types';
+import { TestcaseResult, Verdict } from '../types';
 import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
 import { getSite, SITES, PERSONAL } from '../conn';
 
@@ -150,14 +150,14 @@ suite("Extension Tests", function () {
     /**
      * core::timedRun
      *
-     * Test running one single test cases, and receiving all different veredicts
+     * Test running one single test cases, and receiving all different verdicts
      */
     test("timedRunOk", function() {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'A');
         let testcaseId = '0';
         let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
-        assert.equal(result.status, Veredict.OK);
+        assert.equal(result.status, Verdict.OK);
     });
 
     test("timedRunWA", function() {
@@ -165,7 +165,7 @@ suite("Extension Tests", function () {
         let problem = join(exampleContest, 'B');
         let testcaseId = '0';
         let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
-        assert.equal(result.status, Veredict.WA);
+        assert.equal(result.status, Verdict.WA);
     });
 
     test("timedRunRTE", function() {
@@ -173,7 +173,7 @@ suite("Extension Tests", function () {
         let problem = join(exampleContest, 'C');
         let testcaseId = '0';
         let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
-        assert.equal(result.status, Veredict.RTE);
+        assert.equal(result.status, Verdict.RTE);
     });
 
     test("timedRunTLE", function() {
@@ -181,19 +181,19 @@ suite("Extension Tests", function () {
         let problem = join(exampleContest, 'D');
         let testcaseId = '0';
         let result: TestcaseResult = timedRun(problem, testcaseId, 100);
-        assert.equal(result.status, Veredict.TLE);
+        assert.equal(result.status, Verdict.TLE);
     });
 
     /**
      * core::testSolution
      *
-     * Test running one single test cases, and receiving all different veredicts
+     * Test running one single test cases, and receiving all different verdicts
      */
     test("testSolutionOK", function() {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'A');
         let result: TestcaseResult = testSolution(problem);
-        assert.equal(result.status, Veredict.OK);
+        assert.equal(result.status, Verdict.OK);
     });
 
     test("testSolutionCE", function() {
@@ -256,7 +256,7 @@ suite("Extension Tests", function () {
 
         let result = stressSolution(path, 10);
 
-        assert.equal(result.status, Veredict.OK);
+        assert.equal(result.status, Verdict.OK);
 
         recRmdir(path);
     });
@@ -307,7 +307,7 @@ suite("Extension Tests", function () {
 
         let result = stressSolution(path, 10);
 
-        assert.equal(result.status, Veredict.WA);
+        assert.equal(result.status, Verdict.WA);
 
         recRmdir(path);
     });

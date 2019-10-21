@@ -4,7 +4,7 @@ import { mkdirSync, existsSync, copyFileSync, openSync, readSync, readdirSync, w
 import { dirname, join, extname, basename } from "path";
 import * as child_process from 'child_process';
 import * as gwen from './gwen';
-import { TestcaseResult, Veredict, SolutionResult, Problem, Contest, SiteDescription } from "./types";
+import { TestcaseResult, Verdict, SolutionResult, Problem, Contest, SiteDescription } from "./types";
 import { ceTerminal, stderrTerminal } from './terminal';
 const md5File = require('md5-file');
 
@@ -370,10 +370,10 @@ export function timedRun(path: string, tcName: string, timeout: number){
     // Check if an error happened
     if (xresult.status !== 0){
         if (spanTime < timeout){
-            return new TestcaseResult(Veredict.RTE);
+            return new TestcaseResult(Verdict.RTE);
         }
         else{
-            return new TestcaseResult(Veredict.TLE);
+            return new TestcaseResult(Verdict.TLE);
         }
     }
 
@@ -386,10 +386,10 @@ export function timedRun(path: string, tcName: string, timeout: number){
     let checker_result = child_process.spawnSync(checker_path, [tcInput, tcCurrent, tcOutput]);
 
     if (checker_result.status !== 0){
-        return new TestcaseResult(Veredict.WA);
+        return new TestcaseResult(Verdict.WA);
     }
     else{
-        return new TestcaseResult(Veredict.OK, spanTime);
+        return new TestcaseResult(Verdict.OK, spanTime);
     }
 }
 
@@ -465,7 +465,7 @@ export function testSolution(path: string){
     let testcasesId = testcasesName(path);
 
     if (testcasesId.length === 0){
-        return new SolutionResult(Veredict.NO_TESTCASES, undefined, undefined);
+        return new SolutionResult(Verdict.NO_TESTCASES, undefined, undefined);
     }
 
     // Proccess all testcases in sorted order
@@ -486,7 +486,7 @@ export function testSolution(path: string){
         // Run while there none have failed already
         if (fail === undefined){
             let tcResult = timedRun(path, tcId, getTimeout());
-            if (tcResult.status !== Veredict.OK){
+            if (tcResult.status !== Verdict.OK){
                 fail = new SolutionResult(tcResult.status, tcId);
             }
             results.push(tcResult);
@@ -501,7 +501,7 @@ export function testSolution(path: string){
             }
         }
 
-        return new SolutionResult(Veredict.OK, undefined, maxTime);
+        return new SolutionResult(Verdict.OK, undefined, maxTime);
     }
     else{
         return fail;
@@ -569,7 +569,7 @@ export function stressSolution(path: string, times: number){
         // Check sol report same result than brute
         let result = timedRun(path, 'gen', getTimeout());
 
-        if (result.status !== Veredict.OK){
+        if (result.status !== Verdict.OK){
             return new SolutionResult(result.status, 'gen');
         }
 
@@ -583,27 +583,27 @@ export function stressSolution(path: string, times: number){
         }
     }
 
-    return new SolutionResult(Veredict.OK, undefined, maxTime);
+    return new SolutionResult(Verdict.OK, undefined, maxTime);
 }
 
-export function veredictName(veredict: Veredict){
-    switch (veredict) {
-        case Veredict.OK:
+export function verdictName(verdict: Verdict){
+    switch (verdict) {
+        case Verdict.OK:
             return "OK";
 
-        case Veredict.WA:
+        case Verdict.WA:
             return "WA";
 
-        case Veredict.TLE:
+        case Verdict.TLE:
             return "TLE";
 
-        case Veredict.RTE:
+        case Verdict.RTE:
             return "RTE";
 
-        case Veredict.CE:
+        case Verdict.CE:
             return "CE";
 
         default:
-            throw new Error("Invalid Veredict");
+            throw new Error("Invalid Verdict");
     }
 }
