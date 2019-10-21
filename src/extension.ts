@@ -129,6 +129,9 @@ async function runSolution(){
     if (result.status === Veredict.OK){
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
+    else if (result.status === Veredict.NO_TESTCASES){
+        vscode.window.showErrorMessage(`No testcases.`);
+    }
     else{
         vscode.window.showErrorMessage(`${veredictName(result.status)} on test ${result.failTcId}`);
         debugTestcase(path, result.failTcId!);

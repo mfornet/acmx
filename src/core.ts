@@ -350,7 +350,7 @@ export function timedRun(path: string, tcName: string, timeout: number){
     closeSync(inputFd);
 
     let startTime = new Date().getTime();
-    let command = `${join(path, ATTIC, "sol")}`;
+    let command = `${join(path, ATTIC, "sol.exe")}`;
 
     let xresult = child_process.spawnSync(command, {
         input: tcData,
@@ -449,7 +449,7 @@ export function compileCode(pathCode: string, pathOutput: string){
 
 export function testSolution(path: string){
     let sol = join(path, solFile());
-    let out = join(path, ATTIC, 'sol');
+    let out = join(path, ATTIC, 'sol.exe');
 
     if (!existsSync(sol)){
         throw new Error("Open a coding environment first.");
@@ -463,6 +463,11 @@ export function testSolution(path: string){
     }
 
     let testcasesId = testcasesName(path);
+
+    if (testcasesId.length === 0){
+        return new SolutionResult(Veredict.NO_TESTCASES, undefined, undefined);
+    }
+
     // Proccess all testcases in sorted order
     testcasesId.sort();
 
@@ -477,16 +482,13 @@ export function testSolution(path: string){
 
     let results: TestcaseResult[] = [];
     let fail: SolutionResult | undefined = undefined;
-
     testcasesId.forEach(tcId => {
         // Run while there none have failed already
         if (fail === undefined){
             let tcResult = timedRun(path, tcId, getTimeout());
-
             if (tcResult.status !== Veredict.OK){
                 fail = new SolutionResult(tcResult.status, tcId);
             }
-
             results.push(tcResult);
         }
     });

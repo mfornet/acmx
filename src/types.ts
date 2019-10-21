@@ -4,6 +4,7 @@ export enum Veredict{
     TLE,    // Time Limit Exceeded
     RTE,    // Runtime Error
     CE,     // Compilation Error
+    NO_TESTCASES,
 }
 
 export class TestcaseResult{
