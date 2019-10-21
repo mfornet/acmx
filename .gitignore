@@ -6,6 +6,6 @@ node_modules
 out
 
 # IDE
-.vscode
+.vscode/
 .vscode-test/
 
