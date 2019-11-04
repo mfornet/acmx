@@ -530,7 +530,7 @@ export function stressSolution(path: string, times: number){
         throw new Error("Upgrade environment first.");
     }
 
-    let brout = join(path, ATTIC, 'brout');
+    let brout = join(path, ATTIC, 'brout.exe');
 
     let solCompileResult = compileCode(sol, out);
     if (solCompileResult.status !== 0){
