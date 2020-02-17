@@ -197,24 +197,6 @@ export function testcasesName(path: string){
             map( function(tcpath) { return removeExtension(tcpath); });
 }
 
-// function testcases(path: string){
-//     return testcasesName(path).map(function (name){
-//         let inp_fd = openSync(join(path, TESTCASES, `${name}.in`), 'r');
-//         let out_fd = openSync(join(path, TESTCASES, `${name}.out`), 'r');
-
-//         let inp_buffer = new Buffer(getMaxSizeInput());
-//         let out_buffer = new Buffer(getMaxSizeInput());
-
-//         readSync(inp_fd, inp_buffer, 0, getMaxSizeInput(), 0);
-//         readSync(out_fd, out_buffer, 0, getMaxSizeInput(), 0);
-
-//         return [
-//             inp_buffer.toString(),
-//             out_buffer.toString()
-//         ];
-//     });
-// }
-
 export function upgradeArena(path: string) {
     // Create brute force solution
     let brute = join(path, 'brute.cpp');
@@ -468,7 +450,7 @@ export function testSolution(path: string){
         return new SolutionResult(Verdict.NO_TESTCASES, undefined, undefined);
     }
 
-    // Proccess all testcases in sorted order
+    // Process all testcases in sorted order
     testcasesId.sort();
 
     // Run current test case first (if it exists)

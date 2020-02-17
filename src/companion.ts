@@ -13,11 +13,6 @@ export function startCompetitiveCompanionService(){
     app.post('/', async (req: any, res: any) => {
         const data = req.body;
 
-        // console.log(`Problem name: ${data.name}`);
-        // console.log(`Problem group: ${data.group}`);
-        // console.log('Full body:');
-        // console.log(JSON.stringify(data, null, 4));
-
         res.sendStatus(200);
         let contestPath = newProblemFromCompanion(data);
         await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(contestPath));

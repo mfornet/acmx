@@ -3,7 +3,7 @@ node_modules
 
 # Extension
 *.vsix
-out
+out/
 
 # IDE
 .vscode/
