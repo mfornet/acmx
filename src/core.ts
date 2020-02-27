@@ -26,13 +26,6 @@ export function getTimeout() {
     return timeout;
 }
 
-/**
- * Can only handle testcases of at most 512MB
- */
-function getMaxSizeInput() {
-    return 512 * 1024;
-}
-
 function isProblemFolder(path: string) {
     return existsSync(join(path, solFile())) &&
         existsSync(join(path, 'attic'));
