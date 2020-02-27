@@ -1,4 +1,4 @@
-import { SiteDescription, Contest, Problem } from "./types";
+import { Contest, Problem, SiteDescription } from "./types";
 // import { CODEFORCES } from "./parsers/codeforces";
 
 /**
@@ -17,7 +17,7 @@ export const PERSONAL = new SiteDescription(
         let problems = [];
 
         for (let i = 0; i < total; i++) {
-            problems.push(new Problem(`P${i+1}`, `P${i+1}`, ["0\n", "2\n", "9\n"], ["2\n", "4\n", "11\n"]));
+            problems.push(new Problem(`P${i + 1}`, `P${i + 1}`, ["0\n", "2\n", "9\n"], ["2\n", "4\n", "11\n"]));
         }
 
         return new Contest("personal", problems);
@@ -42,7 +42,7 @@ const EMPTY = new SiteDescription(
         // Where `problem-name` is current name and `10` is number of problems
         let args = problemId.split('-');
 
-        let numProblems =  args[args.length - 1];
+        let numProblems = args[args.length - 1];
         let total = Number.parseInt(numProblems);
 
         args.pop();
@@ -51,7 +51,7 @@ const EMPTY = new SiteDescription(
         let problems = [];
 
         for (let i = 0; i < total; i++) {
-            problems.push(new Problem(`P${i+1}`, `P${i+1}`, [], []));
+            problems.push(new Problem(`P${i + 1}`, `P${i + 1}`, [], []));
         }
 
         return new Contest(name, problems);
@@ -69,16 +69,16 @@ export const SITES: SiteDescription[] = [
     // CODEFORCES,
 ];
 
-export function getSite(site: string): SiteDescription  {
+export function getSite(site: string): SiteDescription {
     let result = undefined;
 
     SITES.forEach(siteDescription => {
-        if (siteDescription.name === site){
+        if (siteDescription.name === site) {
             result = siteDescription;
         }
     });
 
-    if (result !== undefined){
+    if (result !== undefined) {
         return result;
     }
 

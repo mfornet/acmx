@@ -1,9 +1,9 @@
-import { SiteDescription, Contest, Problem } from "../types";
-
-import * as vscode from 'vscode';
-import JSSoup from 'jssoup';
 import * as got from 'got';
+import JSSoup from 'jssoup';
+import * as vscode from 'vscode';
+import { Contest, Problem, SiteDescription } from "../types";
 import { getText } from './util';
+
 
 /**
  * contestId: ${contest}
@@ -16,7 +16,7 @@ export async function parseContest(contestId: string) {
     let url = `http://codeforces.com/contest/${contestId}`;
     let response = await got.get(url);
 
-    if (response.statusCode !== 200){
+    if (response.statusCode !== 200) {
         throw new Error(`Contest ${url} not downloaded. ${response.statusCode}`);
     }
 
@@ -24,14 +24,14 @@ export async function parseContest(contestId: string) {
 
     let soup = new JSSoup(response.body);
 
-    let name: string = soup.find("div", {"id" : "sidebar"}).find("a").text;
+    let name: string = soup.find("div", { "id": "sidebar" }).find("a").text;
     name = name.toLowerCase().replace(' ', '-');
 
     let problemsTable = soup.find("table", "problems");
     let problems: Problem[] = [];
     let problemSection = problemsTable.findAll("td", "id");
 
-    for (let i = 0; i < problemSection.length; i++){
+    for (let i = 0; i < problemSection.length; i++) {
         let section = problemSection[i];
         let hrefData = section.find("a").attrs.href.split('/');
         let pid = hrefData[hrefData.length - 1];
@@ -59,7 +59,7 @@ export async function parseProblem(problemId: string) {
     let url = `http://codeforces.com/contest/${contest}/problem/${pid}`;
     let response = await got.get(url);
 
-    if (response.statusCode !== 200){
+    if (response.statusCode !== 200) {
         throw new Error(`Problem ${url} not downloaded. ${response.statusCode}`);
     }
 
@@ -71,12 +71,12 @@ export async function parseProblem(problemId: string) {
     let inputTC: string[] = [];
     let outputTC: string[] = [];
 
-    problemDescription.findAll("div", "input").forEach((element: any) =>{
+    problemDescription.findAll("div", "input").forEach((element: any) => {
         let tc = element.find("pre");
         inputTC.push(getText(tc));
     });
 
-    problemDescription.findAll("div", "output").forEach((element: any) =>{
+    problemDescription.findAll("div", "output").forEach((element: any) => {
         let tc = element.find("pre");
         outputTC.push(getText(tc));
     });
@@ -87,10 +87,10 @@ export async function parseProblem(problemId: string) {
 }
 
 export const CODEFORCES = new SiteDescription(
-        "codeforces",
-        "codeforces.com",
-        "{contest id} (Ex: 1095)",
-        "{contest id}-{problem id} (Ex: 1095-A)",
-        parseContest,
-        parseProblem,
-    );
+    "codeforces",
+    "codeforces.com",
+    "{contest id} (Ex: 1095)",
+    "{contest id}-{problem id} (Ex: 1095-A)",
+    parseContest,
+    parseProblem,
+);

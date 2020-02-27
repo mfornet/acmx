@@ -4,7 +4,7 @@ import { newProblemFromCompanion } from './core';
 const app = require('express')();
 const bodyParser = require('body-parser');
 
-export function startCompetitiveCompanionService(){
+export function startCompetitiveCompanionService() {
     let _port: number | undefined = vscode.workspace.getConfiguration('acmx.companion', null).get('port');
     let port: number = _port!;
 

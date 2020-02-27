@@ -5,11 +5,11 @@
 
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
+import { closeSync, existsSync, openSync, readdirSync, rmdirSync, unlinkSync, writeSync } from 'fs';
 import { dirname, join } from 'path';
-import { timedRun, testcasesName, testSolution, newArena, ATTIC, TESTCASES, upgradeArena, stressSolution, newProblemFromId, newContestFromId, getTimeout } from '../core';
+import { getSite, PERSONAL, SITES } from '../conn';
+import { ATTIC, getTimeout, newArena, newContestFromId, newProblemFromId, stressSolution, TESTCASES, testcasesName, testSolution, timedRun, upgradeArena } from '../core';
 import { TestcaseResult, Verdict } from '../types';
-import { rmdirSync, existsSync, readdirSync, unlinkSync, openSync, writeSync, closeSync } from 'fs';
-import { getSite, SITES, PERSONAL } from '../conn';
 
 const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
 const ARENA = join(SRC, 'arena');
@@ -20,15 +20,15 @@ suite("Extension Tests", function () {
     /**
      * Recursive remove
      */
-    function recRmdir(path: string){
-        if (existsSync(path)){
+    function recRmdir(path: string) {
+        if (existsSync(path)) {
             readdirSync(path).forEach(name => {
                 let cPath = join(path, name);
 
-                try{
+                try {
                     unlinkSync(cPath);
                 }
-                catch(err){
+                catch (err) {
                     recRmdir(cPath);
                 }
             });
@@ -37,7 +37,7 @@ suite("Extension Tests", function () {
         }
     }
 
-    function writeFile(path: string, content: string){
+    function writeFile(path: string, content: string) {
         let currentFd = openSync(path, 'w');
         writeSync(currentFd, content);
         closeSync(currentFd);
@@ -46,17 +46,17 @@ suite("Extension Tests", function () {
     /**
      * core::initAcmX
      */
-    test("initAcmX", function(){
+    test("initAcmX", function () {
         // TODO
     });
 
     /**
      * core::newArena
      */
-    test("newArena", function(){
+    test("newArena", function () {
         let path = join(ARENA, "testNew");
 
-        if (existsSync(path)){
+        if (existsSync(path)) {
             recRmdir(path);
         }
 
@@ -74,10 +74,10 @@ suite("Extension Tests", function () {
     /**
      * core::upgradeArena
      */
-    test("upgradeArena", function(){
+    test("upgradeArena", function () {
         let path = join(ARENA, "testUpgrade");
 
-        if (existsSync(path)){
+        if (existsSync(path)) {
             recRmdir(path);
         }
 
@@ -95,7 +95,7 @@ suite("Extension Tests", function () {
     /**
      * core::testcasesName
      */
-    test("testcasesName", function(){
+    test("testcasesName", function () {
         let path = join(ARENA, 'exampleContest', 'A');
         let result = testcasesName(path);
         let target = ["0", "1", "2"];
@@ -104,7 +104,7 @@ suite("Extension Tests", function () {
 
         result.sort();
 
-        for (let i = 0; i < 3; ++i){
+        for (let i = 0; i < 3; ++i) {
             assert.equal(target[i], result[i]);
         }
     });
@@ -112,7 +112,7 @@ suite("Extension Tests", function () {
     /**
      * core::newProblem
      */
-    test("newProblemFromId", async function(){
+    test("newProblemFromId", async function () {
         let problemId = 'testProblemFromId';
         let path = join(ARENA, problemId);
 
@@ -130,11 +130,11 @@ suite("Extension Tests", function () {
     /**
      * core::newContestFromId
      */
-    test("newContestFromId", async function(){
+    test("newContestFromId", async function () {
         let contestId = 'testContestFromId';
         let path = join(ARENA, contestId);
 
-        if (existsSync(path)){
+        if (existsSync(path)) {
             recRmdir(path);
         }
 
@@ -152,7 +152,7 @@ suite("Extension Tests", function () {
      *
      * Test running one single test cases, and receiving all different verdicts
      */
-    test("timedRunOk", function() {
+    test("timedRunOk", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'A');
         let testcaseId = '0';
@@ -160,7 +160,7 @@ suite("Extension Tests", function () {
         assert.equal(result.status, Verdict.OK);
     });
 
-    test("timedRunWA", function() {
+    test("timedRunWA", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'B');
         let testcaseId = '0';
@@ -168,7 +168,7 @@ suite("Extension Tests", function () {
         assert.equal(result.status, Verdict.WA);
     });
 
-    test("timedRunRTE", function() {
+    test("timedRunRTE", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'C');
         let testcaseId = '0';
@@ -176,7 +176,7 @@ suite("Extension Tests", function () {
         assert.equal(result.status, Verdict.RTE);
     });
 
-    test("timedRunTLE", function() {
+    test("timedRunTLE", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'D');
         let testcaseId = '0';
@@ -189,14 +189,14 @@ suite("Extension Tests", function () {
      *
      * Test running one single test cases, and receiving all different verdicts
      */
-    test("testSolutionOK", function() {
+    test("testSolutionOK", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'A');
         let result: TestcaseResult = testSolution(problem);
         assert.equal(result.status, Verdict.OK);
     });
 
-    test("testSolutionCE", function() {
+    test("testSolutionCE", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'E');
         try {
@@ -210,10 +210,10 @@ suite("Extension Tests", function () {
     /**
      * core::stressSolution
      */
-    test("stressSolutionOK", function() {
+    test("stressSolutionOK", function () {
         let path = join(ARENA, 'testStressOK');
 
-        if (existsSync(path)){
+        if (existsSync(path)) {
             recRmdir(path);
         }
 
@@ -224,34 +224,34 @@ suite("Extension Tests", function () {
 
         // populate sol.cpp
         writeFile(join(path, "sol.cpp"),
-        `#include <iostream>\n` +
-        `\n` +
-        `using namespace std;\n` +
-        `\n` +
-        `int main(){\n` +
-        `   int n; cin >> n;\n` +
-        `   cout << n + 2 << endl;\n` +
-        `   return 0;\n` +
-        `}\n`
+            `#include <iostream>\n` +
+            `\n` +
+            `using namespace std;\n` +
+            `\n` +
+            `int main(){\n` +
+            `   int n; cin >> n;\n` +
+            `   cout << n + 2 << endl;\n` +
+            `   return 0;\n` +
+            `}\n`
         );
 
         // populate brute.cpp
         writeFile(join(path, "brute.cpp"),
-        `#include <iostream>\n` +
-        `\n` +
-        `using namespace std;\n` +
-        `\n` +
-        `int main(){\n` +
-        `   int n; cin >> n;\n` +
-        `   cout << n + 2 << endl;\n` +
-        `   return 0;\n` +
-        `}\n`
+            `#include <iostream>\n` +
+            `\n` +
+            `using namespace std;\n` +
+            `\n` +
+            `int main(){\n` +
+            `   int n; cin >> n;\n` +
+            `   cout << n + 2 << endl;\n` +
+            `   return 0;\n` +
+            `}\n`
         );
 
         // populate gen.py
         writeFile(join(path, 'gen.py'),
-        `import random\n` +
-        `print(random.randint(0, 99))\n`
+            `import random\n` +
+            `print(random.randint(0, 99))\n`
         );
 
         let result = stressSolution(path, 10);
@@ -261,10 +261,10 @@ suite("Extension Tests", function () {
         recRmdir(path);
     });
 
-    test("stressSolutionWA", function() {
+    test("stressSolutionWA", function () {
         let path = join(ARENA, 'testStressWA');
 
-        if (existsSync(path)){
+        if (existsSync(path)) {
             recRmdir(path);
         }
 
@@ -275,34 +275,34 @@ suite("Extension Tests", function () {
 
         // populate sol.cpp
         writeFile(join(path, "sol.cpp"),
-        `#include <iostream>\n` +
-        `\n` +
-        `using namespace std;\n` +
-        `\n` +
-        `int main(){\n` +
-        `   int n; cin >> n;\n` +
-        `   cout << n + 3 << endl;\n` +
-        `   return 0;\n` +
-        `}\n`
+            `#include <iostream>\n` +
+            `\n` +
+            `using namespace std;\n` +
+            `\n` +
+            `int main(){\n` +
+            `   int n; cin >> n;\n` +
+            `   cout << n + 3 << endl;\n` +
+            `   return 0;\n` +
+            `}\n`
         );
 
         // populate brute.cpp
         writeFile(join(path, "brute.cpp"),
-        `#include <iostream>\n` +
-        `\n` +
-        `using namespace std;\n` +
-        `\n` +
-        `int main(){\n` +
-        `   int n; cin >> n;\n` +
-        `   cout << n + 2 << endl;\n` +
-        `   return 0;\n` +
-        `}\n`
+            `#include <iostream>\n` +
+            `\n` +
+            `using namespace std;\n` +
+            `\n` +
+            `int main(){\n` +
+            `   int n; cin >> n;\n` +
+            `   cout << n + 2 << endl;\n` +
+            `   return 0;\n` +
+            `}\n`
         );
 
         // populate gen.py
         writeFile(join(path, ATTIC, 'gen.py'),
-        `import random\n` +
-        `print(random.randint(0, 99))\n`
+            `import random\n` +
+            `print(random.randint(0, 99))\n`
         );
 
         let result = stressSolution(path, 10);

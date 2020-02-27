@@ -1,12 +1,12 @@
 'use strict';
+import { copyFileSync, existsSync, readdirSync, writeFileSync } from 'fs';
+import { extname, join } from 'path';
 import * as vscode from 'vscode';
-import { existsSync, writeFileSync, readdirSync, copyFileSync } from 'fs';
-import { join, extname } from 'path';
-import { SITES, getSite } from './conn';
-import { newContestFromId, testSolution, verdictName, stressSolution, upgradeArena, newProblemFromId, removeExtension, solFile, initAcmX, currentProblem, compileCode, ATTIC, SRC } from './core';
-import { Verdict, SiteDescription } from './types';
 import { startCompetitiveCompanionService } from './companion';
+import { getSite, SITES } from './conn';
+import { ATTIC, compileCode, currentProblem, initAcmX, newContestFromId, newProblemFromId, removeExtension, solFile, SRC, stressSolution, testSolution, upgradeArena, verdictName } from './core';
 import { hideTerminals } from './terminal';
+import { SiteDescription, Verdict } from './types';
 
 const TESTCASES = 'testcases';
 
@@ -15,9 +15,9 @@ function quickPickSites() {
 
     SITES.forEach(value => {
         sites.push({
-            "label" : value.name,
-            "target" : value.name,
-            "description" : value.description,
+            "label": value.name,
+            "target": value.name,
+            "description": value.description,
         });
     });
 
@@ -28,16 +28,16 @@ function quickPickSites() {
 async function addProblem() {
     let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
-    if (site_info === undefined){
+    if (site_info === undefined) {
         vscode.window.showErrorMessage("Site not provided.");
         return;
     }
 
     let site: SiteDescription = getSite(site_info.target);
 
-    let id = await vscode.window.showInputBox({placeHolder: site.problemIdPlaceholder});
+    let id = await vscode.window.showInputBox({ placeHolder: site.problemIdPlaceholder });
 
-    if (id === undefined){
+    if (id === undefined) {
         vscode.window.showErrorMessage("Problem ID not provided.");
         return;
     }
@@ -58,7 +58,7 @@ async function addContest() {
     let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
     let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
-    if (site_info === undefined){
+    if (site_info === undefined) {
         vscode.window.showErrorMessage("Site not provided.");
         return;
     }
@@ -66,27 +66,27 @@ async function addContest() {
     let site = getSite(site_info.target);
     let id = undefined;
 
-    if (site.name === "empty"){
-        let name= await vscode.window.showInputBox({placeHolder: site.contestIdPlaceholder});
+    if (site.name === "empty") {
+        let name = await vscode.window.showInputBox({ placeHolder: site.contestIdPlaceholder });
 
-        if (name === undefined){
+        if (name === undefined) {
             vscode.window.showErrorMessage("Name not provided.");
             return;
         }
 
-        let probCountStr = await vscode.window.showInputBox({placeHolder: "Number of problems"});
+        let probCountStr = await vscode.window.showInputBox({ placeHolder: "Number of problems" });
 
-        if (name === undefined){
+        if (name === undefined) {
             vscode.window.showErrorMessage("Number of problems not provided.");
             return;
         }
 
         id = name + '-' + probCountStr!;
     }
-    else{
-        id = await vscode.window.showInputBox({placeHolder: site.contestIdPlaceholder});
+    else {
+        id = await vscode.window.showInputBox({ placeHolder: site.contestIdPlaceholder });
 
-        if (id === undefined){
+        if (id === undefined) {
             vscode.window.showErrorMessage("Contest ID not provided.");
             return;
         }
@@ -97,7 +97,7 @@ async function addContest() {
     vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(contestPath));
 }
 
-async function debugTestcase(path: string, tcId: string){
+async function debugTestcase(path: string, tcId: string) {
     // Change editor layout to show failing test
     await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{ groups: [{}], size: 0.5 }, { groups: [{}, {}, {}], size: 0.5 }] });
 
@@ -111,37 +111,37 @@ async function debugTestcase(path: string, tcId: string){
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Three);
 
     // This file might not exist!
-    if (existsSync(cur)){
+    if (existsSync(cur)) {
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(cur), vscode.ViewColumn.Four);
     }
 }
 
-async function runSolution(){
+async function runSolution() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
     let result = testSolution(path);
 
-    if (result.status === Verdict.OK){
+    if (result.status === Verdict.OK) {
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
-    else if (result.status === Verdict.NO_TESTCASES){
+    else if (result.status === Verdict.NO_TESTCASES) {
         vscode.window.showErrorMessage(`No testcases.`);
     }
-    else{
+    else {
         vscode.window.showErrorMessage(`${verdictName(result.status)} on test ${result.failTcId}`);
         debugTestcase(path, result.failTcId!);
     }
 }
 
-async function compile(){
+async function compile() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
@@ -149,17 +149,17 @@ async function compile(){
     let sol = join(path, solFile());
     let out = join(path, ATTIC, 'sol');
 
-    if (!existsSync(sol)){
+    if (!existsSync(sol)) {
         throw new Error("Open a coding environment first.");
     }
 
     // Compile solution
     let xresult = compileCode(sol, out);
 
-    if (xresult.status !== 0){
+    if (xresult.status !== 0) {
         throw new Error(`Compilation Error. ${sol}`);
     }
-    else{
+    else {
         vscode.window.showInformationMessage("Compilation successfully.");
     }
 }
@@ -167,7 +167,7 @@ async function compile(){
 async function openTestcase() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
@@ -176,24 +176,25 @@ async function openTestcase() {
 
     // Read testcases
     readdirSync(join(path, TESTCASES)).
-        filter( function (tcpath) {
-            return extname(tcpath) === '.in';}).
-        map( function(tcpath) {
+        filter(function (tcpath) {
+            return extname(tcpath) === '.in';
+        }).
+        map(function (tcpath) {
             let name = removeExtension(tcpath);
 
             tcs.push({
-                'label' : name,
-                'target' : name,
+                'label': name,
+                'target': name,
             });
         });
 
     let tc = await vscode.window.showQuickPick(tcs, { placeHolder: 'Select testcase' });
 
-    if (tc !== undefined){
+    if (tc !== undefined) {
         let inp = join(path, TESTCASES, `${tc.target}.in`);
         let out = join(path, TESTCASES, `${tc.target}.out`);
 
-        await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}]});
+        await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}] });
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.One);
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Two);
     }
@@ -202,13 +203,13 @@ async function openTestcase() {
 async function addTestcase() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
     let index = 0;
-    while (existsSync(join(path, TESTCASES, `${index}.hand.in`))){
+    while (existsSync(join(path, TESTCASES, `${index}.hand.in`))) {
         index += 1;
     }
 
@@ -218,7 +219,7 @@ async function addTestcase() {
     writeFileSync(inp, "");
     writeFileSync(out, "");
 
-    await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}]});
+    await vscode.commands.executeCommand("vscode.setEditorLayout", { orientation: 0, groups: [{}, {}] });
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(inp), vscode.ViewColumn.One);
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(out), vscode.ViewColumn.Two);
 }
@@ -228,22 +229,22 @@ async function coding() {
 
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    await vscode.commands.executeCommand("vscode.setEditorLayout", { groups: [{}]});
+    await vscode.commands.executeCommand("vscode.setEditorLayout", { groups: [{}] });
 
     let sol = join(path, solFile());
 
     await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(sol), vscode.ViewColumn.One);
 }
 
-async function stress(){
+async function stress() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
@@ -251,25 +252,25 @@ async function stress(){
     let stressTimes: number | undefined = vscode.workspace.getConfiguration('acmx.stress', null).get('times');
 
     // Use default
-    if (stressTimes === undefined){
+    if (stressTimes === undefined) {
         stressTimes = 10;
     }
 
     let result = stressSolution(path, stressTimes);
 
-    if (result.status === Verdict.OK){
+    if (result.status === Verdict.OK) {
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     }
-    else{
+    else {
         vscode.window.showErrorMessage(`${verdictName(result.status)} on test ${result.failTcId}`);
         debugTestcase(path, result.failTcId!);
     }
 }
 
-async function upgrade(){
+async function upgrade() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
@@ -277,34 +278,34 @@ async function upgrade(){
     upgradeArena(path);
 }
 
-function fileList(dir: string): string[]{
+function fileList(dir: string): string[] {
     return readdirSync(dir).reduce((list: string[], file: string) => {
         return list.concat([file]);
     }, []);
 }
 
-async function setChecker(){
+async function setChecker() {
     let path = currentProblem();
 
-    if (path === undefined){
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
     let all_checkers_plain = fileList(join(SRC, 'static', 'checkers'))
-                                .filter((name: string) => name !== 'testlib.h')
-                                .map((name: string) => name.slice(0, name.length - 4));
+        .filter((name: string) => name !== 'testlib.h')
+        .map((name: string) => name.slice(0, name.length - 4));
 
     let all_checkers = all_checkers_plain.map((value: string) => {
         return {
-            'label' : value,
-            'target' : value + '.cpp'
+            'label': value,
+            'target': value + '.cpp'
         };
     });
 
     let checker_info = await vscode.window.showQuickPick(all_checkers, { placeHolder: 'Select custom checker.' });
 
-    if (checker_info === undefined){
+    if (checker_info === undefined) {
         vscode.window.showErrorMessage("Checker not provided.");
         return;
     }
@@ -317,7 +318,7 @@ async function setChecker(){
     copyFileSync(checker_path, checker_dest);
 }
 
-async function debugTest(){
+async function debugTest() {
     console.log("no bugs :O");
 }
 
