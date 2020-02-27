@@ -65,7 +65,6 @@ const EMPTY = new SiteDescription(
  */
 export const SITES: SiteDescription[] = [
     EMPTY,
-    // CODEFORCES,
 ];
 
 export function getSite(site: string): SiteDescription {

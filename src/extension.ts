@@ -1,6 +1,6 @@
 'use strict';
-import { copyFileSync, existsSync, readdirSync, writeFileSync } from 'fs';
-import { extname, join } from 'path';
+import { closeSync, copyFileSync, existsSync, openSync, readdirSync, readFileSync, writeFileSync, writeSync } from 'fs';
+import { basename, dirname, extname, join } from 'path';
 import * as vscode from 'vscode';
 import { startCompetitiveCompanionService } from './companion';
 import { getSite, SITES } from './conn';
@@ -318,6 +318,31 @@ async function setChecker() {
     copyFileSync(checker_path, checker_dest);
 }
 
+async function debugTestCase(uriPath: vscode.Uri) {
+    let testCaseName = basename(uriPath.path);
+    let path = dirname(uriPath.path);
+
+    const MAX_DEPTH = 2;
+
+    for (let i = 0; i < MAX_DEPTH && !existsSync(join(path, '.vscode')); i++) {
+        path = dirname(path);
+        console.log(path);
+    }
+
+    let launchTaskPath = join(path, '.vscode', 'launch.json');
+
+    if (!existsSync(launchTaskPath)) {
+        return undefined;
+    }
+
+    let launchTaskData = readFileSync(launchTaskPath, "utf8");
+    // TODO(#41): Don't use regular expression to replace this. Use JSON parser instead.
+    let newTaskData = launchTaskData.replace(/\"stdio\"\:.+/, `"stdio": ["\${fileDirname}/testcases/${testCaseName}"],`);
+    let launchTaskFdW = openSync(launchTaskPath, 'w');
+    writeSync(launchTaskFdW, newTaskData);
+    closeSync(launchTaskFdW);
+}
+
 async function debugTest() {
     console.log("no bugs :O");
 }
@@ -338,8 +363,9 @@ export function activate(context: vscode.ExtensionContext) {
     let upgradeCommand = vscode.commands.registerCommand('acmx.upgrade', upgrade);
     let compileCommand = vscode.commands.registerCommand('acmx.compile', compile);
     let setCheckerCommand = vscode.commands.registerCommand('acmx.setChecker', setChecker);
+    let debugTestCaseCommand = vscode.commands.registerCommand('acmx.debugTestCase', debugTestCase);
 
-    let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
+    // let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
 
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
@@ -351,8 +377,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(upgradeCommand);
     context.subscriptions.push(compileCommand);
     context.subscriptions.push(setCheckerCommand);
+    context.subscriptions.push(debugTestCaseCommand);
 
-    context.subscriptions.push(debugTestCommand);
+    // context.subscriptions.push(debugTestCommand);
 }
 
 // this method is called when your extension is deactivated

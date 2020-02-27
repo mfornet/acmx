@@ -127,6 +127,10 @@
             {
                 "command": "acmx.setChecker",
                 "title": "ACMX: Set Checker"
+            },
+            {
+                "command": "acmx.debugTestCase",
+                "title": "Select Test Case"
             }
         ],
         "keybindings": [
@@ -150,7 +154,22 @@
                 "command": "acmx.upgrade",
                 "key": "ctrl+alt+u"
             }
-        ]
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "acmx.debugTestCase",
+                    "group": "acmx@1",
+                    "when": "resourceExtname == .in"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "acmx.debugTestCase",
+                    "when": "false"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
