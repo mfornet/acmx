@@ -2,6 +2,14 @@
 
 Notable updates of **acmX**
 
+## 0.2.6
+
+* Add official logo (thanks @Salil03)
+* Allow default launch.json and tasks.json
+* Allow select testcase to debug (only compatible with launch.json for CodeLLDB)
+* New contest will be named with letters from A to Z
+* Command to copy code to clipboard (integration with caide)
+
 ## 0.2.5
 
 * Build executable in windows properly.
