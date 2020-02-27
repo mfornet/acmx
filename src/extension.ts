@@ -359,8 +359,12 @@ async function copySubmissionToClipboard() {
     if (submissionCommand === undefined || submissionCommand === "") {
         content = readFileSync(sol, "utf8");
     } else {
-        submissionCommand = submissionCommand.replace("$PROGRAM", sol);
-        let submissionCommands = submissionCommand.split(' ');
+        let submissionCommands = submissionCommand!.split(' ');
+
+        for (let i = 0; i < submissionCommands.length; i++) {
+            submissionCommands[i] = submissionCommands[i].replace("$PROGRAM", sol);
+        }
+
         let xresult = child_process.spawnSync(submissionCommands[0], submissionCommands.slice(1));
 
         if (xresult.status !== 0) {
@@ -372,6 +376,7 @@ async function copySubmissionToClipboard() {
     }
 
     clipboardy.writeSync(content);
+    vscode.window.showInformationMessage("Submission copied to clipboard!");
 }
 
 async function debugTest() {
