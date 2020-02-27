@@ -294,7 +294,8 @@ export function newProblemFromCompanion(config: any) {
         outputs.push(testcase.output);
     });
 
-    newProblem(problemPath, new Problem(config.name, config.name, inputs, outputs), true);
+    copyDefaultFilesToWorkspace(contestPath);
+    newProblem(problemPath, new Problem(config.name, config.name, inputs, outputs), false);
 
     return contestPath;
 }
