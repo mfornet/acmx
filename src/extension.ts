@@ -7,6 +7,7 @@ import { getSite, SITES } from './conn';
 import { ATTIC, compileCode, currentProblem, initAcmX, newContestFromId, newProblemFromId, removeExtension, solFile, SRC, stressSolution, testSolution, upgradeArena, verdictName } from './core';
 import { hideTerminals } from './terminal';
 import { SiteDescription, Verdict } from './types';
+const clipboardy = require('clipboardy');
 
 const TESTCASES = 'testcases';
 
@@ -48,8 +49,7 @@ async function addProblem() {
     let problemPath = await newProblemFromId(path, site, id);
 
     await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(problemPath));
-    // TODO: 007
-    // Just want to run two commands below
+    // TODO(#42): Just want to run two commands below
     // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(solFile()));
     // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
 }
@@ -343,6 +343,20 @@ async function debugTestCase(uriPath: vscode.Uri) {
     closeSync(launchTaskFdW);
 }
 
+async function copySubmissionToClipboard() {
+    let path = currentProblem();
+
+    if (path === undefined) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let sol = join(path, solFile());
+    let content = readFileSync(sol, "utf8");
+
+    clipboardy.writeSync(content);
+}
+
 async function debugTest() {
     vscode.window.showInformationMessage(String.fromCharCode(65));
     console.log("no bugs :O");
@@ -365,6 +379,7 @@ export function activate(context: vscode.ExtensionContext) {
     let compileCommand = vscode.commands.registerCommand('acmx.compile', compile);
     let setCheckerCommand = vscode.commands.registerCommand('acmx.setChecker', setChecker);
     let debugTestCaseCommand = vscode.commands.registerCommand('acmx.debugTestCase', debugTestCase);
+    let copySubmissionToClipboardCommand = vscode.commands.registerCommand('acmx.copyToClipboard', copySubmissionToClipboard);
 
     let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
 
@@ -379,6 +394,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(compileCommand);
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(debugTestCaseCommand);
+    context.subscriptions.push(copySubmissionToClipboardCommand);
 
     context.subscriptions.push(debugTestCommand);
 }
