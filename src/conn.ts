@@ -50,7 +50,11 @@ const EMPTY = new SiteDescription(
         let problems = [];
 
         for (let i = 0; i < total; i++) {
-            problems.push(new Problem(`P${i + 1}`, `P${i + 1}`, [], []));
+            let name = `Z${i - 25}`;
+            if (i < 26) {
+                name = String.fromCharCode(i + 65);
+            }
+            problems.push(new Problem(name, name, [], []));
         }
 
         return new Contest(name, problems);

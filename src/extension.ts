@@ -344,6 +344,7 @@ async function debugTestCase(uriPath: vscode.Uri) {
 }
 
 async function debugTest() {
+    vscode.window.showInformationMessage(String.fromCharCode(65));
     console.log("no bugs :O");
 }
 
@@ -365,7 +366,7 @@ export function activate(context: vscode.ExtensionContext) {
     let setCheckerCommand = vscode.commands.registerCommand('acmx.setChecker', setChecker);
     let debugTestCaseCommand = vscode.commands.registerCommand('acmx.debugTestCase', debugTestCase);
 
-    // let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
+    let debugTestCommand = vscode.commands.registerCommand('acmx.debugTest', debugTest);
 
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
@@ -379,7 +380,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(debugTestCaseCommand);
 
-    // context.subscriptions.push(debugTestCommand);
+    context.subscriptions.push(debugTestCommand);
 }
 
 // this method is called when your extension is deactivated
