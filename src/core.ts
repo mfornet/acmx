@@ -224,8 +224,37 @@ export function upgradeArena(path: string) {
     }
 }
 
-function newProblem(path: string, problem: Problem) {
+function copyDefaultFilesToWorkspace(path: string) {
+    let vscodeFolder = join(path, '.vscode');
+    createFolder(vscodeFolder);
+
+    // acmx.configuration.tasks
+    let tasksPath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('tasks');
+    let launchPath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('launch');
+
+    if (tasksPath !== '') {
+        if (tasksPath === undefined || !existsSync(tasksPath)) {
+            vscode.window.showErrorMessage(`tasks file ${tasksPath} not found`);
+        } else {
+            copyFileSync(tasksPath, join(vscodeFolder, 'tasks.json'));
+        }
+    }
+
+    if (launchPath !== '') {
+        if (launchPath === undefined || !existsSync(launchPath)) {
+            vscode.window.showErrorMessage(`launch file ${launchPath} not found`);
+        } else {
+            copyFileSync(launchPath, join(vscodeFolder, 'launch.json'));
+        }
+    }
+}
+
+function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
     newArena(path);
+
+    if (isWorkspace) {
+        copyDefaultFilesToWorkspace(path);
+    }
 
     problem.inputs!.forEach((value, index) => {
         let fd = openSync(join(path, TESTCASES, `${index}.in`), 'w');
@@ -243,14 +272,14 @@ export async function newProblemFromId(path: string, site: SiteDescription, prob
 
     path = join(path, problem.identifier!);
 
-    newProblem(path, problem);
+    newProblem(path, problem, true);
 
     return path;
 }
 
 function newContest(path: string, contest: Contest) {
     contest.problems!.forEach(problem => {
-        newProblem(join(path, problem.identifier!), problem);
+        newProblem(join(path, problem.identifier!), problem, false);
     });
 }
 
@@ -272,7 +301,7 @@ export function newProblemFromCompanion(config: any) {
         outputs.push(testcase.output);
     });
 
-    newProblem(problemPath, new Problem(config.name, config.name, inputs, outputs));
+    newProblem(problemPath, new Problem(config.name, config.name, inputs, outputs), true);
 
     return contestPath;
 }
@@ -287,8 +316,9 @@ export async function newContestFromId(path: string, site: SiteDescription, cont
     let contestPath = join(path, site.name, contest.name);
 
     createFolder(contestPath);
-
+    copyDefaultFilesToWorkspace(contestPath);
     newContest(contestPath, contest);
+
     return contestPath;
 }
 

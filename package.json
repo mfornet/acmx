@@ -48,6 +48,18 @@
                         "description": "Path to python executable.",
                         "scope": "resource"
                     },
+                    "acmx.configuration.tasks": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Path to default tasks file to include in the workspace.",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.launch": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Path to default launch file to include in the workspace.",
+                        "scope": "resource"
+                    },
                     "acmx.configuration.templatePath": {
                         "type": "string",
                         "default": "",
