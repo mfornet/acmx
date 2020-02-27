@@ -6,6 +6,18 @@
     "publisher": "marx24",
     "version": "0.2.6",
     "license": "MIT",
+    "keywords": [
+        "acm",
+        "icpc",
+        "codeforces",
+        "codechef",
+        "atcoder",
+        "hackerrank",
+        "spoj",
+        "competitive programming",
+        "test cases",
+        "submit"
+    ],
     "engines": {
         "vscode": "^1.30.0"
     },
