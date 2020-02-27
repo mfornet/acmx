@@ -1,6 +1,6 @@
 'use strict';
 import * as child_process from 'child_process';
-import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, readSync, writeSync } from "fs";
+import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, writeSync } from "fs";
 import { basename, dirname, extname, join } from "path";
 import * as vscode from 'vscode';
 import * as gwen from './gwen';
@@ -352,14 +352,7 @@ export function timedRun(path: string, tcName: string, timeout: number) {
     let tcOutput = join(path, TESTCASES, `${tcName}.out`);
     let tcCurrent = join(path, TESTCASES, `${tcName}.real`);
 
-    // TODO: Don't create Buffer from constructor `new Buffer()`. See warning:
-    // (node:17458) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
-
-    let inputFd = openSync(tcInput, 'r');
-    let buffer = new Buffer(getMaxSizeInput());
-    readSync(inputFd, buffer, 0, getMaxSizeInput(), 0);
-    let tcData = buffer.toString();
-    closeSync(inputFd);
+    let tcData = readFileSync(tcInput, "utf8");
 
     let startTime = new Date().getTime();
     let command = `${join(path, ATTIC, "sol.exe")}`;
@@ -417,11 +410,7 @@ export function compileCode(pathCode: string, pathOutput: string) {
     let md5data = "";
 
     if (existsSync(pathCodeMD5)) {
-        let codeMD5fd = openSync(pathCodeMD5, 'r');
-        let buffer = new Buffer(getMaxSizeInput());
-        readSync(codeMD5fd, buffer, 0, 32, 0);
-        md5data = buffer.toString().slice(0, 32);
-        closeSync(codeMD5fd);
+        md5data = readFileSync(pathCodeMD5, "utf8");
     }
 
     let codeMD5 = md5File.sync(pathCode);
@@ -561,14 +550,10 @@ export function stressSolution(path: string, times: number) {
         generateTestcase(path);
 
         // Generate output testcase from brute.cpp
-        let inputFd = openSync(join(path, TESTCASES, 'gen.in'), 'r');
-        let buffer = new Buffer(getMaxSizeInput());
-        readSync(inputFd, buffer, 0, getMaxSizeInput(), 0);
-        let tcData = buffer.toString();
-        closeSync(inputFd);
+        let tcData = readFileSync(join(path, TESTCASES, 'gen.in'), "utf8");
 
         // Run without restrictions
-        // TODO: 005
+        // TODO(#36)
         let runResult = child_process.spawnSync(brout, {
             input: tcData,
         });
