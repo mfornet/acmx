@@ -1,5 +1,4 @@
 import { Contest, Problem, SiteDescription } from "./types";
-// import { CODEFORCES } from "./parsers/codeforces";
 
 /**
  * Not a real site.
