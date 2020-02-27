@@ -338,7 +338,7 @@ function get_checker_path() {
  *
  * @param path
  * @param tcName
- * @param timeout in miliseconds
+ * @param timeout in milliseconds
  */
 export function timedRun(path: string, tcName: string, timeout: number) {
     let tcInput = join(path, TESTCASES, `${tcName}.in`);

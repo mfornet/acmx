@@ -1,4 +1,5 @@
 'use strict';
+import * as child_process from 'child_process';
 import { closeSync, copyFileSync, existsSync, openSync, readdirSync, readFileSync, writeFileSync, writeSync } from 'fs';
 import { basename, dirname, extname, join } from 'path';
 import * as vscode from 'vscode';
@@ -351,8 +352,24 @@ async function copySubmissionToClipboard() {
         return;
     }
 
+    let submissionCommand: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('copyToClipboardCommand');
     let sol = join(path, solFile());
-    let content = readFileSync(sol, "utf8");
+    let content = "";
+
+    if (submissionCommand === undefined || submissionCommand === "") {
+        content = readFileSync(sol, "utf8");
+    } else {
+        submissionCommand = submissionCommand.replace("$PROGRAM", sol);
+        let submissionCommands = submissionCommand.split(' ');
+        let xresult = child_process.spawnSync(submissionCommands[0], submissionCommands.slice(1));
+
+        if (xresult.status !== 0) {
+            vscode.window.showErrorMessage("Fail generating submission.");
+            return;
+        }
+
+        content = xresult.stdout.toString();
+    }
 
     clipboardy.writeSync(content);
 }

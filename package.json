@@ -48,6 +48,12 @@
                         "description": "Path to python executable.",
                         "scope": "resource"
                     },
+                    "acmx.configuration.copyToClipboardCommand": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Command to run to copy to clipboard. Leave empty to copy main program. Refer to the code as $PROGRAM",
+                        "scope": "resource"
+                    },
                     "acmx.configuration.tasks": {
                         "type": "string",
                         "default": "",
