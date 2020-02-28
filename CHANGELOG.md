@@ -2,6 +2,10 @@
 
 Notable updates of **acmX**
 
+## 0.2.7
+
+* Fix bugs introduced after features in 0.2.6
+
 ## 0.2.6
 
 * Add official logo (thanks @Salil03)
