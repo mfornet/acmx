@@ -2,22 +2,15 @@
 import * as assert from 'assert';
 import { existsSync, readdirSync } from 'fs';
 import { dirname, join } from 'path';
-import * as vscode from 'vscode';
 import { getSite, PERSONAL, SITES } from '../conn';
 import { ATTIC, newArena, newContestFromId, newProblemFromId, TESTCASES, testcasesName, testSolution, upgradeArena } from '../core';
 import { TestcaseResult, Verdict } from '../types';
 import { recRmdir } from './test_utils';
-const { before } = require('mocha');
 
 const ARENA = join(dirname(dirname(dirname(__filename))), 'src', 'test', 'arena');
 
 SITES.push(PERSONAL);
-
-before(async () => {
-    process.env.ACMX_TESTING = "1";
-    const extensions = vscode.extensions.getExtension("marx24.acmX")!;
-    await extensions.activate();
-});
+process.env.ACMX_TESTING = "1";
 
 suite("Extension Tests", function () {
     /**
