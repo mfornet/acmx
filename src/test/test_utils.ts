@@ -20,7 +20,18 @@ export function recursiveRemoveDirectory(path: string) {
             }
         });
 
-        rmdirSync(path);
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                rmdirSync(path);
+                break;
+            } catch (error) {
+                retries -= 1;
+                if (retries === 0) {
+                    throw (path);
+                }
+            }
+        }
     }
 }
 

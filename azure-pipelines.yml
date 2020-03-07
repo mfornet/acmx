@@ -1,14 +1,15 @@
 trigger:
 - master
+- testing
 
 strategy:
   matrix:
+    windows:
+      imageName: 'windows-2019'
     linux:
       imageName: 'ubuntu-18.04'
     mac:
       imageName: 'macOS-10.15'
-    windows:
-      imageName: 'windows-2019'
 
 pool:
   vmImage: $(imageName)
