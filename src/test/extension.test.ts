@@ -47,7 +47,6 @@ suite("Extension Tests", function () {
      * core::initAcmX
      */
     test("initAcmX", function () {
-        // TODO
     });
 
     /**

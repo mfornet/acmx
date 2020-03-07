@@ -203,7 +203,7 @@ export function upgradeArena(path: string) {
     let generator = join(path, 'gen.py');
 
     if (!existsSync(generator)) {
-        // TODO: If generator already exist ask whether to overwrite or not.
+        // TODO(#47): If generator already exist don't overwrite but log that it was not created.
         gwen.create(path, generator);
     }
 
@@ -547,7 +547,7 @@ export function stressSolution(path: string, times: number) {
         let tcData = readFileSync(join(path, TESTCASES, 'gen.in'), "utf8");
 
         // Run without restrictions
-        // TODO(#36)
+        // TODO(#36): Put time limit on all type of programs
         let runResult = child_process.spawnSync(brout, {
             input: tcData,
         });
