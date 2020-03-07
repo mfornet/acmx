@@ -51,6 +51,29 @@ async function addProblem() {
     // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
 }
 
+function parseNumberOfProblems(numberOfProblems: string | undefined) {
+    if (numberOfProblems === undefined) {
+        return undefined;
+    }
+
+    numberOfProblems = numberOfProblems.toLowerCase();
+
+    if (numberOfProblems.length === 1) {
+        let value = numberOfProblems.charCodeAt(0);
+        if (97 <= value && value <= 122) {
+            return value - 97 + 1;
+        }
+    }
+
+    let res = Number.parseInt(numberOfProblems);
+
+    if (Number.isNaN(res)) {
+        return undefined;
+    } else {
+        return res;
+    }
+}
+
 async function addContest() {
     let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
 
@@ -61,31 +84,22 @@ async function addContest() {
 
     let id = undefined;
 
-    if (site.name === "empty") {
-        let name = await vscode.window.showInputBox({ placeHolder: site.contestIdPlaceholder });
+    let name = await vscode.window.showInputBox({ placeHolder: site.contestIdPlaceholder });
 
-        if (name === undefined) {
-            vscode.window.showErrorMessage("Name not provided.");
-            return;
-        }
-
-        let probCountStr = await vscode.window.showInputBox({ placeHolder: "Number of problems" });
-
-        if (name === undefined) {
-            vscode.window.showErrorMessage("Number of problems not provided.");
-            return;
-        }
-
-        id = name + '-' + probCountStr!;
+    if (name === undefined) {
+        vscode.window.showErrorMessage("Name not provided.");
+        return;
     }
-    else {
-        id = await vscode.window.showInputBox({ placeHolder: site.contestIdPlaceholder });
 
-        if (id === undefined) {
-            vscode.window.showErrorMessage("Contest ID not provided.");
-            return;
-        }
+    let probCountStr = await vscode.window.showInputBox({ placeHolder: "Number of problems" });
+    let probCount = parseNumberOfProblems(probCountStr);
+
+    if (probCount === undefined) {
+        vscode.window.showErrorMessage("Number of problems not provided.");
+        return;
     }
+
+    id = name + '-' + probCount.toString();
 
     let contestPath = await newContestFromId(path!, site, id);
 
