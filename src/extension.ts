@@ -28,14 +28,10 @@ function quickPickSites() {
 
 // Create a new problem
 async function addProblem() {
-    let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
+    // Use default site when creating a problem from the vscode.
+    let target = "empty";
 
-    if (site_info === undefined) {
-        vscode.window.showErrorMessage("Site not provided.");
-        return;
-    }
-
-    let site: SiteDescription = getSite(site_info.target);
+    let site: SiteDescription = getSite(target);
 
     let id = await vscode.window.showInputBox({ placeHolder: site.problemIdPlaceholder });
 
@@ -57,14 +53,12 @@ async function addProblem() {
 
 async function addContest() {
     let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
-    let site_info = await vscode.window.showQuickPick(quickPickSites(), { placeHolder: 'Select contest site' });
 
-    if (site_info === undefined) {
-        vscode.window.showErrorMessage("Site not provided.");
-        return;
-    }
+    // Use default site when creating a contest from the vscode.
+    let target = "empty";
 
-    let site = getSite(site_info.target);
+    let site: SiteDescription = getSite(target);
+
     let id = undefined;
 
     if (site.name === "empty") {
