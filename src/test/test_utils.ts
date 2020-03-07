@@ -1,20 +1,22 @@
 
-import { closeSync, existsSync, openSync, readdirSync, rmdirSync, unlinkSync, writeSync } from 'fs';
+import { closeSync, existsSync, lstatSync, openSync, readdirSync, rmdirSync, unlinkSync, writeSync } from 'fs';
 import { join } from 'path';
 
 /**
  * Recursive remove
  */
-export function recRmdir(path: string) {
+export function recursiveRemoveDirectory(path: string) {
     if (existsSync(path)) {
         readdirSync(path).forEach(name => {
             let cPath = join(path, name);
+            let cPathStat = lstatSync(cPath);
 
-            try {
+            if (cPathStat.isFile()) {
                 unlinkSync(cPath);
-            }
-            catch (err) {
-                recRmdir(cPath);
+            } else if (cPathStat.isDirectory()) {
+                recursiveRemoveDirectory(cPath);
+            } else {
+                throw Error(`Error removing ${cPath} | stat: ${cPathStat}`);
             }
         });
 

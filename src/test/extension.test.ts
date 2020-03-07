@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import { getSite, PERSONAL, SITES } from '../conn';
 import { ATTIC, newArena, newContestFromId, newProblemFromId, TESTCASES, testcasesName, testSolution, upgradeArena } from '../core';
 import { TestcaseResult, Verdict } from '../types';
-import { recRmdir } from './test_utils';
+import { recursiveRemoveDirectory } from './test_utils';
 
 const ARENA = join(dirname(dirname(dirname(__filename))), 'src', 'test', 'arena');
 
@@ -20,7 +20,7 @@ suite("Extension Tests", function () {
         let path = join(ARENA, "testNew");
 
         if (existsSync(path)) {
-            recRmdir(path);
+            recursiveRemoveDirectory(path);
         }
 
         assert.equal(existsSync(path), false);
@@ -31,7 +31,7 @@ suite("Extension Tests", function () {
         assert.equal(existsSync(join(path, ATTIC)), true);
         assert.equal(existsSync(join(path, TESTCASES)), true);
 
-        recRmdir(path);
+        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -41,7 +41,7 @@ suite("Extension Tests", function () {
         let path = join(ARENA, "testUpgrade");
 
         if (existsSync(path)) {
-            recRmdir(path);
+            recursiveRemoveDirectory(path);
         }
 
         assert.equal(existsSync(path), false);
@@ -52,7 +52,7 @@ suite("Extension Tests", function () {
         assert.equal(existsSync(join(path, 'gen.py')), true);
         assert.equal(existsSync(join(path, 'brute.cpp')), true);
 
-        recRmdir(path);
+        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -87,7 +87,7 @@ suite("Extension Tests", function () {
         assert.equal(existsSync(join(path, TESTCASES)), true, "Testcases not found.");
         assert.equal(readdirSync(join(path, TESTCASES)).length, 6, "Incorrect number of files.");
 
-        recRmdir(path);
+        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -98,7 +98,7 @@ suite("Extension Tests", function () {
         let path = join(ARENA, contestId);
 
         if (existsSync(path)) {
-            recRmdir(path);
+            recursiveRemoveDirectory(path);
         }
 
         assert.equal(existsSync(path), false);
@@ -107,7 +107,7 @@ suite("Extension Tests", function () {
 
         assert.equal(readdirSync(path).length, 1);
 
-        recRmdir(path);
+        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -174,7 +174,7 @@ suite("Extension Tests", function () {
     //     let path = join(ARENA, 'testStressOK');
 
     //     if (existsSync(path)) {
-    //         recRmdir(path);
+    //         recursiveRemoveDirectory(path);
     //     }
 
     //     assert.equal(existsSync(path), false);
@@ -218,14 +218,14 @@ suite("Extension Tests", function () {
 
     //     assert.equal(result.status, Verdict.OK);
 
-    //     recRmdir(path);
+    //     recursiveRemoveDirectory(path);
     // });
 
     // test("stressSolutionWA", function () {
     //     let path = join(ARENA, 'testStressWA');
 
     //     if (existsSync(path)) {
-    //         recRmdir(path);
+    //         recursiveRemoveDirectory(path);
     //     }
 
     //     assert.equal(existsSync(path), false);
@@ -269,6 +269,6 @@ suite("Extension Tests", function () {
 
     //     assert.equal(result.status, Verdict.WA);
 
-    //     recRmdir(path);
+    //     recursiveRemoveDirectory(path);
     // });
 });
