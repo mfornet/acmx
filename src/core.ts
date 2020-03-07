@@ -10,10 +10,16 @@ const md5File = require('md5-file');
 
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
-export const SRC = dirname(__filename);
 
 /**
- * Name of program file. Take extension dynamically from configuration
+ * Path to static folder.
+ */
+export function pathToStatic() {
+    return join(dirname(dirname(__filename)), 'static');
+}
+
+/**
+ * Name of program file. Take extension dynamically from configuration.
  */
 export function solFile() {
     let extension: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('extension');
@@ -128,14 +134,14 @@ export function initAcmX() {
     // Copy testlib
     let testlib = 'testlib.h';
     if (!existsSync(join(checkerFolder, testlib))) {
-        copyFileSync(join(SRC, 'static', 'checkers', testlib),
+        copyFileSync(join(pathToStatic(), 'checkers', testlib),
             join(checkerFolder, testlib));
     }
 
     // Create wcmp checker
     let checkerName = 'wcmp.cpp';
     if (!existsSync(join(checkerFolder, checkerName))) {
-        copyFileSync(join(SRC, 'static', 'checkers', checkerName),
+        copyFileSync(join(pathToStatic(), 'checkers', checkerName),
             join(checkerFolder, checkerName));
     }
 
@@ -161,7 +167,7 @@ export function newArena(path: string) {
     let templatePath: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('templatePath');
 
     if (templatePath! === "") {
-        templatePath = join(SRC, 'static', 'template.cpp');
+        templatePath = join(pathToStatic(), 'template.cpp');
     }
 
     let solution = join(path, solFile());
@@ -196,7 +202,7 @@ export function upgradeArena(path: string) {
 
     if (!existsSync(brute)) {
         // Create brute.cpp file
-        copyFileSync(join(SRC, 'static', 'template.cpp'), brute);
+        copyFileSync(join(pathToStatic(), 'template.cpp'), brute);
     }
 
     // Create test case generator
@@ -212,8 +218,8 @@ export function upgradeArena(path: string) {
 
     if (!existsSync(checker)) {
         let testlib_path = join(path, ATTIC, 'testlib.h');
-        copyFileSync(join(SRC, 'static', 'checkers', 'wcmp.cpp'), checker);
-        copyFileSync(join(SRC, 'static', 'checkers', 'testlib.h'), testlib_path);
+        copyFileSync(join(pathToStatic(), 'checkers', 'wcmp.cpp'), checker);
+        copyFileSync(join(pathToStatic(), 'checkers', 'testlib.h'), testlib_path);
     }
 }
 

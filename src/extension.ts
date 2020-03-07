@@ -5,7 +5,7 @@ import { basename, dirname, extname, join } from 'path';
 import * as vscode from 'vscode';
 import { startCompetitiveCompanionService } from './companion';
 import { getSite } from './conn';
-import { ATTIC, compileCode, currentProblem, initAcmX, newContestFromId, newProblemFromId, removeExtension, solFile, SRC, stressSolution, testSolution, upgradeArena, verdictName } from './core';
+import { ATTIC, compileCode, currentProblem, initAcmX, newContestFromId, newProblemFromId, pathToStatic, removeExtension, solFile, stressSolution, testSolution, upgradeArena, verdictName } from './core';
 import { hideTerminals } from './terminal';
 import { SiteDescription, Verdict } from './types';
 const clipboardy = require('clipboardy');
@@ -287,7 +287,7 @@ async function setChecker() {
         return;
     }
 
-    let all_checkers_plain = fileList(join(SRC, 'static', 'checkers'))
+    let all_checkers_plain = fileList(join(pathToStatic(), 'checkers'))
         .filter((name: string) => name !== 'testlib.h')
         .map((name: string) => name.slice(0, name.length - 4));
 
@@ -307,7 +307,7 @@ async function setChecker() {
 
     let checker = checker_info.target;
 
-    let checker_path = join(SRC, 'static', 'checkers', checker);
+    let checker_path = join(pathToStatic(), 'checkers', checker);
     let checker_dest = join(path, ATTIC, 'checker.cpp');
 
     copyFileSync(checker_path, checker_dest);
