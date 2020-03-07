@@ -5,8 +5,14 @@ const app = require('express')();
 const bodyParser = require('body-parser');
 
 export function startCompetitiveCompanionService() {
-    let _port: number | undefined = vscode.workspace.getConfiguration('acmx.companion', null).get('port');
-    let port: number = _port!;
+    let port = 0;
+
+    if (process.env.ACMX_TESTING === "1") {
+        port = 10041; // Use this port for testing.
+    } else {
+        let _port: number | undefined = vscode.workspace.getConfiguration('acmx.companion', null).get('port');
+        port = _port!;
+    }
 
     app.use(bodyParser.json());
 
@@ -24,6 +30,7 @@ export function startCompetitiveCompanionService() {
             process.exit(1);
         }
 
+        // TODO(#47): Move to logs of the extension for debugging purposes.
         console.log(`Listening on port ${port}.`);
     });
 }

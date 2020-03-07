@@ -1,54 +1,25 @@
-//
-// Note: This example test is leveraging the Mocha test framework.
-// Please refer to their documentation on https://mochajs.org/ for help.
-//
-
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
-import { closeSync, existsSync, openSync, readdirSync, rmdirSync, unlinkSync, writeSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
 import { dirname, join } from 'path';
+import * as vscode from 'vscode';
 import { getSite, PERSONAL, SITES } from '../conn';
-import { ATTIC, getTimeout, newArena, newContestFromId, newProblemFromId, stressSolution, TESTCASES, testcasesName, testSolution, timedRun, upgradeArena } from '../core';
+import { ATTIC, newArena, newContestFromId, newProblemFromId, TESTCASES, testcasesName, testSolution, upgradeArena } from '../core';
 import { TestcaseResult, Verdict } from '../types';
+import { recRmdir } from './test_utils';
+const { before } = require('mocha');
 
-const SRC = join(dirname(dirname(dirname(__filename))), 'src', 'test');
-const ARENA = join(SRC, 'arena');
+const ARENA = join(dirname(dirname(dirname(__filename))), 'src', 'test', 'arena');
 
 SITES.push(PERSONAL);
 
+before(async () => {
+    process.env.ACMX_TESTING = "1";
+    const extensions = vscode.extensions.getExtension("marx24.acmX")!;
+    await extensions.activate();
+});
+
 suite("Extension Tests", function () {
-    /**
-     * Recursive remove
-     */
-    function recRmdir(path: string) {
-        if (existsSync(path)) {
-            readdirSync(path).forEach(name => {
-                let cPath = join(path, name);
-
-                try {
-                    unlinkSync(cPath);
-                }
-                catch (err) {
-                    recRmdir(cPath);
-                }
-            });
-
-            rmdirSync(path);
-        }
-    }
-
-    function writeFile(path: string, content: string) {
-        let currentFd = openSync(path, 'w');
-        writeSync(currentFd, content);
-        closeSync(currentFd);
-    }
-
-    /**
-     * core::initAcmX
-     */
-    test("initAcmX", function () {
-    });
-
     /**
      * core::newArena
      */
@@ -151,37 +122,37 @@ suite("Extension Tests", function () {
      *
      * Test running one single test cases, and receiving all different verdicts
      */
-    test("timedRunOk", function () {
-        let exampleContest = join(ARENA, 'exampleContest');
-        let problem = join(exampleContest, 'A');
-        let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
-        assert.equal(result.status, Verdict.OK);
-    });
+    // test("timedRunOk", function () {
+    //     let exampleContest = join(ARENA, 'exampleContest');
+    //     let problem = join(exampleContest, 'A');
+    //     let testcaseId = '0';
+    //     let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
+    //     assert.equal(result.status, Verdict.OK);
+    // });
 
-    test("timedRunWA", function () {
-        let exampleContest = join(ARENA, 'exampleContest');
-        let problem = join(exampleContest, 'B');
-        let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
-        assert.equal(result.status, Verdict.WA);
-    });
+    // test("timedRunWA", function () {
+    //     let exampleContest = join(ARENA, 'exampleContest');
+    //     let problem = join(exampleContest, 'B');
+    //     let testcaseId = '0';
+    //     let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
+    //     assert.equal(result.status, Verdict.WA);
+    // });
 
-    test("timedRunRTE", function () {
-        let exampleContest = join(ARENA, 'exampleContest');
-        let problem = join(exampleContest, 'C');
-        let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
-        assert.equal(result.status, Verdict.RTE);
-    });
+    // test("timedRunRTE", function () {
+    //     let exampleContest = join(ARENA, 'exampleContest');
+    //     let problem = join(exampleContest, 'C');
+    //     let testcaseId = '0';
+    //     let result: TestcaseResult = timedRun(problem, testcaseId, getTimeout());
+    //     assert.equal(result.status, Verdict.RTE);
+    // });
 
-    test("timedRunTLE", function () {
-        let exampleContest = join(ARENA, 'exampleContest');
-        let problem = join(exampleContest, 'D');
-        let testcaseId = '0';
-        let result: TestcaseResult = timedRun(problem, testcaseId, 100);
-        assert.equal(result.status, Verdict.TLE);
-    });
+    // test("timedRunTLE", function () {
+    //     let exampleContest = join(ARENA, 'exampleContest');
+    //     let problem = join(exampleContest, 'D');
+    //     let testcaseId = '0';
+    //     let result: TestcaseResult = timedRun(problem, testcaseId, 100);
+    //     assert.equal(result.status, Verdict.TLE);
+    // });
 
     /**
      * core::testSolution
@@ -195,119 +166,116 @@ suite("Extension Tests", function () {
         assert.equal(result.status, Verdict.OK);
     });
 
-    test("testSolutionCE", function () {
-        let exampleContest = join(ARENA, 'exampleContest');
-        let problem = join(exampleContest, 'E');
-        try {
-            testSolution(problem);
-            assert(false, "This must throw Compilation Error");
-        } catch (Error) {
-
-        }
-    });
+    // TODO: Disable stderr
+    // test("testSolutionCE", function () {
+    //     let exampleContest = join(ARENA, 'exampleContest');
+    //     let problem = join(exampleContest, 'E');
+    //     let result = testSolution(problem);
+    //     assert.equal(result.status, Verdict.CE);
+    // });
 
     /**
      * core::stressSolution
      */
-    test("stressSolutionOK", function () {
-        let path = join(ARENA, 'testStressOK');
+    // test("stressSolutionOK", function () {
+    //     let path = join(ARENA, 'testStressOK');
 
-        if (existsSync(path)) {
-            recRmdir(path);
-        }
+    //     if (existsSync(path)) {
+    //         recRmdir(path);
+    //     }
 
-        assert.equal(existsSync(path), false);
+    //     assert.equal(existsSync(path), false);
 
-        newArena(path);
-        upgradeArena(path);
+    //     newArena(path);
+    //     upgradeArena(path);
 
-        // populate sol.cpp
-        writeFile(join(path, "sol.cpp"),
-            `#include <iostream>\n` +
-            `\n` +
-            `using namespace std;\n` +
-            `\n` +
-            `int main(){\n` +
-            `   int n; cin >> n;\n` +
-            `   cout << n + 2 << endl;\n` +
-            `   return 0;\n` +
-            `}\n`
-        );
+    //     // populate sol.cpp
+    //     writeFile(join(path, "sol.cpp"),
+    //         `#include <iostream>\n` +
+    //         `\n` +
+    //         `using namespace std;\n` +
+    //         `\n` +
+    //         `int main(){\n` +
+    //         `   int n; cin >> n;\n` +
+    //         `   cout << n + 2 << endl;\n` +
+    //         `   return 0;\n` +
+    //         `}\n`
+    //     );
 
-        // populate brute.cpp
-        writeFile(join(path, "brute.cpp"),
-            `#include <iostream>\n` +
-            `\n` +
-            `using namespace std;\n` +
-            `\n` +
-            `int main(){\n` +
-            `   int n; cin >> n;\n` +
-            `   cout << n + 2 << endl;\n` +
-            `   return 0;\n` +
-            `}\n`
-        );
+    //     // populate brute.cpp
+    //     writeFile(join(path, "brute.cpp"),
+    //         `#include <iostream>\n` +
+    //         `\n` +
+    //         `using namespace std;\n` +
+    //         `\n` +
+    //         `int main(){\n` +
+    //         `   int n; cin >> n;\n` +
+    //         `   cout << n + 2 << endl;\n` +
+    //         `   return 0;\n` +
+    //         `}\n`
+    //     );
 
-        // populate gen.py
-        writeFile(join(path, 'gen.py'),
-            `import random\n` +
-            `print(random.randint(0, 99))\n`
-        );
+    //     // populate gen.py
+    //     writeFile(join(path, 'gen.py'),
+    //         `import random\n` +
+    //         `print(random.randint(0, 99))\n`
+    //     );
 
-        let result = stressSolution(path, 10);
+    //     let result = stressSolution(path, 10);
 
-        assert.equal(result.status, Verdict.OK);
+    //     assert.equal(result.status, Verdict.OK);
 
-        recRmdir(path);
-    });
+    //     recRmdir(path);
+    // });
 
-    test("stressSolutionWA", function () {
-        let path = join(ARENA, 'testStressWA');
+    // test("stressSolutionWA", function () {
+    //     let path = join(ARENA, 'testStressWA');
 
-        if (existsSync(path)) {
-            recRmdir(path);
-        }
+    //     if (existsSync(path)) {
+    //         recRmdir(path);
+    //     }
 
-        assert.equal(existsSync(path), false);
+    //     assert.equal(existsSync(path), false);
 
-        newArena(path);
-        upgradeArena(path);
+    //     newArena(path);
+    //     upgradeArena(path);
 
-        // populate sol.cpp
-        writeFile(join(path, "sol.cpp"),
-            `#include <iostream>\n` +
-            `\n` +
-            `using namespace std;\n` +
-            `\n` +
-            `int main(){\n` +
-            `   int n; cin >> n;\n` +
-            `   cout << n + 3 << endl;\n` +
-            `   return 0;\n` +
-            `}\n`
-        );
+    //     // populate sol.cpp
+    //     writeFile(join(path, "sol.cpp"),
+    //         `#include <iostream>\n` +
+    //         `\n` +
+    //         `using namespace std;\n` +
+    //         `\n` +
+    //         `int main(){\n` +
+    //         `   int n; cin >> n;\n` +
+    //         `   cout << n + 3 << endl;\n` +
+    //         `   return 0;\n` +
+    //         `}\n`
+    //     );
 
-        // populate brute.cpp
-        writeFile(join(path, "brute.cpp"),
-            `#include <iostream>\n` +
-            `\n` +
-            `using namespace std;\n` +
-            `\n` +
-            `int main(){\n` +
-            `   int n; cin >> n;\n` +
-            `   cout << n + 2 << endl;\n` +
-            `   return 0;\n` +
-            `}\n`
-        );
+    //     // populate brute.cpp
+    //     writeFile(join(path, "brute.cpp"),
+    //         `#include <iostream>\n` +
+    //         `\n` +
+    //         `using namespace std;\n` +
+    //         `\n` +
+    //         `int main(){\n` +
+    //         `   int n; cin >> n;\n` +
+    //         `   cout << n + 2 << endl;\n` +
+    //         `   return 0;\n` +
+    //         `}\n`
+    //     );
 
-        // populate gen.py
-        writeFile(join(path, ATTIC, 'gen.py'),
-            `import random\n` +
-            `print(random.randint(0, 99))\n`
-        );
+    //     // populate gen.py
+    //     writeFile(join(path, ATTIC, 'gen.py'),
+    //         `import random\n` +
+    //         `print(random.randint(0, 99))\n`
+    //     );
 
-        let result = stressSolution(path, 10);
+    //     let result = stressSolution(path, 10);
 
-        assert.equal(result.status, Verdict.WA);
+    //     assert.equal(result.status, Verdict.WA);
 
-        recRmdir(path);
-    });
+    //     recRmdir(path);
+    // });
 });
