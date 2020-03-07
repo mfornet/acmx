@@ -4,27 +4,13 @@ import { closeSync, copyFileSync, existsSync, openSync, readdirSync, readFileSyn
 import { basename, dirname, extname, join } from 'path';
 import * as vscode from 'vscode';
 import { startCompetitiveCompanionService } from './companion';
-import { getSite, SITES } from './conn';
+import { getSite } from './conn';
 import { ATTIC, compileCode, currentProblem, initAcmX, newContestFromId, newProblemFromId, removeExtension, solFile, SRC, stressSolution, testSolution, upgradeArena, verdictName } from './core';
 import { hideTerminals } from './terminal';
 import { SiteDescription, Verdict } from './types';
 const clipboardy = require('clipboardy');
 
 const TESTCASES = 'testcases';
-
-function quickPickSites() {
-    let sites: any[] = [];
-
-    SITES.forEach(value => {
-        sites.push({
-            "label": value.name,
-            "target": value.name,
-            "description": value.description,
-        });
-    });
-
-    return sites;
-}
 
 // Create a new problem
 async function addProblem() {
