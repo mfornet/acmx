@@ -229,6 +229,7 @@
         "express": "^4.16.4",
         "body-parser": "^1.18.3",
         "md5-file": "^4.0.0",
-        "clipboardy": "^2.2.0"
+        "clipboardy": "^2.2.0",
+        "rimraf": "^3.0.2"
     }
 }
