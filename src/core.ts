@@ -4,7 +4,6 @@ import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, 
 import { basename, dirname, extname, join } from "path";
 import * as vscode from 'vscode';
 import * as gwen from './gwen';
-import { ceTerminal, stderrTerminal } from './terminal';
 import { Contest, Problem, SiteDescription, SolutionResult, TestcaseResult, Verdict } from "./types";
 const md5File = require('md5-file');
 
@@ -365,12 +364,13 @@ export function timedRun(path: string, tcName: string, timeout: number) {
 
     let spanTime = new Date().getTime() - startTime;
 
-    if (xresult.stderr.length > 0) {
-        let stderrTer = stderrTerminal();
-        let escaped_output = escape_double_ticks(xresult.stderr.toString());
-        stderrTer.sendText(`echo "${escaped_output}"`);
-        stderrTer.show();
-    }
+    // TODO(#12)
+    // if (xresult.stderr.length > 0) {
+    //     let stderrTer = stderrTerminal();
+    //     let escaped_output = escape_double_ticks(xresult.stderr.toString());
+    //     stderrTer.sendText(`echo "${escaped_output}"`);
+    //     stderrTer.show();
+    // }
 
     // Check if an error happened
     if (xresult.status !== 0) {
@@ -437,13 +437,14 @@ export function compileCode(pathCode: string, pathOutput: string) {
 
     let result = child_process.spawnSync(program, args);
 
-    if (result.status !== 0) {
-        // Write to the compile error terminal
-        let ter = ceTerminal();
-        let escaped_output = escape_double_ticks(result.stderr);
-        ter.sendText(`echo "${escaped_output}"`);
-        ter.show();
-    }
+    // TODO(#12)
+    // if (result.status !== 0) {
+    //     // Write to the compile error terminal
+    //     let ter = ceTerminal();
+    //     let escaped_output = escape_double_ticks(result.stderr);
+    //     ter.sendText(`echo "${escaped_output}"`);
+    //     ter.show();
+    // }
 
     return result;
 }

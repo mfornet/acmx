@@ -3,7 +3,7 @@ import * as assert from 'assert';
 import { existsSync, readdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { getSite, PERSONAL, SITES } from '../conn';
-import { ATTIC, newArena, newContestFromId, newProblemFromId, TESTCASES, testcasesName, testSolution, upgradeArena } from '../core';
+import { ATTIC, compileCode, newArena, newContestFromId, newProblemFromId, TESTCASES, testcasesName, testSolution, upgradeArena } from '../core';
 import { TestcaseResult, Verdict } from '../types';
 import { recursiveRemoveDirectory } from './test_utils';
 
@@ -151,6 +151,9 @@ suite("Extension Tests", function () {
     test("testSolutionOK", function () {
         let exampleContest = join(ARENA, 'exampleContest');
         let problem = join(exampleContest, 'A');
+        let sol = join(problem, 'sol.cpp');
+        let out = join(problem, ATTIC, 'sol.exe');
+        compileCode(sol, out);
         let result: TestcaseResult = testSolution(problem);
         assert.equal(result.status, Verdict.OK);
     });

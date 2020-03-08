@@ -11,8 +11,6 @@ export function create(problemPath: string, outputPath: string) {
     let tcPath = join(problemPath, TESTCASES);
     let exitCode = spawnSync(python_path!, ["-m", `tcgen`, "--path", `${tcPath}`, "--output", `${outputPath}`]);
 
-    console.log("exticode:", exitCode);
-
     if (exitCode.status !== 0) {
         let generator_fd = openSync(outputPath, 'w');
         writeSync(generator_fd, DEFAULT);
