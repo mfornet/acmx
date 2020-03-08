@@ -30,8 +30,6 @@ suite("Extension Tests", function () {
         assert.equal(existsSync(join(path, 'sol.cpp')), true);
         assert.equal(existsSync(join(path, ATTIC)), true);
         assert.equal(existsSync(join(path, TESTCASES)), true);
-
-        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -51,8 +49,6 @@ suite("Extension Tests", function () {
 
         assert.equal(existsSync(join(path, 'gen.py')), true);
         assert.equal(existsSync(join(path, 'brute.cpp')), true);
-
-        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -79,6 +75,10 @@ suite("Extension Tests", function () {
         let problemId = 'testProblemFromId';
         let path = join(ARENA, problemId);
 
+        if (existsSync(path)) {
+            recursiveRemoveDirectory(path);
+        }
+
         assert.equal(existsSync(path), false);
         await newProblemFromId(ARENA, getSite('personal'), problemId);
 
@@ -86,8 +86,6 @@ suite("Extension Tests", function () {
         assert.equal(existsSync(join(path, ATTIC)), true, "Attic not found.");
         assert.equal(existsSync(join(path, TESTCASES)), true, "Testcases not found.");
         assert.equal(readdirSync(join(path, TESTCASES)).length, 6, "Incorrect number of files.");
-
-        recursiveRemoveDirectory(path);
     });
 
     /**
@@ -106,8 +104,6 @@ suite("Extension Tests", function () {
         await newContestFromId(path, getSite('empty'), "5");
 
         assert.equal(readdirSync(path).length, 1);
-
-        recursiveRemoveDirectory(path);
     });
 
     /**
