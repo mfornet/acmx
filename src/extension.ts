@@ -4,20 +4,18 @@ import { closeSync, copyFileSync, existsSync, openSync, readdirSync, readFileSyn
 import { basename, dirname, extname, join } from 'path';
 import * as vscode from 'vscode';
 import { startCompetitiveCompanionService } from './companion';
-import { getSite } from './conn';
+import { EMPTY } from './conn';
 import { ATTIC, compileCode, currentProblem, initAcmX, newContestFromId, newProblemFromId, pathToStatic, removeExtension, solFile, stressSolution, testSolution, upgradeArena, verdictName } from './core';
 import { hideTerminals } from './terminal';
 import { SiteDescription, Verdict } from './types';
-const clipboardy = require('clipboardy');
+import clipboardy = require('clipboardy');
 
 const TESTCASES = 'testcases';
 
 // Create a new problem
 async function addProblem() {
     // Use default site when creating a problem from the vscode.
-    let target = "empty";
-
-    let site: SiteDescription = getSite(target);
+    let site: SiteDescription = EMPTY;
 
     let id = await vscode.window.showInputBox({ placeHolder: site.problemIdPlaceholder });
 
@@ -63,10 +61,7 @@ function parseNumberOfProblems(numberOfProblems: string | undefined) {
 async function addContest() {
     let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
 
-    // Use default site when creating a contest from the vscode.
-    let target = "empty";
-
-    let site: SiteDescription = getSite(target);
+    let site: SiteDescription = EMPTY;
 
     let id = undefined;
 
@@ -321,7 +316,6 @@ async function debugTestCase(uriPath: vscode.Uri) {
 
     for (let i = 0; i < MAX_DEPTH && !existsSync(join(path, '.vscode')); i++) {
         path = dirname(path);
-        console.log(path);
     }
 
     let launchTaskPath = join(path, '.vscode', 'launch.json');
@@ -331,7 +325,7 @@ async function debugTestCase(uriPath: vscode.Uri) {
     }
 
     let launchTaskData = readFileSync(launchTaskPath, "utf8");
-    // TODO(#41): Don't use regular expression to replace this. Use JSON parser instead.
+    // TODO(#20): Don't use regular expression to replace this. Use JSON parser instead.
     let newTaskData = launchTaskData.replace(/\"stdio\"\:.+/, `"stdio": ["\${fileDirname}/testcases/${testCaseName}"],`);
     let launchTaskFdW = openSync(launchTaskPath, 'w');
     writeSync(launchTaskFdW, newTaskData);
@@ -375,7 +369,6 @@ async function copySubmissionToClipboard() {
 
 async function debugTest() {
     vscode.window.showInformationMessage(String.fromCharCode(65));
-    console.log("no bugs :O");
 }
 
 // this method is called when your extension is activated

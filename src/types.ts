@@ -7,7 +7,7 @@ export enum Verdict {
     NO_TESTCASES,
 }
 
-export class TestcaseResult {
+export class TestCaseResult {
     status: Verdict;
     spanTime?: number;
 
@@ -59,13 +59,13 @@ export class SiteDescription {
     description: string;
     contestIdPlaceholder: string;
     problemIdPlaceholder: string;
-    contestParser: (contestId: string) => Promise<Contest>;
-    problemParser: (problemId: string) => Promise<Problem>;
+    contestParser: (contestId: string) => Contest;
+    problemParser: (problemId: string) => Problem;
 
     constructor(name: string, description: string,
         contestIdPlaceholder: string, problemIdPlaceholder: string,
-        contestParser: (contestId: string) => Promise<Contest>,
-        problemParser: (problemId: string) => Promise<Problem>) {
+        contestParser: (contestId: string) => Contest,
+        problemParser: (problemId: string) => Problem) {
         this.name = name;
         this.description = description;
 

@@ -30,7 +30,7 @@ export function startCompetitiveCompanionService() {
             process.exit(1);
         }
 
-        // TODO(#47): Move to logs of the extension for debugging purposes.
+        // TODO(#21): Move to logs of the extension for debugging purposes.
         console.log(`Listening on port ${port}.`);
     });
 }

@@ -4,8 +4,8 @@ import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, 
 import { basename, dirname, extname, join } from "path";
 import * as vscode from 'vscode';
 import * as gwen from './gwen';
-import { Contest, Problem, SiteDescription, SolutionResult, TestcaseResult, Verdict } from "./types";
-const md5File = require('md5-file');
+import { Contest, Problem, SiteDescription, SolutionResult, TestCaseResult, Verdict } from "./types";
+import md5File = require('md5-file');
 
 export const TESTCASES = 'testcases';
 export const ATTIC = 'attic';
@@ -113,7 +113,11 @@ function createFolder(path: string) {
  *
  * @param testingPath Use for unit tests
  */
-function globalAtticPath(testingPath: string | undefined = undefined) {
+export function globalAtticPath(testPath: string | undefined = undefined) {
+    if (testPath !== undefined) {
+        return join(testPath, ATTIC);
+    }
+
     let path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
     return join(path!, ATTIC);
 }
@@ -121,9 +125,9 @@ function globalAtticPath(testingPath: string | undefined = undefined) {
 /**
  * Create default environment that let acmX run properly
  */
-export function initAcmX() {
+export function initAcmX(testPath: string | undefined = undefined) {
     // Create global attic.
-    let globalAttic = globalAtticPath();
+    let globalAttic = globalAtticPath(testPath);
     createFolder(globalAttic);
 
     // Create checker folder
@@ -149,8 +153,11 @@ export function initAcmX() {
     if (!existsSync(join(checkerFolder, compiledName))) {
         let checkerPath = join(checkerFolder, checkerName);
         let compiledPath = join(checkerFolder, compiledName);
-
         child_process.spawnSync("g++", ["-std=c++11", `${checkerPath}`, "-o", `${compiledPath}`]);
+    }
+
+    if (!existsSync(join(checkerFolder, compiledName))) {
+        throw new Error("compilation failed");
     }
 }
 
@@ -187,7 +194,7 @@ export function removeExtension(name: string) {
     }
 }
 
-export function testcasesName(path: string) {
+export function testCasesName(path: string) {
     return readdirSync(join(path, TESTCASES)).
         filter(function (tcpath) {
             return extname(tcpath) === '.in';
@@ -208,7 +215,7 @@ export function upgradeArena(path: string) {
     let generator = join(path, 'gen.py');
 
     if (!existsSync(generator)) {
-        // TODO(#47): If generator already exist don't overwrite but log that it was not created.
+        // TODO(#21): If generator already exist don't overwrite but log that it was not created.
         gwen.create(path, generator);
     }
 
@@ -265,8 +272,8 @@ function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
     });
 }
 
-export async function newProblemFromId(path: string, site: SiteDescription, problemId: string) {
-    let problem = await site.problemParser(problemId);
+export function newProblemFromId(path: string, site: SiteDescription, problemId: string) {
+    let problem = site.problemParser(problemId);
 
     path = join(path, problem.identifier!);
 
@@ -282,8 +289,6 @@ function newContest(path: string, contest: Contest) {
 }
 
 export function newProblemFromCompanion(config: any) {
-    console.log(config);
-
     let _path: string | undefined = vscode.workspace.getConfiguration('acmx.configuration', null).get('solutionPath');
     let path = _path!;
 
@@ -364,7 +369,7 @@ export function timedRun(path: string, tcName: string, timeout: number) {
 
     let spanTime = new Date().getTime() - startTime;
 
-    // TODO(#12)
+    // TODO(#13)
     // if (xresult.stderr.length > 0) {
     //     let stderrTer = stderrTerminal();
     //     let escaped_output = escape_double_ticks(xresult.stderr.toString());
@@ -375,10 +380,10 @@ export function timedRun(path: string, tcName: string, timeout: number) {
     // Check if an error happened
     if (xresult.status !== 0) {
         if (spanTime < timeout) {
-            return new TestcaseResult(Verdict.RTE);
+            return new TestCaseResult(Verdict.RTE);
         }
         else {
-            return new TestcaseResult(Verdict.TLE);
+            return new TestCaseResult(Verdict.TLE);
         }
     }
 
@@ -391,19 +396,19 @@ export function timedRun(path: string, tcName: string, timeout: number) {
     let checker_result = child_process.spawnSync(checker_path, [tcInput, tcCurrent, tcOutput]);
 
     if (checker_result.status !== 0) {
-        return new TestcaseResult(Verdict.WA);
+        return new TestCaseResult(Verdict.WA);
     }
     else {
-        return new TestcaseResult(Verdict.OK, spanTime);
+        return new TestCaseResult(Verdict.OK, spanTime);
     }
 }
 
-function escape_double_ticks(text: string) {
-    text = text.toString();
-    // text = text.replace('"', '\"');
-    console.log(text);
-    return text;
-}
+// function escape_double_ticks(text: string) {
+//     text = text.toString();
+//     // text = text.replace('"', '\"');
+//     console.log(text);
+//     return text;
+// }
 
 export function compileCode(pathCode: string, pathOutput: string) {
     let pathCodeMD5 = pathCode + '.md5';
@@ -426,7 +431,10 @@ export function compileCode(pathCode: string, pathOutput: string) {
     closeSync(codeMD5fd);
 
     let instruction: string | undefined = vscode.workspace.getConfiguration('acmx.execution', null).get('compile');
-    let splitedInstruction = instruction!.split(' ');
+    if (instruction === undefined || instruction === "") {
+        instruction = "g++ -std=c++17 $PROGRAM -o $OUTPUT";
+    }
+    let splitedInstruction = instruction.split(' ');
 
     for (let i = 0; i < splitedInstruction.length; ++i) {
         splitedInstruction[i] = splitedInstruction[i].replace('$PROGRAM', pathCode).replace('$OUTPUT', pathOutput);
@@ -437,7 +445,7 @@ export function compileCode(pathCode: string, pathOutput: string) {
 
     let result = child_process.spawnSync(program, args);
 
-    // TODO(#12)
+    // TODO(#13)
     // if (result.status !== 0) {
     //     // Write to the compile error terminal
     //     let ter = ceTerminal();
@@ -464,7 +472,7 @@ export function testSolution(path: string) {
         throw new Error(`Compilation Error. ${sol}`);
     }
 
-    let testcasesId = testcasesName(path);
+    let testcasesId = testCasesName(path);
 
     if (testcasesId.length === 0) {
         return new SolutionResult(Verdict.NO_TESTCASES, undefined, undefined);
@@ -482,7 +490,7 @@ export function testSolution(path: string) {
         testcasesId = testcasesId.reverse();
     }
 
-    let results: TestcaseResult[] = [];
+    let results: TestCaseResult[] = [];
     let fail: SolutionResult | undefined = undefined;
     testcasesId.forEach(tcId => {
         // Run while there none have failed already
@@ -554,7 +562,7 @@ export function stressSolution(path: string, times: number) {
         let tcData = readFileSync(join(path, TESTCASES, 'gen.in'), "utf8");
 
         // Run without restrictions
-        // TODO(#36): Put time limit on all type of programs
+        // TODO(#25): Put time limit on all type of programs
         let runResult = child_process.spawnSync(brout, {
             input: tcData,
         });
