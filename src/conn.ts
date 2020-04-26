@@ -16,16 +16,16 @@ export const EMPTY = new SiteDescription(
     "Not a site. Create empty problems",
     "Contest name",
     "Problem name",
-    problemId => {
+    (problemId) => {
         // Parse problemId. It is of the form problem-name-10
         // Where `problem-name` is current name and `10` is number of problems
-        let args = problemId.split('-');
+        let args = problemId.split("-");
 
         let numProblems = args[args.length - 1];
         let total = Number.parseInt(numProblems);
 
         args.pop();
-        let name = args.join('-');
+        let name = args.join("-");
 
         let problems = [];
 
@@ -39,7 +39,7 @@ export const EMPTY = new SiteDescription(
 
         return new Contest(name, problems);
     },
-    problemId => {
+    (problemId) => {
         return new Problem(problemId, problemId, [], []);
     }
 );

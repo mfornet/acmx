@@ -1,12 +1,20 @@
 import * as assert from "assert";
 
 import * as vscode from "vscode";
-import { newArena, ATTIC, TESTCASES, upgradeArena, pathToStatic, testCasesName, newProblemFromId } from "../../core";
+import {
+    newArena,
+    ATTIC,
+    TESTCASES,
+    upgradeArena,
+    pathToStatic,
+    testCasesName,
+    newProblemFromId,
+} from "../../core";
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
 import { runWithTemporaryPath, MOCK_SITE } from "../testUtils";
 
-const CONTEST = join(pathToStatic(), 'testData', 'exampleContest');
+const CONTEST = join(pathToStatic(), "testData", "exampleContest");
 
 suite("Extension Test Suite", () => {
     vscode.window.showInformationMessage("Start all tests.");
@@ -31,7 +39,7 @@ suite("Extension Test Suite", () => {
     });
 
     test("Parse Test Cases", function () {
-        let path = join(CONTEST, 'A');
+        let path = join(CONTEST, "A");
         let result = testCasesName(path);
         let target = ["0", "1", "2"];
 
@@ -49,10 +57,14 @@ suite("Extension Test Suite", () => {
             newProblemFromId(path, MOCK_SITE, problemId);
             let problemPath = join(path, problemId);
             assert.ok(existsSync(problemPath));
-            assert.ok(existsSync(join(problemPath, 'sol.cpp')));
+            assert.ok(existsSync(join(problemPath, "sol.cpp")));
             assert.ok(existsSync(join(problemPath, ATTIC)));
             assert.ok(existsSync(join(problemPath, TESTCASES)));
-            assert.equal(readdirSync(join(problemPath, TESTCASES)).length, 6, "Incorrect number of files.");
+            assert.equal(
+                readdirSync(join(problemPath, TESTCASES)).length,
+                6,
+                "Incorrect number of files."
+            );
         });
     });
 });

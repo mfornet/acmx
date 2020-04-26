@@ -1,9 +1,9 @@
 export enum Verdict {
-    OK,     // Accepted
-    WA,     // Wrong Answer
-    TLE,    // Time Limit Exceeded
-    RTE,    // Runtime Error
-    CE,     // Compilation Error
+    OK, // Accepted
+    WA, // Wrong Answer
+    TLE, // Time Limit Exceeded
+    RTE, // Runtime Error
+    CE, // Compilation Error
     NO_TESTCASES,
 }
 
@@ -36,7 +36,12 @@ export class Problem {
     inputs?: string[];
     outputs?: string[];
 
-    constructor(identifier?: string, name?: string, inputs?: string[], outputs?: string[]) {
+    constructor(
+        identifier?: string,
+        name?: string,
+        inputs?: string[],
+        outputs?: string[]
+    ) {
         this.identifier = identifier;
         this.name = name;
         this.inputs = inputs;
@@ -62,10 +67,14 @@ export class SiteDescription {
     contestParser: (contestId: string) => Contest;
     problemParser: (problemId: string) => Problem;
 
-    constructor(name: string, description: string,
-        contestIdPlaceholder: string, problemIdPlaceholder: string,
+    constructor(
+        name: string,
+        description: string,
+        contestIdPlaceholder: string,
+        problemIdPlaceholder: string,
         contestParser: (contestId: string) => Contest,
-        problemParser: (problemId: string) => Problem) {
+        problemParser: (problemId: string) => Problem
+    ) {
         this.name = name;
         this.description = description;
 

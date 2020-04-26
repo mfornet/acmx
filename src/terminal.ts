@@ -1,10 +1,10 @@
-'use strict';
-import * as vscode from 'vscode';
+"use strict";
+import * as vscode from "vscode";
 
 function getTerminal(name: string) {
     let target = undefined;
 
-    vscode.window.terminals.forEach(value => {
+    vscode.window.terminals.forEach((value) => {
         if (value.name === name) {
             target = value;
         }
@@ -18,15 +18,15 @@ function getTerminal(name: string) {
 }
 
 export function ceTerminal() {
-    return getTerminal('acmx-compile-error');
+    return getTerminal("acmx-compile-error");
 }
 
 export function stderrTerminal() {
-    return getTerminal('acmx-stderr');
+    return getTerminal("acmx-stderr");
 }
 
 export function hideTerminals() {
-    vscode.window.terminals.forEach(ter => {
+    vscode.window.terminals.forEach((ter) => {
         ter.hide();
     });
 }
