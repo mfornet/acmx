@@ -1,11 +1,10 @@
 import * as assert from "assert";
 
 import * as vscode from "vscode";
-import { newArena, ATTIC, TESTCASES, upgradeArena, pathToStatic, testCasesName, newProblemFromId, timedRun, compileCode, globalAtticPath, initAcmX } from "../../core";
-import { existsSync, readdirSync, copyFileSync } from "fs";
+import { newArena, ATTIC, TESTCASES, upgradeArena, pathToStatic, testCasesName, newProblemFromId } from "../../core";
+import { existsSync, readdirSync } from "fs";
 import { join } from "path";
-import { runWithTemporaryPath, MOCK_SITE, runWithCopiedFolder } from "../testUtils";
-import { TestCaseResult, Verdict } from "../../types";
+import { runWithTemporaryPath, MOCK_SITE } from "../testUtils";
 
 const CONTEST = join(pathToStatic(), 'testData', 'exampleContest');
 
@@ -56,39 +55,4 @@ suite("Extension Test Suite", () => {
             assert.equal(readdirSync(join(problemPath, TESTCASES)).length, 6, "Incorrect number of files.");
         });
     });
-
-    test("Timed run OK", function () {
-        this.timeout(20000);
-        testResult("A", Verdict.OK, 10000);
-    });
-
-    test("Timed run WA", function () {
-        this.timeout(20000);
-        testResult("B", Verdict.WA, 10000);
-    });
-
-    test("Timed run RTE", function () {
-        this.timeout(20000);
-        testResult("C", Verdict.RTE, 10000);
-    });
-
-    test("Timed run TLE", function () {
-        this.timeout(20000);
-        testResult("D", Verdict.TLE, 2000);
-    });
 });
-
-function testResult(problemId: string, expectedResult: Verdict, timeLimit: number) {
-    runWithTemporaryPath((globalPath: string) => {
-        initAcmX(globalPath);
-        let problem = join(CONTEST, problemId);
-
-        runWithCopiedFolder(problem, (path: string) => {
-            copyFileSync(join(globalAtticPath(globalPath), 'checkers', 'wcmp.exe'), join(path, ATTIC, 'checker.exe'));
-            let testCaseId = '0';
-            compileCode(join(path, 'sol.cpp'), join(path, ATTIC, 'sol.exe'));
-            let result: TestCaseResult = timedRun(path, testCaseId, timeLimit);
-            assert.equal(result.status, expectedResult);
-        });
-    });
-}
