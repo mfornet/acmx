@@ -126,7 +126,7 @@ async function addContest() {
     );
 }
 
-async function debugTestcase(path: string, tcId: string) {
+async function debugTestCase(path: string, tcId: string) {
     // Change editor layout to show failing test
     await vscode.commands.executeCommand("vscode.setEditorLayout", {
         orientation: 0,
@@ -170,23 +170,27 @@ async function debugTestcase(path: string, tcId: string) {
 async function runSolution() {
     let path = currentProblem();
 
-    if (path === undefined) {
-        vscode.window.showErrorMessage("No active problem");
-        return;
-    }
+    vscode.window.activeTextEditor?.document.save().then(() => {
+        if (path === undefined) {
+            vscode.window.showErrorMessage("No active problem");
+            return;
+        }
 
-    let result = testSolution(path);
+        let result = testSolution(path);
 
-    if (result.status === Verdict.OK) {
-        vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
-    } else if (result.status === Verdict.NO_TESTCASES) {
-        vscode.window.showErrorMessage(`No testcases.`);
-    } else {
-        vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${result.failTcId}`
-        );
-        debugTestcase(path, result.failTcId!);
-    }
+        if (result.status === Verdict.OK) {
+            vscode.window.showInformationMessage(
+                `OK. Time ${result.maxTime!}ms`
+            );
+        } else if (result.status === Verdict.NO_TESTCASES) {
+            vscode.window.showErrorMessage(`No testcases.`);
+        } else {
+            vscode.window.showErrorMessage(
+                `${verdictName(result.status)} on test ${result.failTcId}`
+            );
+            debugTestCase(path, result.failTcId!);
+        }
+    });
 }
 
 async function compile() {
@@ -201,20 +205,23 @@ async function compile() {
     let out = join(path, ATTIC, "sol");
 
     if (!existsSync(sol)) {
-        throw new Error("Open a coding environment first.");
+        vscode.window.showErrorMessage("Open a coding environment first.");
+        return;
     }
 
-    // Compile solution
-    let xresult = compileCode(sol, out);
+    vscode.window.activeTextEditor?.document.save().then(() => {
+        // Compile solution
+        let result = compileCode(sol, out);
 
-    if (xresult.status !== 0) {
-        throw new Error(`Compilation Error. ${sol}`);
-    } else {
-        vscode.window.showInformationMessage("Compilation successfully.");
-    }
+        if (result.status !== 0) {
+            vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
+        } else {
+            vscode.window.showInformationMessage("Compilation successfully.");
+        }
+    });
 }
 
-async function openTestcase() {
+async function openTestCase() {
     let path = currentProblem();
 
     if (path === undefined) {
@@ -226,11 +233,11 @@ async function openTestcase() {
 
     // Read testcases
     readdirSync(join(path, TESTCASES))
-        .filter(function (tcpath) {
-            return extname(tcpath) === ".in";
+        .filter(function (tc_path) {
+            return extname(tc_path) === ".in";
         })
-        .map(function (tcpath) {
-            let name = removeExtension(tcpath);
+        .map(function (tc_path) {
+            let name = removeExtension(tc_path);
 
             tcs.push({
                 label: name,
@@ -239,7 +246,7 @@ async function openTestcase() {
         });
 
     let tc = await vscode.window.showQuickPick(tcs, {
-        placeHolder: "Select testcase",
+        placeHolder: "Select test case",
     });
 
     if (tc !== undefined) {
@@ -263,7 +270,7 @@ async function openTestcase() {
     }
 }
 
-async function addTestcase() {
+async function addTestCase() {
     let path = currentProblem();
 
     if (path === undefined) {
@@ -346,7 +353,7 @@ async function stress() {
         vscode.window.showErrorMessage(
             `${verdictName(result.status)} on test ${result.failTcId}`
         );
-        debugTestcase(path, result.failTcId!);
+        debugTestCase(path, result.failTcId!);
     }
 }
 
@@ -403,7 +410,7 @@ async function setChecker() {
     copyFileSync(checker_path, checker_dest);
 }
 
-async function debugTestCase(uriPath: vscode.Uri) {
+async function selectDebugTestCase(uriPath: vscode.Uri) {
     let testCaseName = basename(uriPath.path);
     let path = dirname(uriPath.path);
 
@@ -458,17 +465,17 @@ async function copySubmissionToClipboard() {
             );
         }
 
-        let xresult = child_process.spawnSync(
+        let result = child_process.spawnSync(
             submissionCommands[0],
             submissionCommands.slice(1)
         );
 
-        if (xresult.status !== 0) {
+        if (result.status !== 0) {
             vscode.window.showErrorMessage("Fail generating submission.");
             return;
         }
 
-        content = xresult.stdout.toString();
+        content = result.stdout.toString();
     }
 
     clipboardy.writeSync(content);
@@ -497,13 +504,13 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.runSolution",
         runSolution
     );
-    let openTestcaseCommand = vscode.commands.registerCommand(
-        "acmx.openTestcase",
-        openTestcase
+    let openTestCaseCommand = vscode.commands.registerCommand(
+        "acmx.openTestCase",
+        openTestCase
     );
-    let addTestcaseCommand = vscode.commands.registerCommand(
-        "acmx.addTestcase",
-        addTestcase
+    let addTestCaseCommand = vscode.commands.registerCommand(
+        "acmx.addTestCase",
+        addTestCase
     );
     let codingCommand = vscode.commands.registerCommand("acmx.coding", coding);
     let stressCommand = vscode.commands.registerCommand("acmx.stress", stress);
@@ -519,9 +526,9 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.setChecker",
         setChecker
     );
-    let debugTestCaseCommand = vscode.commands.registerCommand(
-        "acmx.debugTestCase",
-        debugTestCase
+    let selectDebugTestCaseCommand = vscode.commands.registerCommand(
+        "acmx.selectDebugTestCase",
+        selectDebugTestCase
     );
     let copySubmissionToClipboardCommand = vscode.commands.registerCommand(
         "acmx.copyToClipboard",
@@ -536,14 +543,14 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
     context.subscriptions.push(runSolutionCommand);
-    context.subscriptions.push(openTestcaseCommand);
-    context.subscriptions.push(addTestcaseCommand);
+    context.subscriptions.push(openTestCaseCommand);
+    context.subscriptions.push(addTestCaseCommand);
     context.subscriptions.push(codingCommand);
     context.subscriptions.push(stressCommand);
     context.subscriptions.push(upgradeCommand);
     context.subscriptions.push(compileCommand);
     context.subscriptions.push(setCheckerCommand);
-    context.subscriptions.push(debugTestCaseCommand);
+    context.subscriptions.push(selectDebugTestCaseCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
 
     context.subscriptions.push(debugTestCommand);
