@@ -55,19 +55,19 @@ function isProblemFolder(path: string) {
     return existsSync(join(path, solFile())) && existsSync(join(path, "attic"));
 }
 
-function isTestcase(path: string) {
+function isTestCase(path: string) {
     let ext = extname(path);
     return ext === ".in" || ext === ".out" || ext === ".real";
 }
 
-export function currentTestcase() {
+export function currentTestCase() {
     let answer: string | undefined = undefined;
 
-    // Try to find an open testcase
+    // Try to find an open test case
     if (vscode.window.activeTextEditor) {
         let path = vscode.window.activeTextEditor.document.uri.fsPath;
 
-        if (isTestcase(path)) {
+        if (isTestCase(path)) {
             answer = removeExtension(basename(path));
         }
     }
@@ -75,7 +75,7 @@ export function currentTestcase() {
     // Try to find the test case watching the current open workspace folder
     if (vscode.workspace.workspaceFolders !== undefined) {
         vscode.workspace.workspaceFolders.forEach(function (fd) {
-            if (answer === undefined && isTestcase(fd.uri.fsPath)) {
+            if (answer === undefined && isTestCase(fd.uri.fsPath)) {
                 answer = removeExtension(basename(fd.uri.fsPath));
             }
         });
@@ -187,7 +187,8 @@ export function initAcmX(testPath: string | undefined = undefined) {
     }
 
     if (!existsSync(join(checkerFolder, compiledName))) {
-        throw new Error("compilation failed");
+        vscode.window.showErrorMessage("Compilation failed.");
+        return;
     }
 }
 
@@ -227,11 +228,11 @@ export function removeExtension(name: string) {
 
 export function testCasesName(path: string) {
     return readdirSync(join(path, TESTCASES))
-        .filter(function (tcpath) {
-            return extname(tcpath) === ".in";
+        .filter(function (tc_path) {
+            return extname(tc_path) === ".in";
         })
-        .map(function (tcpath) {
-            return removeExtension(tcpath);
+        .map(function (tc_path) {
+            return removeExtension(tc_path);
         });
 }
 
@@ -347,9 +348,9 @@ export function newProblemFromCompanion(config: any) {
     let inputs: string[] = [];
     let outputs: string[] = [];
 
-    config.tests.forEach(function (testcase: any) {
-        inputs.push(testcase.input);
-        outputs.push(testcase.output);
+    config.tests.forEach(function (test_case: any) {
+        inputs.push(test_case.input);
+        outputs.push(test_case.output);
     });
 
     copyDefaultFilesToWorkspace(contestPath);
@@ -417,7 +418,7 @@ export function timedRun(path: string, tcName: string, timeout: number) {
     let startTime = new Date().getTime();
     let command = `${join(path, ATTIC, "sol.exe")}`;
 
-    let xresult = child_process.spawnSync(command, {
+    let result = child_process.spawnSync(command, {
         input: tcData,
         timeout,
         killSignal: "SIGTERM",
@@ -425,16 +426,8 @@ export function timedRun(path: string, tcName: string, timeout: number) {
 
     let spanTime = new Date().getTime() - startTime;
 
-    // TODO(#13)
-    // if (xresult.stderr.length > 0) {
-    //     let stderrTer = stderrTerminal();
-    //     let escaped_output = escape_double_ticks(xresult.stderr.toString());
-    //     stderrTer.sendText(`echo "${escaped_output}"`);
-    //     stderrTer.show();
-    // }
-
     // Check if an error happened
-    if (xresult.status !== 0) {
+    if (result.status !== 0) {
         if (spanTime < timeout) {
             return new TestCaseResult(Verdict.RTE);
         } else {
@@ -444,7 +437,7 @@ export function timedRun(path: string, tcName: string, timeout: number) {
 
     // Check output is ok
     let currentFd = openSync(tcCurrent, "w");
-    writeSync(currentFd, xresult.stdout);
+    writeSync(currentFd, result.stdout);
     closeSync(currentFd);
 
     let checker_path = get_checker_path();
@@ -460,13 +453,6 @@ export function timedRun(path: string, tcName: string, timeout: number) {
         return new TestCaseResult(Verdict.OK, spanTime);
     }
 }
-
-// function escape_double_ticks(text: string) {
-//     text = text.toString();
-//     // text = text.replace('"', '\"');
-//     console.log(text);
-//     return text;
-// }
 
 export function compileCode(pathCode: string, pathOutput: string) {
     let pathCodeMD5 = pathCode + ".md5";
@@ -494,27 +480,18 @@ export function compileCode(pathCode: string, pathOutput: string) {
     if (instruction === undefined || instruction === "") {
         instruction = "g++ -std=c++17 $PROGRAM -o $OUTPUT";
     }
-    let splitedInstruction = instruction.split(" ");
+    let splitInstruction = instruction.split(" ");
 
-    for (let i = 0; i < splitedInstruction.length; ++i) {
-        splitedInstruction[i] = splitedInstruction[i]
+    for (let i = 0; i < splitInstruction.length; ++i) {
+        splitInstruction[i] = splitInstruction[i]
             .replace("$PROGRAM", pathCode)
             .replace("$OUTPUT", pathOutput);
     }
 
-    let program = splitedInstruction[0];
-    let args = splitedInstruction.slice(1);
+    let program = splitInstruction[0];
+    let args = splitInstruction.slice(1);
 
     let result = child_process.spawnSync(program, args);
-
-    // TODO(#13)
-    // if (result.status !== 0) {
-    //     // Write to the compile error terminal
-    //     let ter = ceTerminal();
-    //     let escaped_output = escape_double_ticks(result.stderr);
-    //     ter.sendText(`echo "${escaped_output}"`);
-    //     ter.show();
-    // }
 
     return result;
 }
@@ -524,14 +501,16 @@ export function testSolution(path: string) {
     let out = join(path, ATTIC, "sol.exe");
 
     if (!existsSync(sol)) {
-        throw new Error("Open a coding environment first.");
+        vscode.window.showErrorMessage("Open a coding environment first");
+        throw new Error("");
     }
 
     // Compile solution
-    let xresult = compileCode(sol, out);
+    let result = compileCode(sol, out);
 
-    if (xresult.status !== 0) {
-        throw new Error(`Compilation Error. ${sol}`);
+    if (result.status !== 0) {
+        vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
+        throw new Error("");
     }
 
     let testcasesId = testCasesName(path);
@@ -544,7 +523,7 @@ export function testSolution(path: string) {
     testcasesId.sort();
 
     // Run current test case first (if it exists)
-    let startTc = currentTestcase();
+    let startTc = currentTestCase();
 
     if (startTc !== undefined) {
         testcasesId = testcasesId.reverse().filter((name) => name !== startTc);
@@ -579,7 +558,7 @@ export function testSolution(path: string) {
     }
 }
 
-function generateTestcase(path: string) {
+function generateTestCase(path: string) {
     let python: string | undefined = vscode.workspace
         .getConfiguration("acmx.execution", null)
         .get("pythonPath");
@@ -596,37 +575,41 @@ export function stressSolution(path: string, times: number) {
     let brute = join(path, "brute.cpp");
 
     if (!existsSync(sol)) {
-        throw new Error("Open a coding environment first.");
+        vscode.window.showErrorMessage("Open a coding environment first.");
+        throw new Error("");
     }
 
     if (!existsSync(brute)) {
-        throw new Error("Upgrade environment first.");
+        vscode.window.showErrorMessage("Upgrade environment first.");
+        throw new Error("");
     }
 
-    let brout = join(path, ATTIC, "brout.exe");
+    let brute_out = join(path, ATTIC, "brute.exe");
 
     let solCompileResult = compileCode(sol, out);
     if (solCompileResult.status !== 0) {
-        throw new Error(`Compilation Error. ${sol}`);
+        vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
+        throw new Error("");
     }
 
-    let bruteCompileResult = compileCode(brute, brout);
+    let bruteCompileResult = compileCode(brute, brute_out);
     if (bruteCompileResult.status !== 0) {
-        throw new Error(`Compilation Error. ${brute}`);
+        vscode.window.showErrorMessage(`Compilation Error. ${brute}`);
+        throw new Error("");
     }
 
     let results = [];
 
     for (let index = 0; index < times; index++) {
-        // Generate input testcase
-        generateTestcase(path);
+        // Generate input test case
+        generateTestCase(path);
 
-        // Generate output testcase from brute.cpp
+        // Generate output test case from brute.cpp
         let tcData = readFileSync(join(path, TESTCASES, "gen.in"), "utf8");
 
         // Run without restrictions
         // TODO(#25): Put time limit on all type of programs
-        let runResult = child_process.spawnSync(brout, {
+        let runResult = child_process.spawnSync(brute_out, {
             input: tcData,
         });
 

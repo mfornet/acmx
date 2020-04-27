@@ -22,7 +22,12 @@ export function writeFile(path: string, content: string) {
 export function runWithTemporaryPath(callback: (path: string) => void) {
     let path = tmp.dirSync();
     callback(path.name);
-    recursiveRemoveDirectory(path.name);
+    try {
+        recursiveRemoveDirectory(path.name);
+    } catch (err) {
+        // rimraf doesn't remove folders reliable on windows.
+        // Check https://github.com/isaacs/rimraf/issues/72
+    }
 }
 
 export function runWithCopiedFolder(

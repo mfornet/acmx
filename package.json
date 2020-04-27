@@ -119,11 +119,11 @@
                 "title": "ACMX: Run"
             },
             {
-                "command": "acmx.openTestcase",
+                "command": "acmx.openTestCase",
                 "title": "ACMX: Open Test Case"
             },
             {
-                "command": "acmx.addTestcase",
+                "command": "acmx.addTestCase",
                 "title": "ACMX: Add Test Case"
             },
             {
@@ -147,7 +147,7 @@
                 "title": "ACMX: Set Checker"
             },
             {
-                "command": "acmx.debugTestCase",
+                "command": "acmx.selectDebugTestCase",
                 "title": "Select Test Case"
             },
             {
@@ -184,14 +184,14 @@
         "menus": {
             "explorer/context": [
                 {
-                    "command": "acmx.debugTestCase",
+                    "command": "acmx.selectDebugTestCase",
                     "group": "acmx@1",
                     "when": "resourceExtname == .in"
                 }
             ],
             "commandPalette": [
                 {
-                    "command": "acmx.debugTestCase",
+                    "command": "acmx.selectDebugTestCase",
                     "when": "false"
                 }
             ]
