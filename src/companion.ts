@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { newProblemFromCompanion } from "./core";
 
 const app = require("express")();
-const bodyParser = require("body-parser");
+import bodyParser = require("body-parser");
 
 export function startCompetitiveCompanionService() {
     let port = 0;
