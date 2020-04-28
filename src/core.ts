@@ -510,12 +510,12 @@ export function testSolution(path: string) {
 
     if (result.status !== 0) {
         vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-        let error_path = join(path, 'stderr');
-        let error_file = openSync(error_path, 'w');
+        let error_path = join(path, "stderr");
+        let error_file = openSync(error_path, "w");
         writeSync(error_file, result.stderr.toString());
         vscode.commands.executeCommand("vscode.setEditorLayout", {
             orientation: 1,
-            groups: [{ groups: [{}, {}], size: 0.5 }]
+            groups: [{ groups: [{}, {}], size: 0.5 }],
         });
         vscode.commands.executeCommand(
             "vscode.open",
@@ -601,12 +601,12 @@ export function stressSolution(path: string, times: number) {
     let solCompileResult = compileCode(sol, out);
     if (solCompileResult.status !== 0) {
         vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-        let error_path = join(path, 'stderr');
-        let error_file = openSync(error_path, 'w');
+        let error_path = join(path, "stderr");
+        let error_file = openSync(error_path, "w");
         writeSync(error_file, solCompileResult.stderr.toString());
         vscode.commands.executeCommand("vscode.setEditorLayout", {
             orientation: 1,
-            groups: [{ groups: [{}, {}], size: 0.5 }]
+            groups: [{ groups: [{}, {}], size: 0.5 }],
         });
         vscode.commands.executeCommand(
             "vscode.open",
@@ -619,12 +619,12 @@ export function stressSolution(path: string, times: number) {
     let bruteCompileResult = compileCode(brute, brute_out);
     if (bruteCompileResult.status !== 0) {
         vscode.window.showErrorMessage(`Compilation Error. ${brute}`);
-        let error_path = join(brute, 'stderr');
-        let error_file = openSync(error_path, 'w');
+        let error_path = join(brute, "stderr");
+        let error_file = openSync(error_path, "w");
         writeSync(error_file, bruteCompileResult.stderr.toString());
         vscode.commands.executeCommand("vscode.setEditorLayout", {
             orientation: 1,
-            groups: [{ groups: [{}, {}], size: 0.5 }]
+            groups: [{ groups: [{}, {}], size: 0.5 }],
         });
         vscode.commands.executeCommand(
             "vscode.open",
