@@ -132,10 +132,9 @@ async function debugTestCase(path: string, tcId: string) {
         orientation: 0,
         groups: [
             { groups: [{}], size: 0.5 },
-            { groups: [{}, {}, {}], size: 0.5 },
+            { groups: [{}, {}], size: 0.5 },
         ],
     });
-
     let sol = join(path, solFile());
     let inp = join(path, TESTCASES, `${tcId}.in`);
     let out = join(path, TESTCASES, `${tcId}.out`);
@@ -151,19 +150,12 @@ async function debugTestCase(path: string, tcId: string) {
         vscode.Uri.file(inp),
         vscode.ViewColumn.Two
     );
-    await vscode.commands.executeCommand(
-        "vscode.open",
-        vscode.Uri.file(out),
-        vscode.ViewColumn.Three
-    );
-
     // This file might not exist!
     if (existsSync(cur)) {
-        await vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(cur),
-            vscode.ViewColumn.Four
-        );
+        await vscode.commands.executeCommand("vscode.diff", vscode.Uri.file(cur), vscode.Uri.file(out), "Difference in outputs", { viewColumn: vscode.ViewColumn.Three });
+    }
+    else {
+        await vscode.commands.executeCommand("vscode.diff", vscode.Uri.file(out), "Difference in outputs", { viewColumn: vscode.ViewColumn.Three });
     }
 }
 
@@ -215,6 +207,18 @@ async function compile() {
 
         if (result.status !== 0) {
             vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
+            let error_path = join(path!, 'stderr');
+            let error_file = openSync(error_path, 'w');
+            writeSync(error_file, result.stderr.toString());
+            vscode.commands.executeCommand("vscode.setEditorLayout", {
+                orientation: 1,
+                groups: [{ groups: [{}, {}], size: 0.5 }]
+            });
+            vscode.commands.executeCommand(
+                "vscode.open",
+                vscode.Uri.file(error_path),
+                vscode.ViewColumn.Two
+            );
         } else {
             vscode.window.showInformationMessage("Compilation successfully.");
         }
@@ -448,8 +452,8 @@ async function copySubmissionToClipboard() {
     let submissionCommand:
         | string
         | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("copyToClipboardCommand");
+            .getConfiguration("acmx.configuration", null)
+            .get("copyToClipboardCommand");
     let sol = join(path, solFile());
     let content = "";
 
@@ -557,4 +561,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
