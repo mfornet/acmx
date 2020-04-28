@@ -1,6 +1,6 @@
 # ACMX
 
-[![Build Status](https://github.com/mfornet/acmx/workflows/.github/workflows/test.yaml/badge.svg)](https://github.com/mfornet/acmx/workflows/.github/workflows/test.yaml/badge.svg) ![Visual Studio Marketplace Installs(https://marketplace.visualstudio.com/items?itemName=marx24.acmx)](https://img.shields.io/visual-studio-marketplace/i/marx24.acmx)
+[![Build Status](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test)](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test) ![Visual Studio Marketplace Installs(https://marketplace.visualstudio.com/items?itemName=marx24.acmx)](https://img.shields.io/visual-studio-marketplace/i/marx24.acmx)
 
 **acmX** is tool that empower contestants to solve competitive programming problems easily.
 
