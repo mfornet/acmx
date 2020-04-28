@@ -1,5 +1,5 @@
-# Set default behavior to automatically normalize line endings.
-* text=auto
+# Keep line endings as-is (checkout as-is, commit as-is)
+* -text
 
 # Ignore static folder for language stats
 static/* linguist-vendored
