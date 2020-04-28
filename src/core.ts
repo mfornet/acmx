@@ -9,7 +9,6 @@ import {
     readdirSync,
     readFileSync,
     writeSync,
-    write,
 } from "fs";
 import { basename, dirname, extname, join } from "path";
 import * as vscode from "vscode";
