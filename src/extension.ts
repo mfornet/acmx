@@ -28,6 +28,7 @@ import {
     testSolution,
     upgradeArena,
     verdictName,
+    showCompileError,
 } from "./core";
 import { hideTerminals } from "./terminal";
 import { SiteDescription, Verdict } from "./types";
@@ -132,10 +133,9 @@ async function debugTestCase(path: string, tcId: string) {
         orientation: 0,
         groups: [
             { groups: [{}], size: 0.5 },
-            { groups: [{}, {}, {}], size: 0.5 },
+            { groups: [{}, {}], size: 0.5 },
         ],
     });
-
     let sol = join(path, solFile());
     let inp = join(path, TESTCASES, `${tcId}.in`);
     let out = join(path, TESTCASES, `${tcId}.out`);
@@ -151,18 +151,21 @@ async function debugTestCase(path: string, tcId: string) {
         vscode.Uri.file(inp),
         vscode.ViewColumn.Two
     );
-    await vscode.commands.executeCommand(
-        "vscode.open",
-        vscode.Uri.file(out),
-        vscode.ViewColumn.Three
-    );
-
     // This file might not exist!
     if (existsSync(cur)) {
         await vscode.commands.executeCommand(
-            "vscode.open",
+            "vscode.diff",
             vscode.Uri.file(cur),
-            vscode.ViewColumn.Four
+            vscode.Uri.file(out),
+            "Difference in outputs",
+            { viewColumn: vscode.ViewColumn.Three }
+        );
+    } else {
+        await vscode.commands.executeCommand(
+            "vscode.diff",
+            vscode.Uri.file(out),
+            "Difference in outputs",
+            { viewColumn: vscode.ViewColumn.Three }
         );
     }
 }
@@ -215,6 +218,8 @@ async function compile() {
 
         if (result.status !== 0) {
             vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
+            showCompileError(path!, result.stderr.toString());
+            throw new Error("");
         } else {
             vscode.window.showInformationMessage("Compilation successfully.");
         }
