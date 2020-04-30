@@ -28,6 +28,7 @@ import {
     testSolution,
     upgradeArena,
     verdictName,
+    showCompileError,
 } from "./core";
 import { hideTerminals } from "./terminal";
 import { SiteDescription, Verdict } from "./types";
@@ -217,18 +218,8 @@ async function compile() {
 
         if (result.status !== 0) {
             vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-            let error_path = join(path!, "stderr");
-            let error_file = openSync(error_path, "w");
-            writeSync(error_file, result.stderr.toString());
-            vscode.commands.executeCommand("vscode.setEditorLayout", {
-                orientation: 1,
-                groups: [{ groups: [{}, {}], size: 0.5 }],
-            });
-            vscode.commands.executeCommand(
-                "vscode.open",
-                vscode.Uri.file(error_path),
-                vscode.ViewColumn.Two
-            );
+            showCompileError(path!, result.stderr.toString());
+            throw new Error("");
         } else {
             vscode.window.showInformationMessage("Compilation successfully.");
         }

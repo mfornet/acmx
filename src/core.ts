@@ -84,7 +84,6 @@ export function currentTestCase() {
     // Test case not found
     return answer;
 }
-
 export function currentProblem() {
     // Try to find the problem using current open file
     if (vscode.window.activeTextEditor) {
@@ -454,6 +453,24 @@ export function timedRun(path: string, tcName: string, timeout: number) {
     }
 }
 
+export function showCompileError(path: string, compile_error: string) {
+    let error_path = join(path, ATTIC, "stderr");
+    let error_file = openSync(error_path, "w");
+    writeSync(error_file, compile_error);
+    vscode.commands.executeCommand("vscode.setEditorLayout", {
+        orientation: 1,
+        groups: [
+            { groups: [{}], size: 0.5 },
+            { groups: [{}], size: 0.5 },
+        ],
+    });
+    vscode.commands.executeCommand(
+        "vscode.open",
+        vscode.Uri.file(error_path),
+        vscode.ViewColumn.Two
+    );
+}
+
 export function compileCode(pathCode: string, pathOutput: string) {
     let pathCodeMD5 = pathCode + ".md5";
     let md5data = "";
@@ -510,18 +527,7 @@ export function testSolution(path: string) {
 
     if (result.status !== 0) {
         vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-        let error_path = join(path, "stderr");
-        let error_file = openSync(error_path, "w");
-        writeSync(error_file, result.stderr.toString());
-        vscode.commands.executeCommand("vscode.setEditorLayout", {
-            orientation: 1,
-            groups: [{ groups: [{}, {}], size: 0.5 }],
-        });
-        vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(error_path),
-            vscode.ViewColumn.Two
-        );
+        showCompileError(path, result.stderr.toString());
         throw new Error("");
     }
 
@@ -601,36 +607,14 @@ export function stressSolution(path: string, times: number) {
     let solCompileResult = compileCode(sol, out);
     if (solCompileResult.status !== 0) {
         vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-        let error_path = join(path, "stderr");
-        let error_file = openSync(error_path, "w");
-        writeSync(error_file, solCompileResult.stderr.toString());
-        vscode.commands.executeCommand("vscode.setEditorLayout", {
-            orientation: 1,
-            groups: [{ groups: [{}, {}], size: 0.5 }],
-        });
-        vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(error_path),
-            vscode.ViewColumn.Two
-        );
+        showCompileError(path, solCompileResult.stderr.toString());
         throw new Error("");
     }
 
     let bruteCompileResult = compileCode(brute, brute_out);
     if (bruteCompileResult.status !== 0) {
         vscode.window.showErrorMessage(`Compilation Error. ${brute}`);
-        let error_path = join(brute, "stderr");
-        let error_file = openSync(error_path, "w");
-        writeSync(error_file, bruteCompileResult.stderr.toString());
-        vscode.commands.executeCommand("vscode.setEditorLayout", {
-            orientation: 1,
-            groups: [{ groups: [{}, {}], size: 0.5 }],
-        });
-        vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(error_path),
-            vscode.ViewColumn.Two
-        );
+        showCompileError(brute, bruteCompileResult.stderr.toString());
         throw new Error("");
     }
 
