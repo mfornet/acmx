@@ -29,6 +29,8 @@ suite("Extension Test Suite", () => {
     });
 
     test("Upgrade Arena", function () {
+        this.timeout(5000);
+
         runWithTemporaryPath((path: string) => {
             newArena(path);
             upgradeArena(path);

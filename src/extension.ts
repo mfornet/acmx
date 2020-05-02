@@ -173,7 +173,7 @@ async function debugTestCase(path: string, tcId: string) {
 async function runSolution() {
     let path = currentProblem();
 
-    vscode.window.activeTextEditor?.document.save().then(() => {
+    await vscode.window.activeTextEditor?.document.save().then(() => {
         if (path === undefined) {
             vscode.window.showErrorMessage("No active problem");
             return;
@@ -212,7 +212,7 @@ async function compile() {
         return;
     }
 
-    vscode.window.activeTextEditor?.document.save().then(() => {
+    await vscode.window.activeTextEditor?.document.save().then(() => {
         // Compile solution
         let result = compileCode(sol, out);
 
