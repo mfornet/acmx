@@ -77,7 +77,7 @@ function isProblemFolder(path: string) {
 
 function isTestCase(path: string) {
     let ext = extname(path);
-    return ext === ".in" || ext === ".out" || ext === ".real";
+    return ext === ".in" || ext === ".ans" || ext === ".out";
 }
 
 export function currentTestCase(): Option<string> {
@@ -425,7 +425,7 @@ function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
     });
 
     problem.outputs!.forEach((value, index) => {
-        let fd = openSync(join(path, TESTCASES, `${index}.out`), "w");
+        let fd = openSync(join(path, TESTCASES, `${index}.ans`), "w");
         writeSync(fd, value);
         closeSync(fd);
     });
@@ -517,8 +517,8 @@ export function timedRun(
     checker: CompileResult
 ): TestCaseResult {
     let tcInput = join(path, TESTCASES, `${tcName}.in`);
-    let tcOutput = join(path, TESTCASES, `${tcName}.out`);
-    let tcCurrent = join(path, TESTCASES, `${tcName}.real`);
+    let tcOutput = join(path, TESTCASES, `${tcName}.ans`);
+    let tcCurrent = join(path, TESTCASES, `${tcName}.out`);
 
     let tcData = readFileSync(tcInput, "utf8");
 
@@ -876,7 +876,7 @@ export function stressSolution(
 
         // Finally write .out
         writeBufferToFileSync(
-            join(path, TESTCASES, GENERATED_TEST_CASE + ".out"),
+            join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
             bruteExecution.stdout()
         );
 

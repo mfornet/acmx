@@ -142,8 +142,8 @@ async function debugTestCase(path: string, tcId: string) {
     });
     let sol = mainSolution(path);
     let inp = join(path, TESTCASES, `${tcId}.in`);
-    let out = join(path, TESTCASES, `${tcId}.out`);
-    let cur = join(path, TESTCASES, `${tcId}.real`);
+    let out = join(path, TESTCASES, `${tcId}.ans`);
+    let cur = join(path, TESTCASES, `${tcId}.out`);
 
     await vscode.commands.executeCommand(
         "vscode.open",
@@ -273,7 +273,7 @@ async function openTestCase() {
 
     if (tc !== undefined) {
         let inp = join(path, TESTCASES, `${tc.target}.in`);
-        let out = join(path, TESTCASES, `${tc.target}.out`);
+        let out = join(path, TESTCASES, `${tc.target}.ans`);
 
         await vscode.commands.executeCommand("vscode.setEditorLayout", {
             orientation: 0,
@@ -308,7 +308,7 @@ async function addTestCase() {
     }
 
     let inp = join(path, TESTCASES, `${index}.hand.in`);
-    let out = join(path, TESTCASES, `${index}.hand.out`);
+    let out = join(path, TESTCASES, `${index}.hand.ans`);
 
     writeFileSync(inp, "");
     writeFileSync(out, "");
