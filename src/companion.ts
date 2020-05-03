@@ -3,6 +3,7 @@ import { newProblemFromCompanion } from "./core";
 
 const app = require("express")();
 import bodyParser = require("body-parser");
+import { debug } from "./log";
 
 export function startCompetitiveCompanionService() {
     let port = 0;
@@ -36,6 +37,6 @@ export function startCompetitiveCompanionService() {
         }
 
         // TODO(#21): Move to logs of the extension for debugging purposes.
-        console.log(`Listening on port ${port}.`);
+        debug("companion", `Started companion. Listening on port ${port}`);
     });
 }

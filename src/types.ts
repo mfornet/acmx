@@ -1,3 +1,5 @@
+import { SpawnSyncReturns } from "child_process";
+
 export enum Verdict {
     OK, // Accepted
     WA, // Wrong Answer
@@ -83,5 +85,40 @@ export class SiteDescription {
 
         this.contestParser = contestParser;
         this.problemParser = problemParser;
+    }
+}
+
+export class Execution {
+    // Identifier will be used as folder name
+    result: SpawnSyncReturns<Buffer>;
+    timeSpan: number;
+    timeout: number;
+
+    constructor(
+        result: SpawnSyncReturns<Buffer>,
+        timeSpan: number,
+        timeout: number
+    ) {
+        this.result = result;
+        this.timeSpan = timeSpan;
+        this.timeout = timeout;
+    }
+
+    isTLE() {
+        return this.timeSpan >= this.timeout;
+    }
+
+    failed() {
+        return this.result.status !== 0;
+    }
+}
+
+export class LanguageCommand {
+    preRun: string[];
+    run: string[];
+
+    constructor(preRun: string[], run: string[]) {
+        this.preRun = preRun;
+        this.run = run;
     }
 }

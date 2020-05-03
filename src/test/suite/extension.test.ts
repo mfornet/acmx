@@ -21,7 +21,7 @@ suite("Extension Test Suite", () => {
 
     test("New Arena", () => {
         runWithTemporaryPath((path: string) => {
-            newArena(path);
+            newArena(path, {});
             assert.ok(existsSync(join(path, "sol.cpp")));
             assert.ok(existsSync(join(path, ATTIC)));
             assert.ok(existsSync(join(path, TESTCASES)));
@@ -32,7 +32,7 @@ suite("Extension Test Suite", () => {
         this.timeout(5000);
 
         runWithTemporaryPath((path: string) => {
-            newArena(path);
+            newArena(path, {});
             upgradeArena(path);
 
             assert.ok(existsSync(join(path, "gen.py")));

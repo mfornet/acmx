@@ -1,5 +1,4 @@
 "use strict";
-import * as child_process from "child_process";
 import {
     closeSync,
     copyFileSync,
@@ -16,23 +15,26 @@ import { startCompetitiveCompanionService } from "./companion";
 import { EMPTY } from "./conn";
 import {
     ATTIC,
-    compileCode,
     currentProblem,
+    getSolutionPath,
     initAcmX,
     newContestFromId,
     newProblemFromId,
     pathToStatic,
     removeExtension,
-    solFile,
     stressSolution,
     testSolution,
     upgradeArena,
     verdictName,
-    showCompileError,
+    mainSolution,
+    FRIEND_TIMEOUT,
+    onCompilationError,
 } from "./core";
 import { hideTerminals } from "./terminal";
 import { SiteDescription, Verdict } from "./types";
 import clipboardy = require("clipboardy");
+import { debug } from "./log";
+import { preRun, runSingle } from "./runner";
 
 const TESTCASES = "testcases";
 
@@ -50,20 +52,24 @@ async function addProblem() {
         return;
     }
 
-    let path: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("solutionPath");
+    let path = getSolutionPath();
     path = join(path!, site.name, "single");
 
-    let problemPath = await newProblemFromId(path, site, id);
+    let problemPath = newProblemFromId(path, site, id);
 
     await vscode.commands.executeCommand(
         "vscode.openFolder",
         vscode.Uri.file(problemPath)
     );
-    // TODO(#42): Just want to run two commands below
-    // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(solFile()));
-    // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
+
+    // TODO(#42): Run two commands below
+    // await vscode.commands.executeCommand(
+    //     "vscode.open",
+    //     vscode.Uri.file(mainSolution(problemPath))
+    // );
+    // vscode.window.showInformationMessage(
+    //     `Add problem ${site}/${id} at ${path}`
+    // );
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
@@ -90,10 +96,7 @@ function parseNumberOfProblems(numberOfProblems: string | undefined) {
 }
 
 async function addContest() {
-    let path: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("solutionPath");
-
+    let path = getSolutionPath();
     let site: SiteDescription = EMPTY;
 
     let id = undefined;
@@ -136,7 +139,7 @@ async function debugTestCase(path: string, tcId: string) {
             { groups: [{}, {}], size: 0.5 },
         ],
     });
-    let sol = join(path, solFile());
+    let sol = mainSolution(path);
     let inp = join(path, TESTCASES, `${tcId}.in`);
     let out = join(path, TESTCASES, `${tcId}.out`);
     let cur = join(path, TESTCASES, `${tcId}.real`);
@@ -181,7 +184,9 @@ async function runSolution() {
 
         let result = testSolution(path);
 
-        if (result.status === Verdict.OK) {
+        if (result === undefined) {
+            return;
+        } else if (result.status === Verdict.OK) {
             vscode.window.showInformationMessage(
                 `OK. Time ${result.maxTime!}ms`
             );
@@ -198,13 +203,14 @@ async function runSolution() {
 
 async function compile() {
     let path = currentProblem();
+    debug("compile", `${path}`);
 
     if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let sol = join(path, solFile());
+    let sol = mainSolution(path);
     let out = join(path, ATTIC, "sol");
 
     if (!existsSync(sol)) {
@@ -214,15 +220,8 @@ async function compile() {
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
         // Compile solution
-        let result = compileCode(sol, out);
-
-        if (result.status !== 0) {
-            vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-            showCompileError(path!, result.stderr.toString());
-            throw new Error("");
-        } else {
-            vscode.window.showInformationMessage("Compilation successfully.");
-        }
+        preRun(sol, out, path!, FRIEND_TIMEOUT, onCompilationError);
+        vscode.window.showInformationMessage("Compilation successfully.");
     });
 }
 
@@ -324,7 +323,7 @@ async function coding() {
         groups: [{}],
     });
 
-    let sol = join(path, solFile());
+    let sol = mainSolution(path);
 
     await vscode.commands.executeCommand(
         "vscode.open",
@@ -352,7 +351,9 @@ async function stress() {
 
     let result = stressSolution(path, stressTimes);
 
-    if (result.status === Verdict.OK) {
+    if (result === undefined) {
+        return;
+    } else if (result.status === Verdict.OK) {
         vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     } else {
         vscode.window.showErrorMessage(
@@ -455,7 +456,7 @@ async function copySubmissionToClipboard() {
         | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("copyToClipboardCommand");
-    let sol = join(path, solFile());
+    let sol = mainSolution(path);
     let content = "";
 
     if (submissionCommand === undefined || submissionCommand === "") {
@@ -470,17 +471,14 @@ async function copySubmissionToClipboard() {
             );
         }
 
-        let result = child_process.spawnSync(
-            submissionCommands[0],
-            submissionCommands.slice(1)
-        );
+        let execution = runSingle(submissionCommands, FRIEND_TIMEOUT, "");
 
-        if (result.status !== 0) {
+        if (execution.result.status !== 0) {
             vscode.window.showErrorMessage("Fail generating submission.");
             return;
         }
 
-        content = result.stdout.toString();
+        content = execution.result.stdout.toString();
     }
 
     clipboardy.writeSync(content);
