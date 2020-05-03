@@ -2,6 +2,15 @@
 
 Notable updates of **acmX**
 
+## 0.2.8
+
+* Show diff on failing test cases #47 (thanks Salil03)
+* Show compilation error on editor #47 (thanks @Salil03)
+* Specify number of problem of a contest using the character from the last problem. (J for 10)
+* Save before compiling and running #15
+* Fix some issues #19, #26, #50
+* Improve contributing experience
+
 ## 0.2.7
 
 * Fix bugs introduced after features in 0.2.6
