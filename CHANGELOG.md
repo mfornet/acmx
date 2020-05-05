@@ -2,10 +2,15 @@
 
 Notable updates of **acmX**
 
+## 0.2.9
+
+* Revert diff feature. Display expected output and current output side be side #53
+* Add buttons to run / compile code from the UI #53
+
 ## 0.2.8
 
-* Show diff on failing test cases #47 (thanks Salil03)
-* Show compilation error on editor #47 (thanks @Salil03)
+* Show diff on failing test cases #47
+* Show compilation error on editor #47
 * Specify number of problem of a contest using the character from the last problem. (J for 10)
 * Save before compiling and running #15
 * Fix some issues #19, #26, #50
