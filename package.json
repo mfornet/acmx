@@ -42,6 +42,18 @@
                         "description": "Maximum time limit in seconds to run the program on each test case.",
                         "scope": "resource"
                     },
+                    "acmx.execution.showRunIconInEditorTitleMenu": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to show 'Run File' icon in editor title menu.",
+                        "scope": "resource"
+                    },
+                    "acmx.execution.showCompileIconInEditorTitleMenu": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to show 'Compile File' icon in editor title menu.",
+                        "scope": "resource"
+                    },
                     "acmx.stress.times": {
                         "type": "number",
                         "default": 10,
@@ -122,7 +134,11 @@
             },
             {
                 "command": "acmx.runSolution",
-                "title": "ACMX: Run"
+                "title": "ACMX: Run",
+                "icon": {
+                    "light": "./images/run-light.svg",
+                    "dark": "./images/run-dark.svg"
+                }
             },
             {
                 "command": "acmx.openTestCase",
@@ -146,7 +162,11 @@
             },
             {
                 "command": "acmx.compile",
-                "title": "ACMX: Compile"
+                "title": "ACMX: Compile",
+                "icon": {
+                    "light": "./images/compile-light.svg",
+                    "dark": "./images/compile-dark.svg"
+                }
             },
             {
                 "command": "acmx.setChecker",
@@ -199,6 +219,18 @@
                 {
                     "command": "acmx.selectDebugTestCase",
                     "when": "false"
+                }
+            ],
+            "editor/title": [
+                {
+                    "when": "config.acmx.execution.showRunIconInEditorTitleMenu",
+                    "command": "acmx.runSolution",
+                    "group": "navigation"
+                },
+                {
+                    "when": "config.acmx.execution.showCompileIconInEditorTitleMenu",
+                    "command": "acmx.compile",
+                    "group": "navigation"
                 }
             ]
         }

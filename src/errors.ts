@@ -30,8 +30,8 @@ export function showCompileError(path: string, compileError: string) {
     vscode.commands.executeCommand("vscode.setEditorLayout", {
         orientation: 1,
         groups: [
-            { groups: [{}], size: 0.5 },
-            { groups: [{}], size: 0.5 },
+            { groups: [{}], size: 0.6 },
+            { groups: [{}], size: 0.4 },
         ],
     });
 

@@ -137,7 +137,7 @@ async function debugTestCase(path: string, tcId: string) {
         orientation: 0,
         groups: [
             { groups: [{}], size: 0.5 },
-            { groups: [{}, {}], size: 0.5 },
+            { groups: [{}, [{}, {}]], size: 0.5 },
         ],
     });
     let sol = mainSolution(path);
@@ -158,18 +158,20 @@ async function debugTestCase(path: string, tcId: string) {
     // This file might not exist!
     if (existsSync(cur)) {
         await vscode.commands.executeCommand(
-            "vscode.diff",
+            "vscode.open",
             vscode.Uri.file(cur),
+            vscode.ViewColumn.Three
+        );
+        await vscode.commands.executeCommand(
+            "vscode.open",
             vscode.Uri.file(out),
-            "Difference in outputs",
-            { viewColumn: vscode.ViewColumn.Three }
+            vscode.ViewColumn.Four
         );
     } else {
         await vscode.commands.executeCommand(
-            "vscode.diff",
+            "vscode.open",
             vscode.Uri.file(out),
-            "Difference in outputs",
-            { viewColumn: vscode.ViewColumn.Three }
+            vscode.ViewColumn.Four
         );
     }
 }
