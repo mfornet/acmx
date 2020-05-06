@@ -62,8 +62,8 @@
                     },
                     "acmx.execution.compile": {
                         "type": "string",
-                        "default": "g++ -std=c++11 $PROGRAM -o $OUTPUT",
-                        "description": "Command to compile the program. Refer to the code as $PROGRAM, and output file as $OUTPUT.",
+                        "default": "g++ -fdiagnostics-color=always -std=c++11 $PROGRAM -o $OUTPUT",
+                        "description": "Command to compile the program. Refer to the code as $PROGRAM, and output file as $OUTPUT. You can use -fdiagnostics-color=always flag to output coloured error text in g++",
                         "scope": "resource"
                     },
                     "acmx.execution.pythonPath": {

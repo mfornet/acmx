@@ -457,18 +457,9 @@ export function showCompileError(path: string, compile_error: string) {
     let error_path = join(path, ATTIC, "stderr");
     let error_file = openSync(error_path, "w");
     writeSync(error_file, compile_error);
-    vscode.commands.executeCommand("vscode.setEditorLayout", {
-        orientation: 1,
-        groups: [
-            { groups: [{}], size: 0.6 },
-            { groups: [{}], size: 0.4 },
-        ],
-    });
-    vscode.commands.executeCommand(
-        "vscode.open",
-        vscode.Uri.file(error_path),
-        vscode.ViewColumn.Two
-    );
+    let stderr_terminal = vscode.window.createTerminal("Compilation Error");
+    stderr_terminal.show();
+    stderr_terminal.sendText("more " + '"' + error_path + '"');
 }
 
 export function compileCode(pathCode: string, pathOutput: string) {
