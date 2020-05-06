@@ -10,7 +10,7 @@ import {
     readFileSync,
     writeSync,
 } from "fs";
-import { basename, dirname, extname, join } from "path";
+import { basename, dirname, extname, join, parse } from "path";
 import * as vscode from "vscode";
 import * as gwen from "./gwen";
 import {
@@ -22,7 +22,6 @@ import {
     Verdict,
 } from "./types";
 import md5File = require("md5-file");
-
 export const TESTCASES = "testcases";
 export const ATTIC = "attic";
 
@@ -472,7 +471,8 @@ export function showCompileError(path: string, compile_error: string) {
 }
 
 export function compileCode(pathCode: string, pathOutput: string) {
-    let pathCodeMD5 = pathCode + ".md5";
+    let pathCodeMD5 =
+        join(parse(pathOutput).dir, parse(pathOutput).name) + ".md5";
     let md5data = "";
 
     if (existsSync(pathCodeMD5)) {
@@ -487,10 +487,6 @@ export function compileCode(pathCode: string, pathOutput: string) {
             stderr: "",
         };
     }
-
-    let codeMD5fd = openSync(pathCodeMD5, "w");
-    writeSync(codeMD5fd, codeMD5 + "\n");
-    closeSync(codeMD5fd);
 
     let instruction: string | undefined = vscode.workspace
         .getConfiguration("acmx.execution", null)
@@ -510,6 +506,11 @@ export function compileCode(pathCode: string, pathOutput: string) {
     let args = splitInstruction.slice(1);
 
     let result = child_process.spawnSync(program, args);
+    if (result.status === 0) {
+        let codeMD5fd = openSync(pathCodeMD5, "w");
+        writeSync(codeMD5fd, codeMD5 + "\n");
+        closeSync(codeMD5fd);
+    }
     return result;
 }
 
