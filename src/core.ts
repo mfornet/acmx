@@ -7,6 +7,7 @@ import {
     readdirSync,
     readFileSync,
     writeSync,
+    renameSync,
 } from "fs";
 import { basename, dirname, extname, join, parse } from "path";
 import * as vscode from "vscode";
@@ -874,7 +875,7 @@ export function stressSolution(
             );
         }
 
-        // Finally write .out
+        // Finally write .ans
         writeBufferToFileSync(
             join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
             bruteExecution.stdout()
@@ -890,6 +891,27 @@ export function stressSolution(
         );
 
         if (!result.isOk()) {
+            // now save the test case
+            let index = 0;
+            while (existsSync(join(path, TESTCASES, `gen.${index}.in`))) {
+                index += 1;
+            }
+            renameSync(
+                join(path, TESTCASES, `gen.in`),
+                join(path, TESTCASES, `gen.${index}.in`)
+            );
+            if (existsSync(join(path, TESTCASES, `gen.ans`))) {
+                renameSync(
+                    join(path, TESTCASES, `gen.ans`),
+                    join(path, TESTCASES, `gen.${index}.ans`)
+                );
+            }
+            if (existsSync(join(path, TESTCASES, `gen.out`))) {
+                renameSync(
+                    join(path, TESTCASES, `gen.out`),
+                    join(path, TESTCASES, `gen.${index}.out`)
+                );
+            }
             return Option.some(
                 new SolutionResult(result.status, GENERATED_TEST_CASE)
             );
