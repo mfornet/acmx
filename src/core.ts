@@ -8,7 +8,7 @@ import {
     readFileSync,
     writeSync,
 } from "fs";
-import { basename, dirname, extname, join } from "path";
+import { basename, dirname, extname, join, parse } from "path";
 import * as vscode from "vscode";
 import {
     Contest,
