@@ -30,7 +30,6 @@ import {
     verdictName,
     showCompileError,
 } from "./core";
-import { hideTerminals } from "./terminal";
 import { SiteDescription, Verdict } from "./types";
 import clipboardy = require("clipboardy");
 
@@ -313,7 +312,9 @@ async function addTestCase() {
 }
 
 async function coding() {
-    hideTerminals();
+    vscode.window.terminals.forEach((ter) => {
+        ter.hide();
+    }); //hides terminals
 
     let path = currentProblem();
 
