@@ -151,9 +151,15 @@ export function globalHomePath(testPath?: string): string {
         return testPath;
     }
 
-    let path = vscode.workspace
-        .getConfiguration()
-        .get("acmx.configuration.homePath", "");
+    let path_: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("homePath");
+
+    let path = path_!;
+
+    if (path !== undefined) {
+        path = substituteArgWith(path);
+    }
 
     path = substituteArgWith(path);
 
@@ -246,8 +252,8 @@ function copyFromTemplate(
 
 function populateMainSolution(path: string, override: boolean): string {
     let templatePath: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("templatePath");
+        .getConfiguration("acmx.template", null)
+        .get("solutionPath");
 
     if (templatePath === undefined || templatePath === "") {
         templatePath = join(pathToStatic(), "templates", "sol.cpp");
@@ -441,7 +447,7 @@ function newContest(path: string, contest: Contest) {
 export function getSolutionPath() {
     let path: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
-        .get("solutionPath");
+        .get("library");
 
     if (path !== undefined) {
         path = substituteArgWith(path);
