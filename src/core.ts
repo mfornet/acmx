@@ -18,9 +18,10 @@ import {
     SolutionResult,
     TestCaseResult,
     Verdict,
-    Execution,
+    Option,
+    CompileResult,
 } from "./types";
-import { substituteWith, writeToFileSync } from "./utils";
+import { writeToFileSync, substituteArgWith } from "./utils";
 import { debug } from "./log";
 import { preRun, run, runWithArgs } from "./runner";
 
@@ -150,16 +151,6 @@ function createFolder(path: string) {
     }
 }
 
-export function onCompilationError(
-    code: string,
-    path: string,
-    execution: Execution
-) {
-    debug("compile-error", `Compilation error ${code}`);
-    vscode.window.showErrorMessage(`Compilation Error. ${code}`);
-    showCompileError(path!, execution.result.stderr.toString());
-}
-
 /**
  * Path to common attic for every problem.
  *
@@ -175,7 +166,7 @@ export function globalHomePath(testPath: string | undefined = undefined) {
         .get("homePath");
 
     if (path !== undefined) {
-        path = substituteWith(path, process.env);
+        path = substituteArgWith(path);
     }
 
     return path;
@@ -217,13 +208,7 @@ export function initAcmX(testPath: string | undefined = undefined) {
         let checkerPath = join(checkerFolder, checkerName);
         let compiledPath = join(checkerFolder, compiledName);
 
-        preRun(
-            checkerPath,
-            compiledPath,
-            checkerFolder,
-            FRIEND_TIMEOUT,
-            onCompilationError
-        );
+        preRun(checkerPath, compiledPath, checkerFolder, FRIEND_TIMEOUT);
     }
 
     // Copy default languages config
@@ -279,7 +264,7 @@ export function newArena(path: string, config: any) {
     if (templatePath === undefined || templatePath === "") {
         templatePath = join(pathToStatic(), "templates", "sol.cpp");
     } else {
-        templatePath = substituteWith(templatePath, process.env);
+        templatePath = substituteArgWith(templatePath);
     }
 
     debug("newArena", `Using template path: ${templatePath}`);
@@ -477,7 +462,7 @@ export function getSolutionPath() {
         .get("solutionPath");
 
     if (path !== undefined) {
-        path = substituteWith(path, process.env);
+        path = substituteArgWith(path);
     }
 
     return path;
@@ -555,8 +540,7 @@ function getCheckerPath() {
             potentialCheckerCode,
             potentialCheckerOutput,
             path,
-            FRIEND_TIMEOUT,
-            onCompilationError
+            FRIEND_TIMEOUT
         );
         return [potentialCheckerCode, potentialCheckerOutput];
     } else {
@@ -654,8 +638,14 @@ export function testSolution(path: string) {
     }
 
     // Compile solution
-    let execution = preRun(sol, out, path, FRIEND_TIMEOUT, onCompilationError);
-    if (execution === undefined || execution.failed()) {
+    let execution = preRun(sol, out, path, FRIEND_TIMEOUT);
+
+    if (
+        execution.mapOr(false, (exec) => {
+            return exec.failed();
+        })
+    ) {
+        // Return early if compilation failed.
         return;
     }
 
@@ -710,7 +700,32 @@ export function testSolution(path: string) {
     }
 }
 
-function getGeneratorPath(path: string) {
+function getCompileResult(
+    code: string,
+    output: string,
+    path: string
+): Option<CompileResult> {
+    let execution = preRun(code, output, path, FRIEND_TIMEOUT);
+
+    if (execution.isNone()) {
+        // If there is no code to compile. Return current code as expected output.
+        return Option.some(new CompileResult(code));
+    }
+
+    if (execution.unwrap().failed()) {
+        return Option.none();
+    }
+
+    return Option.some(new CompileResult(code, output));
+}
+
+/**
+ * Find generator from config. Compile it if necessary.
+ * Return Option.none if failed.
+ *
+ * @param path
+ */
+function getGeneratorPath(path: string): Option<CompileResult> {
     // TODO(now): Find generator from config
     let generatorCode = join(path, "gen.py");
     let generatorOutput = join(path, ATTIC, "gen");
@@ -719,25 +734,19 @@ function getGeneratorPath(path: string) {
         vscode.window.showErrorMessage(
             "No generator found. Upgrade environment first."
         );
-        return ["", ""];
+        return Option.none();
     }
 
-    let execution = preRun(
-        generatorCode,
-        generatorOutput,
-        path,
-        FRIEND_TIMEOUT,
-        onCompilationError
-    );
-
-    if (execution === undefined || execution.failed()) {
-        return ["", ""];
-    }
-
-    return [generatorCode, generatorOutput];
+    return getCompileResult(generatorCode, generatorOutput, path);
 }
 
-function getBrutePath(path: string) {
+/**
+ * Find brute from config. Compile it if necessary.
+ * Return Option.none if failed.
+ *
+ * @param path
+ */
+function getBrutePath(path: string): Option<CompileResult> {
     let bruteCode = join(path, "brute.cpp");
     let bruteOutput = join(path, ATTIC, "brute");
 
@@ -745,22 +754,13 @@ function getBrutePath(path: string) {
         vscode.window.showErrorMessage(
             "No brute solution found. Upgrade environment first."
         );
-        return ["", ""];
+        return Option.none();
     }
 
-    let execution = preRun(
-        bruteCode,
-        bruteOutput,
-        path,
-        FRIEND_TIMEOUT,
-        onCompilationError
-    );
-
-    if (execution === undefined || execution.failed()) {
-        return ["", ""];
-    }
-    return [bruteCode, bruteOutput];
+    return getCompileResult(bruteCode, bruteOutput, path);
 }
+
+// TODO(now) Same function as above for checker.
 
 function generateTestCase(path: string, code: string, output: string) {
     // TODO(now): Handle executions errors
@@ -784,37 +784,53 @@ export function stressSolution(path: string, times: number) {
     }
 
     // Compile main solution
-    let execution = preRun(sol, out, path, FRIEND_TIMEOUT, onCompilationError);
+    let execution = preRun(sol, out, path, FRIEND_TIMEOUT);
 
-    if (execution === undefined || execution.failed()) {
+    if (
+        execution.mapOr(false, (exec) => {
+            return exec.failed();
+        })
+    ) {
+        // Return early if failed compiling main solution;
         return;
     }
 
     // Get brute file
-    let [bruteCode, bruteOutput] = getBrutePath(path);
-    if (bruteCode === "") {
+    let bruteResultOpt = getBrutePath(path);
+
+    if (bruteResultOpt.isNone()) {
+        // Return early if couldn't find or compile brute solution.
         return;
     }
+
+    let bruteResult = bruteResultOpt.unwrap();
 
     // Get generator file
-    let [generatorCode, generatorOutput] = getGeneratorPath(path);
+    let generatorResultOpt = getGeneratorPath(path);
 
-    if (generatorCode === "") {
+    if (generatorResultOpt.isNone()) {
+        // Return early if couldn't find or compile generator.
         return;
     }
+
+    let generatorResult = generatorResultOpt.unwrap();
 
     let results = [];
 
     for (let index = 0; index < times; index++) {
         // Generate input test case
-        generateTestCase(path, generatorCode, generatorOutput);
+        generateTestCase(
+            path,
+            generatorResult.code,
+            generatorResult.getOutput()
+        );
 
         // Generate output test case from brute.cpp
         let tcData = readFileSync(join(path, TESTCASES, "gen.in"), "utf8");
 
         let bruteExecution = run(
-            bruteCode,
-            bruteOutput,
+            bruteResult.code,
+            bruteResult.getOutput(),
             path,
             tcData,
             FRIEND_TIMEOUT

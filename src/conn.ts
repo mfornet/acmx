@@ -3,12 +3,6 @@ import { Contest, Problem, SiteDescription } from "./types";
 /**
  * Not a real site.
  *
- * Util to create personal problems and debug this tool.
- */
-
-/**
- * Not a real site.
- *
  * Create an empty contest that will be filled by user manually.
  */
 export const EMPTY = new SiteDescription(

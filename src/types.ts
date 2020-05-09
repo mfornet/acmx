@@ -1,4 +1,5 @@
 import { SpawnSyncReturns } from "child_process";
+import { AssertionError } from "assert";
 
 export enum Verdict {
     OK, // Accepted
@@ -89,7 +90,6 @@ export class SiteDescription {
 }
 
 export class Execution {
-    // Identifier will be used as folder name
     result: SpawnSyncReturns<Buffer>;
     timeSpan: number;
     timeout: number;
@@ -120,5 +120,74 @@ export class LanguageCommand {
     constructor(preRun: string[], run: string[]) {
         this.preRun = preRun;
         this.run = run;
+    }
+}
+
+export class Option<T> {
+    value?: T;
+
+    constructor(value?: T) {
+        this.value = value;
+    }
+
+    static none<T>() {
+        return new Option<T>(undefined);
+    }
+
+    static some<T>(value: T) {
+        return new Option<T>(value);
+    }
+
+    isSome() {
+        return this.value !== undefined;
+    }
+
+    isNone() {
+        return !this.isSome();
+    }
+
+    unwrap(): T {
+        if (this.value === undefined) {
+            throw new AssertionError({
+                message: "Expected value found undefined",
+            });
+        } else {
+            return this.value;
+        }
+    }
+
+    unwrapOr(value: T): T {
+        if (this.isSome()) {
+            return this.unwrap();
+        } else {
+            return value;
+        }
+    }
+
+    mapOr<R>(value: R, predicate: (arg: T) => R): R {
+        if (this.isSome()) {
+            return predicate(this.unwrap());
+        } else {
+            return value;
+        }
+    }
+}
+
+/**
+ * Result of compiling code file.
+ * Path to code file, and output file.
+ * If no compilation was performed `output` is Option.none
+ */
+export class CompileResult {
+    code: string;
+    private output: Option<string>;
+
+    constructor(code: string, output?: string) {
+        this.code = code;
+        this.output = new Option(output);
+    }
+
+    getOutput() {
+        return this.output.unwrapOr("");
     }
 }

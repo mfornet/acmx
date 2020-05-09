@@ -1,23 +1,22 @@
 import { spawnSync } from "child_process";
 import { debug } from "./log";
-import { Execution, LanguageCommand } from "./types";
+import { Execution, LanguageCommand, Option } from "./types";
 import { pathToStatic, LANGUAGES, ATTIC } from "./core";
 import { join } from "path";
 import { readdirSync, readFileSync } from "fs-extra";
-import { extension } from "./utils";
+import { extension, substituteArgsWith } from "./utils";
+import { onCompilationError } from "./errors";
+import { AssertionError } from "assert";
 
-function loadConfig(extension: string) {
+function loadConfig(extension: string): LanguageCommand {
     let languagesPath = join(pathToStatic(), LANGUAGES);
 
     let filtered = readdirSync(languagesPath).filter((file) => {
         try {
-            console.debug(file);
             let content = readFileSync(join(languagesPath, file), "utf8");
             let language = JSON.parse(content);
-            console.debug(language);
 
-            if (language.ext == extension) {
-                console.debug("OK");
+            if (language.ext === extension) {
                 return true;
             }
         } catch {
@@ -25,49 +24,39 @@ function loadConfig(extension: string) {
         }
     });
 
+    // TODO(now) Handle the case where no file is available
     let languagePath = join(languagesPath, filtered[0]);
     let content = readFileSync(languagePath, "utf8");
     let language = JSON.parse(content);
     return new LanguageCommand(language.run, language.preRun);
 }
 
-function makeSubstitution(
-    args: string[],
-    code: string,
-    output: string,
-    attic: string
-) {
-    return args.map((arg) => {
-        if (arg == "$CODE") {
-            return code;
-        } else if (arg == "$OUTPUT") {
-            return output;
-        } else if (arg == "$ATTIC") {
-            return attic;
-        } else {
-            return arg;
-        }
-    });
-}
-
+/**
+ * Call preRun method to "compile" code.
+ * If there is no preRun method available return Option.none
+ *
+ * @param code
+ * @param output
+ * @param path
+ * @param timeout
+ */
 export function preRun(
     code: string,
     output: string,
     path: string,
-    timeout: number,
-    compilation_error_callback: (
-        code: string,
-        path: string,
-        execution: Execution
-    ) => void
-) {
+    timeout: number
+): Option<Execution> {
     debug("pre-run", code);
     let codeExt = extension(code);
     let language = loadConfig(codeExt);
+
     if (language.preRun === undefined || language.preRun.length === 0) {
-        return;
+        // No preRun command, so nothing to run.
+        debug("pre-run", "preRun empty. Nothing to run");
+        return Option.none();
     }
-    let command = makeSubstitution(
+
+    let command = substituteArgsWith(
         language.preRun,
         code,
         output,
@@ -76,12 +65,11 @@ export function preRun(
 
     let execution = runSingle(command, timeout, "");
 
-    // TODO(now): remove this callback and simply handle this outside of preRun with Error type
     if (execution.failed()) {
-        compilation_error_callback(code, path, execution);
+        onCompilationError(code, path, execution);
     }
 
-    return execution;
+    return new Option(execution);
 }
 
 // TODO(now): Add md5 support | md5 files should live inside ATTIC
@@ -133,7 +121,7 @@ export function run(
     path: string,
     input: string,
     timeout: number
-) {
+): Execution {
     return runWithArgs(code, output, path, input, timeout, []);
 }
 
@@ -144,14 +132,20 @@ export function runWithArgs(
     input: string,
     timeout: number,
     args: string[]
-) {
-    debug("pre-run", code);
+): Execution {
+    debug("run", code);
     let codeExt = extension(code);
     let language = loadConfig(codeExt);
-    if (language.preRun === undefined || language.preRun.length === 0) {
-        return;
+
+    if (language.run === undefined || language.run.length === 0) {
+        // No preRun command, so nothing to run.
+        debug("run", "run empty.");
+        throw new AssertionError({
+            message: `Nothing to run. Expected something to run for extension ${codeExt}`,
+        });
     }
-    let command = makeSubstitution(
+
+    let command = substituteArgsWith(
         language.run,
         code,
         output,
