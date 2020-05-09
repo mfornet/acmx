@@ -3,8 +3,6 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import {
     newArena,
-    ATTIC,
-    TESTCASES,
     upgradeArena,
     pathToStatic,
     testCasesName,
@@ -13,6 +11,7 @@ import {
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
 import { runWithTemporaryPath, MOCK_SITE } from "../testUtils";
+import { ATTIC, TESTCASES, ConfigFile } from "../../primitives";
 
 const CONTEST = join(pathToStatic(), "testData", "exampleContest");
 
@@ -21,7 +20,7 @@ suite("Extension Test Suite", () => {
 
     test("New Arena", () => {
         runWithTemporaryPath((path: string) => {
-            newArena(path, {});
+            newArena(path, ConfigFile.empty());
             assert.ok(existsSync(join(path, "sol.cpp")));
             assert.ok(existsSync(join(path, ATTIC)));
             assert.ok(existsSync(join(path, TESTCASES)));
@@ -32,7 +31,7 @@ suite("Extension Test Suite", () => {
         this.timeout(5000);
 
         runWithTemporaryPath((path: string) => {
-            newArena(path, {});
+            newArena(path, ConfigFile.empty());
             upgradeArena(path);
 
             assert.ok(existsSync(join(path, "gen.py")));

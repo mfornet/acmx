@@ -1,5 +1,5 @@
-import { openSync, writeSync, closeSync } from "fs-extra";
-import { extname } from "path";
+import { openSync, writeSync, closeSync, existsSync, mkdirSync } from "fs";
+import { extname, dirname } from "path";
 
 /**
  * Substitute argument from a command list with relevant values.
@@ -60,6 +60,12 @@ export function writeToFileSync(path: string, content: string) {
     closeSync(currentFd);
 }
 
+export function writeBufferToFileSync(path: string, content: Buffer) {
+    let currentFd = openSync(path, "w");
+    writeSync(currentFd, content);
+    closeSync(currentFd);
+}
+
 /**
  * Find extension from target file.
  *
@@ -67,4 +73,31 @@ export function writeToFileSync(path: string, content: string) {
  */
 export function extension(file: string) {
     return extname(file).slice(1);
+}
+
+/**
+ * Write structured logs.
+ *
+ * @param target
+ * @param optionalParams
+ */
+export function debug(target: string, ...optionalParams: any[]) {
+    console.log(`${new Date().toISOString()}[${target}]:`, ...optionalParams);
+}
+
+export function removeExtension(name: string) {
+    let split = name.split(".");
+    if (split.length === 0) {
+        return name;
+    } else {
+        split.pop(); // drop extension
+        return split.join(".");
+    }
+}
+
+export function createFolder(path: string) {
+    if (!existsSync(path)) {
+        createFolder(dirname(path));
+        mkdirSync(path);
+    }
 }

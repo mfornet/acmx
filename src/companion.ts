@@ -3,7 +3,7 @@ import { newProblemFromCompanion } from "./core";
 
 const app = require("express")();
 import bodyParser = require("body-parser");
-import { debug } from "./log";
+import { debug } from "./utils";
 
 export function startCompetitiveCompanionService() {
     let port = 0;
@@ -11,10 +11,10 @@ export function startCompetitiveCompanionService() {
     if (process.env.ACMX_TESTING === "1") {
         port = 10041; // Use this port for testing.
     } else {
-        let _port: number | undefined = vscode.workspace
+        let port_: number | undefined = vscode.workspace
             .getConfiguration("acmx.companion", null)
             .get("port");
-        port = _port!;
+        port = port_!;
     }
 
     app.use(bodyParser.json());
@@ -40,3 +40,5 @@ export function startCompetitiveCompanionService() {
         debug("companion", `Started companion. Listening on port ${port}`);
     });
 }
+
+// TODO(Now): Create companion config result

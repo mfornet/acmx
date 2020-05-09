@@ -14,26 +14,27 @@ import * as vscode from "vscode";
 import { startCompetitiveCompanionService } from "./companion";
 import { EMPTY } from "./conn";
 import {
-    ATTIC,
     currentProblem,
     getSolutionPath,
     initAcmX,
     newContestFromId,
     newProblemFromId,
     pathToStatic,
-    removeExtension,
     stressSolution,
     testSolution,
     upgradeArena,
-    verdictName,
     mainSolution,
-    FRIEND_TIMEOUT,
-    onCompilationError,
 } from "./core";
 import { hideTerminals } from "./terminal";
-import { SiteDescription, Verdict } from "./types";
+import {
+    SiteDescription,
+    Verdict,
+    ATTIC,
+    FRIEND_TIMEOUT,
+    verdictName,
+} from "./primitives";
 import clipboardy = require("clipboardy");
-import { debug } from "./log";
+import { debug, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
 
 const TESTCASES = "testcases";
@@ -174,41 +175,52 @@ async function debugTestCase(path: string, tcId: string) {
 }
 
 async function runSolution() {
-    let path = currentProblem();
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+    debug("run-solution", `${path}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
-        if (path === undefined) {
-            vscode.window.showErrorMessage("No active problem");
+        let result_ = testSolution(path);
+
+        if (result_.isNone()) {
             return;
         }
 
-        let result = testSolution(path);
+        let result = result_.unwrap();
 
-        if (result === undefined) {
-            return;
-        } else if (result.status === Verdict.OK) {
+        if (result.isOk()) {
             vscode.window.showInformationMessage(
-                `OK. Time ${result.maxTime!}ms`
+                `OK. Time ${result.getMaxTime()}ms`
             );
         } else if (result.status === Verdict.NO_TESTCASES) {
             vscode.window.showErrorMessage(`No testcases.`);
         } else {
+            let failTestCaseId = result.getFailTestCaseId();
             vscode.window.showErrorMessage(
-                `${verdictName(result.status)} on test ${result.failTcId}`
+                `${verdictName(result.status)} on test ${failTestCaseId}`
             );
-            debugTestCase(path, result.failTcId!);
+            debugTestCase(path, failTestCaseId);
         }
     });
 }
 
 async function compile() {
-    let path = currentProblem();
-    debug("compile", `${path}`);
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
+
+    let path = path_.unwrap();
+
+    debug("compile", `${path}`);
 
     let sol = mainSolution(path);
     let out = join(path, ATTIC, "sol");
@@ -220,36 +232,42 @@ async function compile() {
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
         // Compile solution
-        preRun(sol, out, path!, FRIEND_TIMEOUT, onCompilationError);
-        vscode.window.showInformationMessage("Compilation successfully.");
+        let result = preRun(sol, out, path!, FRIEND_TIMEOUT);
+
+        if (result.isNone()) {
+            vscode.window.showInformationMessage("No compilation needed.");
+        } else if (!result.unwrap().failed()) {
+            vscode.window.showInformationMessage("Compilation successful.");
+        }
     });
 }
 
 async function openTestCase() {
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let tcs: any[] = [];
+    let path = path_.unwrap();
+    let testCases: any[] = [];
 
     // Read testcases
     readdirSync(join(path, TESTCASES))
-        .filter(function (tc_path) {
-            return extname(tc_path) === ".in";
+        .filter(function (testCasePath) {
+            return extname(testCasePath) === ".in";
         })
-        .map(function (tc_path) {
-            let name = removeExtension(tc_path);
+        .map(function (testCasePath) {
+            let name = removeExtension(testCasePath);
 
-            tcs.push({
+            testCases.push({
                 label: name,
                 target: name,
             });
         });
 
-    let tc = await vscode.window.showQuickPick(tcs, {
+    let tc = await vscode.window.showQuickPick(testCases, {
         placeHolder: "Select test case",
     });
 
@@ -275,12 +293,14 @@ async function openTestCase() {
 }
 
 async function addTestCase() {
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
+
+    let path = path_.unwrap();
 
     let index = 0;
     while (existsSync(join(path, TESTCASES, `${index}.hand.in`))) {
@@ -312,12 +332,14 @@ async function addTestCase() {
 async function coding() {
     hideTerminals();
 
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
+
+    let path = path_.unwrap();
 
     await vscode.commands.executeCommand("vscode.setEditorLayout", {
         groups: [{}],
@@ -333,12 +355,14 @@ async function coding() {
 }
 
 async function stress() {
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
+
+    let path = path_.unwrap();
 
     let stressTimes: number | undefined = vscode.workspace
         .getConfiguration("acmx.stress", null)
@@ -349,27 +373,36 @@ async function stress() {
         stressTimes = 10;
     }
 
-    let result = stressSolution(path, stressTimes);
+    let result_ = stressSolution(path, stressTimes);
 
-    if (result === undefined) {
+    if (result_.isNone()) {
         return;
-    } else if (result.status === Verdict.OK) {
-        vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
-    } else {
-        vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${result.failTcId}`
+    }
+
+    let result = result_.unwrap();
+
+    if (result.isOk()) {
+        vscode.window.showInformationMessage(
+            `OK. Time ${result.getMaxTime()}ms`
         );
-        debugTestCase(path, result.failTcId!);
+    } else {
+        let failTestCaseId = result.getFailTestCaseId();
+        vscode.window.showErrorMessage(
+            `${verdictName(result.status)} on test ${failTestCaseId}`
+        );
+        debugTestCase(path, failTestCaseId);
     }
 }
 
 async function upgrade() {
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
+
+    let path = path_.unwrap();
 
     upgradeArena(path);
 }
@@ -381,39 +414,41 @@ function fileList(dir: string): string[] {
 }
 
 async function setChecker() {
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let all_checkers_plain = fileList(join(pathToStatic(), "checkers"))
+    let path = path_.unwrap();
+
+    let allCheckersPlain = fileList(join(pathToStatic(), "checkers"))
         .filter((name: string) => name !== "testlib.h")
         .map((name: string) => name.slice(0, name.length - 4));
 
-    let all_checkers = all_checkers_plain.map((value: string) => {
+    let allChecker = allCheckersPlain.map((value: string) => {
         return {
             label: value,
             target: value + ".cpp",
         };
     });
 
-    let checker_info = await vscode.window.showQuickPick(all_checkers, {
+    let checkerInfo = await vscode.window.showQuickPick(allChecker, {
         placeHolder: "Select custom checker.",
     });
 
-    if (checker_info === undefined) {
+    if (checkerInfo === undefined) {
         vscode.window.showErrorMessage("Checker not provided.");
         return;
     }
 
-    let checker = checker_info.target;
+    let checker = checkerInfo.target;
 
-    let checker_path = join(pathToStatic(), "checkers", checker);
-    let checker_dest = join(path, ATTIC, "checker.cpp");
+    let checkerPath = join(pathToStatic(), "checkers", checker);
+    let checkerDest = join(path, ATTIC, "checker.cpp");
 
-    copyFileSync(checker_path, checker_dest);
+    copyFileSync(checkerPath, checkerDest);
 }
 
 async function selectDebugTestCase(uriPath: vscode.Uri) {
@@ -444,13 +479,14 @@ async function selectDebugTestCase(uriPath: vscode.Uri) {
 }
 
 async function copySubmissionToClipboard() {
-    let path = currentProblem();
+    let path_ = currentProblem();
 
-    if (path === undefined) {
+    if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
+    let path = path_.unwrap();
     let submissionCommand:
         | string
         | undefined = vscode.workspace
@@ -473,12 +509,12 @@ async function copySubmissionToClipboard() {
 
         let execution = runSingle(submissionCommands, FRIEND_TIMEOUT, "");
 
-        if (execution.result.status !== 0) {
+        if (execution.failed()) {
             vscode.window.showErrorMessage("Fail generating submission.");
             return;
         }
 
-        content = execution.result.stdout.toString();
+        content = execution.stdout().toString("utf8");
     }
 
     clipboardy.writeSync(content);

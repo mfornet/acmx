@@ -1,4 +1,4 @@
-import { Contest, Problem, SiteDescription } from "./types";
+import { Contest, Problem, SiteDescription } from "./primitives";
 
 /**
  * Not a real site.

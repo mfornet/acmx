@@ -1,15 +1,20 @@
 import { spawnSync } from "child_process";
-import { debug } from "./log";
-import { Execution, LanguageCommand, Option } from "./types";
-import { pathToStatic, LANGUAGES, ATTIC } from "./core";
+import {
+    Execution,
+    LanguageCommand,
+    Option,
+    LANGUAGES,
+    ATTIC,
+} from "./primitives";
+import { globalHomePath } from "./core";
 import { join } from "path";
-import { readdirSync, readFileSync } from "fs-extra";
-import { extension, substituteArgsWith } from "./utils";
+import { readdirSync, readFileSync } from "fs";
+import { extension, substituteArgsWith, debug } from "./utils";
 import { onCompilationError } from "./errors";
-import { AssertionError } from "assert";
 
 function loadConfig(extension: string): LanguageCommand {
-    let languagesPath = join(pathToStatic(), LANGUAGES);
+    let languagesPath = join(globalHomePath(), LANGUAGES);
+    let candidates: string[] = [];
 
     let filtered = readdirSync(languagesPath).filter((file) => {
         try {
@@ -18,13 +23,22 @@ function loadConfig(extension: string): LanguageCommand {
 
             if (language.ext === extension) {
                 return true;
+            } else {
+                candidates.push(language.ext);
+                return false;
             }
         } catch {
             return false;
         }
     });
 
-    // TODO(now) Handle the case where no file is available
+    // TODO(now). Test this
+    if (filtered.length === 0) {
+        throw `Configuration not found for extension ${extension}. Candidates are: ${candidates.join(
+            ","
+        )}`;
+    }
+
     let languagePath = join(languagesPath, filtered[0]);
     let content = readFileSync(languagePath, "utf8");
     let language = JSON.parse(content);
@@ -50,6 +64,7 @@ export function preRun(
     let codeExt = extension(code);
     let language = loadConfig(codeExt);
 
+    // TODO(now): Use Option in preRun
     if (language.preRun === undefined || language.preRun.length === 0) {
         // No preRun command, so nothing to run.
         debug("pre-run", "preRun empty. Nothing to run");
@@ -72,7 +87,7 @@ export function preRun(
     return new Option(execution);
 }
 
-// TODO(now): Add md5 support | md5 files should live inside ATTIC
+// TODO(now): Add md5 support
 // export function compileCode(pathCode: string, pathOutput: string) {
 //     let pathCodeMD5 = pathCode + ".md5";
 //     let md5data = "";
@@ -138,11 +153,9 @@ export function runWithArgs(
     let language = loadConfig(codeExt);
 
     if (language.run === undefined || language.run.length === 0) {
-        // No preRun command, so nothing to run.
+        // No run command, so nothing to execute.
         debug("run", "run empty.");
-        throw new AssertionError({
-            message: `Nothing to run. Expected something to run for extension ${codeExt}`,
-        });
+        throw `Nothing to run. Expected something to run for extension ${codeExt}`;
     }
 
     let command = substituteArgsWith(
@@ -156,7 +169,11 @@ export function runWithArgs(
     return runSingle(command, timeout, input);
 }
 
-export function runSingle(command: string[], timeout: number, input: string) {
+export function runSingle(
+    command: string[],
+    timeout: number,
+    input: string
+): Execution {
     debug(
         "execute",
         `${command} timeout: ${timeout} input-length: ${input.length}`
