@@ -34,9 +34,11 @@ function loadConfig(extension: string): LanguageCommand {
     });
 
     if (filtered.length === 0) {
-        throw `Configuration not found for extension ${extension}. Candidates are: ${candidates.join(
-            ","
-        )}`;
+        throw new Error(
+            `Configuration not found for extension ${extension}. Candidates are: ${candidates.join(
+                ","
+            )}`
+        );
     }
 
     let languagePath = join(languagesPath, filtered[0]);
@@ -55,7 +57,7 @@ function checkMD5(code: string, path: string): boolean {
         storedMD5 = readFileSync(pathMD5, "utf8");
     }
     let currentMD5 = md5File.sync(code);
-    return currentMD5 == storedMD5;
+    return currentMD5 === storedMD5;
 }
 
 /**
@@ -140,7 +142,9 @@ export function runWithArgs(
     if (language.run === undefined || language.run.length === 0) {
         // No run command, so nothing to execute.
         debug("run", "run empty.");
-        throw `Nothing to run. Expected something to run for extension ${codeExt}`;
+        throw new Error(
+            `Nothing to run. Expected something to run for extension ${codeExt}`
+        );
     }
 
     let command = substituteArgsWith(
