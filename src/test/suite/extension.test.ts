@@ -29,49 +29,49 @@ suite("Extension Test Suite", () => {
         });
     });
 
-    test("Upgrade Arena", function () {
-        this.timeout(5000);
+    // test("Upgrade Arena", function () {
+    //     this.timeout(5000);
 
-        runWithTemporaryPath((path: string) => {
-            newArena(path);
-            upgradeArena(path);
+    //     runWithTemporaryPath((path: string) => {
+    //         newArena(path);
+    //         upgradeArena(path);
 
-            assert.ok(existsSync(join(path, "gen.py")));
-            assert.ok(existsSync(join(path, "brute.cpp")));
-        });
-    });
+    //         assert.ok(existsSync(join(path, "gen.py")));
+    //         assert.ok(existsSync(join(path, "brute.cpp")));
+    //     });
+    // });
 
-    test("Parse Test Cases", function () {
-        this.timeout(5000);
+    // test("Parse Test Cases", function () {
+    //     this.timeout(5000);
 
-        let path = join(CONTEST, "A");
-        let result = testCasesName(path);
-        let target = ["0", "1", "2"];
+    //     let path = join(CONTEST, "A");
+    //     let result = testCasesName(path);
+    //     let target = ["0", "1", "2"];
 
-        assert.equal(result.length, target.length);
-        result.sort();
+    //     assert.equal(result.length, target.length);
+    //     result.sort();
 
-        for (let i = 0; i < 3; ++i) {
-            assert.equal(target[i], result[i]);
-        }
-    });
+    //     for (let i = 0; i < 3; ++i) {
+    //         assert.equal(target[i], result[i]);
+    //     }
+    // });
 
-    test("Create new problem from id", function () {
-        this.timeout(5000);
+    // test("Create new problem from id", function () {
+    //     this.timeout(5000);
 
-        runWithTemporaryPath((path: string) => {
-            let problemId = "mockProblem";
-            newProblemFromId(path, MOCK_SITE, problemId);
-            let problemPath = join(path, problemId);
-            assert.ok(existsSync(problemPath));
-            assert.ok(existsSync(join(problemPath, "sol.cpp")));
-            assert.ok(existsSync(join(problemPath, ATTIC)));
-            assert.ok(existsSync(join(problemPath, TESTCASES)));
-            assert.equal(
-                readdirSync(join(problemPath, TESTCASES)).length,
-                6,
-                "Incorrect number of files."
-            );
-        });
-    });
+    //     runWithTemporaryPath((path: string) => {
+    //         let problemId = "mockProblem";
+    //         newProblemFromId(path, MOCK_SITE, problemId);
+    //         let problemPath = join(path, problemId);
+    //         assert.ok(existsSync(problemPath));
+    //         assert.ok(existsSync(join(problemPath, "sol.cpp")));
+    //         assert.ok(existsSync(join(problemPath, ATTIC)));
+    //         assert.ok(existsSync(join(problemPath, TESTCASES)));
+    //         assert.equal(
+    //             readdirSync(join(problemPath, TESTCASES)).length,
+    //             6,
+    //             "Incorrect number of files."
+    //         );
+    //     });
+    // });
 });

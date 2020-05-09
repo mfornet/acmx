@@ -223,7 +223,7 @@ function copyFromTemplate(
 ): string {
     let parts = template.split("@");
 
-    if (parts.length == 1) {
+    if (parts.length === 1) {
         let fileName = basename(template);
         let target = join(path, fileName);
 
@@ -234,7 +234,9 @@ function copyFromTemplate(
         return target;
     } else {
         if (!existsSync(join(parts[0], parts[1]))) {
-            throw `Invalid template path ${template}. Target not found.`;
+            throw new Error(
+                `Invalid template path ${template}. Target not found.`
+            );
         }
         let folderPath = parts[0];
         copySync(folderPath, path);
@@ -788,7 +790,7 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 
     if (genExecution.failed()) {
-        throw "Failed generating test case.";
+        throw new Error("Failed generating test case.");
     }
 
     writeBufferToFileSync(
