@@ -163,10 +163,17 @@ export function globalHomePath(testPath?: string): string {
 /**
  * Initialize acmx environment.
  */
-export function initAcmX(testPath: string | undefined = undefined) {
+export function initAcmX(testPath?: string) {
     // Create global attic.
     let globalHome = globalHomePath(testPath)!;
     createFolder(globalHome);
+
+    // Copy default languages config
+    let languagesFolder = join(globalHome, LANGUAGES);
+    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
+    if (!existsSync(languagesFolder)) {
+        copySync(languageStaticFolder, languagesFolder);
+    }
 
     // Create checker folder
     let checkerFolder = join(globalHome, "checkers");
@@ -200,23 +207,6 @@ export function initAcmX(testPath: string | undefined = undefined) {
         let compiledPath = join(checkerFolder, compiledName);
         preRun(checkerPath, compiledPath, globalHome, FRIEND_TIMEOUT);
     }
-
-    // Copy default languages config
-    let languagesFolder = join(globalHome, LANGUAGES);
-    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
-    if (!existsSync(languagesFolder)) {
-        createFolder(languagesFolder);
-    }
-
-    readdirSync(languageStaticFolder).forEach((file) => {
-        let target = join(languagesFolder, file);
-        if (!existsSync(target)) {
-            debug("language", `Copied new language configuration: ${file}`);
-            copyFileSync(join(languageStaticFolder, file), target);
-        } else {
-            debug("language", `Existing language configuration: ${file}`);
-        }
-    });
 }
 
 /**
