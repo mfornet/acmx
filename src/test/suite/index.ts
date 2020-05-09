@@ -3,6 +3,16 @@ import * as Mocha from "mocha";
 import * as glob from "glob";
 
 process.env.ACMX_TESTING = "1";
+/**
+ *  There is an issue on github actions:
+ *
+ * ```
+ * Error: async hook stack has become corrupted (actual: 1269, expected: 0)
+ * ```
+ *
+ * Workaround from: https://github.com/microsoft/vscode/issues/85601#issuecomment-558917205
+ */
+process.env.NODE_OPTIONS = "--no-force-async-hooks-checks";
 
 export function run(): Promise<void> {
     // Create the mocha test
