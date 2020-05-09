@@ -146,22 +146,16 @@ export function currentProblem(): Option<string> {
  *
  * @param testingPath Use for unit tests
  */
-export function globalHomePath(
-    testPath: string | undefined = undefined
-): string {
+export function globalHomePath(testPath?: string): string {
     if (testPath !== undefined) {
         return testPath;
     }
 
-    let path_: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("homePath");
+    let path = vscode.workspace
+        .getConfiguration()
+        .get("acmx.configuration.homePath", "");
 
-    let path = path_!;
-
-    if (path !== undefined) {
-        path = substituteArgWith(path);
-    }
+    path = substituteArgWith(path);
 
     return path;
 }
