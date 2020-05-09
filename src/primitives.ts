@@ -126,38 +126,59 @@ export class SiteDescription {
 }
 
 export class Execution {
-    private result: SpawnSyncReturns<Buffer>;
-    timeSpan: number;
-    timeout: number;
+    private cached: boolean;
+    private result: Option<SpawnSyncReturns<Buffer>>;
+    timeSpan: Option<number>;
+    timeout: Option<number>;
 
     constructor(
-        result: SpawnSyncReturns<Buffer>,
-        timeSpan: number,
-        timeout: number
+        result?: SpawnSyncReturns<Buffer>,
+        timeSpan?: number,
+        timeout?: number,
+        cached?: boolean
     ) {
-        this.result = result;
-        this.timeSpan = timeSpan;
-        this.timeout = timeout;
+        this.result = new Option(result);
+        this.timeSpan = new Option(timeSpan);
+        this.timeout = new Option(timeout);
+        this.cached = cached || false;
+    }
+
+    static cached() {
+        return new Execution(undefined, undefined, undefined, true);
+    }
+
+    getCached() {
+        return this.cached;
     }
 
     isTLE() {
-        return this.timeSpan >= this.timeout;
+        return (
+            !this.getCached() && this.timeSpan.unwrap() >= this.timeout.unwrap()
+        );
     }
 
     failed() {
-        return this.result.status !== 0;
+        return !this.getCached() && this.result.unwrap().status !== 0;
     }
 
     status() {
-        return this.result.status;
+        return this.result.mapOr(0, (result) => {
+            return result.status;
+        });
     }
 
+    /**
+     * This method will raise an error if is called on a cached execution.
+     */
     stdout() {
-        return this.result.stdout;
+        return this.result.unwrap().stdout;
     }
 
+    /**
+     * This method will raise an error if is called on a cached execution.
+     */
     stderr() {
-        return this.result.stderr;
+        return this.result.unwrap().stderr;
     }
 }
 

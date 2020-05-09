@@ -7,10 +7,11 @@ import {
     ATTIC,
 } from "./primitives";
 import { globalHomePath } from "./core";
-import { join } from "path";
-import { readdirSync, readFileSync } from "fs";
-import { extension, substituteArgsWith, debug } from "./utils";
+import { join, basename } from "path";
+import { readdirSync, readFileSync, existsSync } from "fs";
+import { extension, substituteArgsWith, debug, writeToFileSync } from "./utils";
 import { onCompilationError } from "./errors";
+import md5File = require("md5-file");
 
 function loadConfig(extension: string): LanguageCommand {
     let languagesPath = join(globalHomePath(), LANGUAGES);
@@ -41,7 +42,29 @@ function loadConfig(extension: string): LanguageCommand {
     let languagePath = join(languagesPath, filtered[0]);
     let content = readFileSync(languagePath, "utf8");
     let language = JSON.parse(content);
-    return new LanguageCommand(language.run, language.preRun);
+    return new LanguageCommand(language.run || [], language.preRun || []);
+}
+
+/**
+ * Check if code was already compiled
+ */
+function checkMD5(code: string, path: string): boolean {
+    let pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
+    let storedMD5 = "";
+    if (existsSync(pathMD5)) {
+        storedMD5 = readFileSync(pathMD5, "utf8");
+    }
+    let currentMD5 = md5File.sync(code);
+    return currentMD5 == storedMD5;
+}
+
+/**
+ * Copy MD5 from current file into a folder to avoid compiling again.
+ */
+function dumpMD5(code: string, path: string) {
+    let pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
+    let currentMD5 = md5File.sync(code);
+    writeToFileSync(pathMD5, currentMD5);
 }
 
 /**
@@ -60,11 +83,15 @@ export function preRun(
     timeout: number
 ): Option<Execution> {
     debug("pre-run", code);
+
+    if (checkMD5(code, path)) {
+        return Option.some(Execution.cached());
+    }
+
     let codeExt = extension(code);
     let language = loadConfig(codeExt);
 
-    // TODO(now): Use Option in preRun
-    if (language.preRun === undefined || language.preRun.length === 0) {
+    if (language.preRun.length === 0) {
         // No preRun command, so nothing to run.
         debug("pre-run", "preRun empty. Nothing to run");
         return Option.none();
@@ -81,53 +108,12 @@ export function preRun(
 
     if (execution.failed()) {
         onCompilationError(code, path, execution);
+    } else {
+        dumpMD5(code, path);
     }
 
     return new Option(execution);
 }
-
-// TODO(now): Add md5 support
-// export function compileCode(pathCode: string, pathOutput: string) {
-//     let pathCodeMD5 = pathCode + ".md5";
-//     let md5data = "";
-
-//     if (existsSync(pathCodeMD5)) {
-//         md5data = readFileSync(pathCodeMD5, "utf8");
-//     }
-
-//     let codeMD5 = md5File.sync(pathCode);
-
-//     if (codeMD5 === md5data) {
-//         return {
-//             status: 0,
-//             stderr: "",
-//         };
-//     }
-
-//     let codeMD5fd = openSync(pathCodeMD5, "w");
-//     writeSync(codeMD5fd, codeMD5 + "\n");
-//     closeSync(codeMD5fd);
-
-//     let instruction: string | undefined = vscode.workspace
-//         .getConfiguration("acmx.execution", null)
-//         .get("compile");
-//     if (instruction === undefined || instruction === "") {
-//         instruction = "g++ -std=c++17 $PROGRAM -o $OUTPUT";
-//     }
-//     let splitInstruction = instruction.split(" ");
-
-//     for (let i = 0; i < splitInstruction.length; ++i) {
-//         splitInstruction[i] = splitInstruction[i]
-//             .replace("$PROGRAM", pathCode)
-//             .replace("$OUTPUT", pathOutput);
-//     }
-
-//     let program = splitInstruction[0];
-//     let args = splitInstruction.slice(1);
-
-//     let result = child_process.spawnSync(program, args);
-//     return result;
-// }
 
 export function run(
     code: string,

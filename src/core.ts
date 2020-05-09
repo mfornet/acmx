@@ -523,7 +523,7 @@ export function timedRun(
         timeout
     );
 
-    let timeSpan = execution.timeSpan;
+    let timeSpan = execution.timeSpan.unwrap();
 
     // Check if an error happened
     if (execution.failed()) {
@@ -762,7 +762,7 @@ function getCheckerPath(
     let globalChecker = preRun(
         globalCheckerCode,
         globalCheckerOutput,
-        join(globalHome, ATTIC),
+        globalHome,
         FRIEND_TIMEOUT
     );
 
