@@ -78,7 +78,7 @@
                         "description": "Path to default launch file to include in the workspace.",
                         "scope": "resource"
                     },
-                    "acmx.template.solutionPath": {
+                    "acmx.template.templatePath": {
                         "type": "string",
                         "default": "",
                         "description": "Path to solution template file. Leave empty to use default template.",
@@ -93,7 +93,7 @@
                     "acmx.template.checkerTemplate": {
                         "type": "string",
                         "default": "",
-                        "description": "Path to checker template file. Leave empty to use default checker.",
+                        "description": "Path to checker template file. Leave empty to use default template.",
                         "scope": "resource"
                     },
                     "acmx.template.generatorTemplate": {
@@ -102,16 +102,16 @@
                         "description": "Path to generator template file. Leave empty to use default template.",
                         "scope": "resource"
                     },
-                    "acmx.configuration.library": {
+                    "acmx.configuration.solutionPath": {
                         "type": "string",
                         "default": "$HOME/.acmx/solutions",
-                        "description": "Path to folder where contests and problems will be created and stored.",
+                        "description": "Path to folder where contest will be created and stored.",
                         "scope": "resource"
                     },
                     "acmx.configuration.homePath": {
                         "type": "string",
                         "default": "$HOME/.acmx",
-                        "description": "Path to store global configuration.",
+                        "description": "Path to global configuration.",
                         "scope": "resource"
                     },
                     "acmx.companion.port": {
