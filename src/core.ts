@@ -65,10 +65,10 @@ export function mainSolution(path: string): string {
  * Return global timeout from configuration.
  */
 export function getTimeout(): number {
-    let timeout: number = vscode.workspace
-        .getConfiguration()
-        .get("acmx.run.timeLimit", 1);
-    timeout *= 1000;
+    let timeout: number | undefined = vscode.workspace
+        .getConfiguration("acmx.run", null)
+        .get("timeLimit");
+    timeout = timeout! * 1000;
     return timeout;
 }
 
@@ -146,16 +146,22 @@ export function currentProblem(): Option<string> {
  *
  * @param testingPath Use for unit tests
  */
-export function globalHomePath(testPath?: string): string {
+export function globalHomePath(
+    testPath: string | undefined = undefined
+): string {
     if (testPath !== undefined) {
         return testPath;
     }
 
-    let path = vscode.workspace
-        .getConfiguration()
-        .get("acmx.configuration.homePath", "");
+    let path_: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("homePath");
 
-    path = substituteArgWith(path);
+    let path = path_!;
+
+    if (path !== undefined) {
+        path = substituteArgWith(path);
+    }
 
     return path;
 }
@@ -163,17 +169,10 @@ export function globalHomePath(testPath?: string): string {
 /**
  * Initialize acmx environment.
  */
-export function initAcmX(testPath?: string) {
+export function initAcmX(testPath: string | undefined = undefined) {
     // Create global attic.
     let globalHome = globalHomePath(testPath)!;
     createFolder(globalHome);
-
-    // Copy default languages config
-    let languagesFolder = join(globalHome, LANGUAGES);
-    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
-    if (!existsSync(languagesFolder)) {
-        copySync(languageStaticFolder, languagesFolder);
-    }
 
     // Create checker folder
     let checkerFolder = join(globalHome, "checkers");
@@ -207,6 +206,23 @@ export function initAcmX(testPath?: string) {
         let compiledPath = join(checkerFolder, compiledName);
         preRun(checkerPath, compiledPath, globalHome, FRIEND_TIMEOUT);
     }
+
+    // Copy default languages config
+    let languagesFolder = join(globalHome, LANGUAGES);
+    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
+    if (!existsSync(languagesFolder)) {
+        createFolder(languagesFolder);
+    }
+
+    readdirSync(languageStaticFolder).forEach((file) => {
+        let target = join(languagesFolder, file);
+        if (!existsSync(target)) {
+            debug("language", `Copied new language configuration: ${file}`);
+            copyFileSync(join(languageStaticFolder, file), target);
+        } else {
+            debug("language", `Existing language configuration: ${file}`);
+        }
+    });
 }
 
 /**
@@ -243,11 +259,11 @@ function copyFromTemplate(
 }
 
 function populateMainSolution(path: string, override: boolean): string {
-    let templatePath = vscode.workspace
-        .getConfiguration()
-        .get("acmx.template.solutionPath", "");
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("templatePath");
 
-    if (templatePath === "") {
+    if (templatePath === undefined || templatePath === "") {
         templatePath = join(pathToStatic(), "templates", "sol.cpp");
     } else {
         templatePath = substituteArgWith(templatePath);
@@ -292,11 +308,11 @@ export function testCasesName(path: string) {
 }
 
 function addBruteSolution(path: string, config: ConfigFile) {
-    let templatePath = vscode.workspace
-        .getConfiguration()
-        .get("acmx.template.bruteTemplate", "");
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.template", null)
+        .get("bruteTemplate");
 
-    if (templatePath === "") {
+    if (templatePath === undefined || templatePath === "") {
         templatePath = join(pathToStatic(), "templates", "brute.cpp");
     }
 
@@ -307,11 +323,11 @@ function addBruteSolution(path: string, config: ConfigFile) {
 
 function addGenerator(path: string, config: ConfigFile) {
     // TODO(#51): Use tcgen
-    let templatePath = vscode.workspace
-        .getConfiguration()
-        .get("acmx.template.generatorTemplate", "");
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.template", null)
+        .get("generatorTemplate");
 
-    if (templatePath === "") {
+    if (templatePath === undefined || templatePath === "") {
         templatePath = join(pathToStatic(), "templates", "gen.py");
     }
 
@@ -319,11 +335,11 @@ function addGenerator(path: string, config: ConfigFile) {
 }
 
 function addChecker(path: string, config: ConfigFile) {
-    let templatePath = vscode.workspace
-        .getConfiguration()
-        .get("acmx.template.checkerTemplate", "");
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.template", null)
+        .get("checkerTemplate");
 
-    if (templatePath === "") {
+    if (templatePath === undefined || templatePath === "") {
         // Don't add default checker if not template was added
     } else {
         config.checker = Option.some(
@@ -369,24 +385,24 @@ function copyDefaultFilesToWorkspace(path: string) {
     let vscodeFolder = join(path, ".vscode");
     createFolder(vscodeFolder);
 
-    let tasksPath = vscode.workspace
-        .getConfiguration()
-        .get("acmx.configuration.tasks", "");
+    let tasksPath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("tasks");
 
     if (tasksPath !== "") {
-        if (!existsSync(tasksPath)) {
+        if (tasksPath === undefined || !existsSync(tasksPath)) {
             vscode.window.showErrorMessage(`tasks file ${tasksPath} not found`);
         } else {
             copyFileSync(tasksPath, join(vscodeFolder, "tasks.json"));
         }
     }
 
-    let launchPath = vscode.workspace
-        .getConfiguration()
-        .get("acmx.configuration.launch", "");
+    let launchPath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("launch");
 
     if (launchPath !== "") {
-        if (!existsSync(launchPath)) {
+        if (launchPath === undefined || !existsSync(launchPath)) {
             vscode.window.showErrorMessage(
                 `launch file ${launchPath} not found`
             );
@@ -436,18 +452,20 @@ function newContest(path: string, contest: Contest) {
     });
 }
 
-export function getLibraryPath() {
-    let path = vscode.workspace
-        .getConfiguration()
-        .get("acmx.configuration.library", "");
+export function getSolutionPath() {
+    let path: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("solutionPath");
 
-    path = substituteArgWith(path);
+    if (path !== undefined) {
+        path = substituteArgWith(path);
+    }
 
     return path;
 }
 
 export function newProblemFromCompanion(config: any) {
-    let path = getLibraryPath();
+    let path = getSolutionPath();
 
     let contestPath = join(path!, config.group);
     createFolder(contestPath);
