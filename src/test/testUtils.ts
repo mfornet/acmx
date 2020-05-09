@@ -1,7 +1,7 @@
 import { closeSync, existsSync, openSync, writeSync } from "fs";
 import tmp = require("tmp");
 import rimraf = require("rimraf");
-import { SiteDescription, Problem, Contest } from "../types";
+import { SiteDescription, Problem, Contest } from "../primitives";
 import fse = require("fs-extra");
 
 /**

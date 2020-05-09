@@ -1,19 +1,16 @@
 "use strict";
-import * as child_process from "child_process";
 import {
     closeSync,
     copyFileSync,
     existsSync,
-    mkdirSync,
     openSync,
     readdirSync,
     readFileSync,
     writeSync,
     renameSync,
 } from "fs";
-import { basename, dirname, extname, join, parse } from "path";
+import { basename, dirname, extname, join } from "path";
 import * as vscode from "vscode";
-import * as gwen from "./gwen";
 import {
     Contest,
     Problem,
@@ -21,12 +18,25 @@ import {
     SolutionResult,
     TestCaseResult,
     Verdict,
-} from "./types";
-import md5File = require("md5-file");
-import os = require("os");
-
-export const TESTCASES = "testcases";
-export const ATTIC = "attic";
+    Option,
+    CompileResult,
+    ATTIC,
+    FRIEND_TIMEOUT,
+    LANGUAGES,
+    TESTCASES,
+    ConfigFile,
+    CHECKER_BINARY,
+    GENERATED_TEST_CASE,
+} from "./primitives";
+import {
+    substituteArgWith,
+    debug,
+    removeExtension,
+    createFolder,
+    writeBufferToFileSync,
+} from "./utils";
+import { preRun, run, runWithArgs } from "./runner";
+import { copySync } from "fs-extra";
 
 /**
  * Path to static folder.
@@ -36,16 +46,25 @@ export function pathToStatic() {
 }
 
 /**
- * Name of program file. Take extension dynamically from configuration.
+ * Path to main solution for given problem.
+ * If main solution doesn't exist, it is created.
+ *
+ * @param path Problem path
  */
-export function solFile() {
-    let extension: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("extension");
-    return "sol." + extension;
+export function mainSolution(path: string): string {
+    let config = ConfigFile.loadConfig(path);
+    if (config.mainSolution.isNone()) {
+        config.mainSolution = Option.some(populateMainSolution(path, false));
+    }
+    let mainSolution = config.mainSolution.unwrap();
+    debug("mainSolution", `${mainSolution}`);
+    return mainSolution;
 }
 
-export function getTimeout() {
+/**
+ * Return global timeout from configuration.
+ */
+export function getTimeout(): number {
     let timeout: number | undefined = vscode.workspace
         .getConfiguration("acmx.run", null)
         .get("timeLimit");
@@ -54,7 +73,7 @@ export function getTimeout() {
 }
 
 function isProblemFolder(path: string) {
-    return existsSync(join(path, solFile())) && existsSync(join(path, "attic"));
+    return existsSync(join(path, "attic"));
 }
 
 function isTestCase(path: string) {
@@ -62,7 +81,7 @@ function isTestCase(path: string) {
     return ext === ".in" || ext === ".ans" || ext === ".out";
 }
 
-export function currentTestCase() {
+export function currentTestCase(): Option<string> {
     let answer: string | undefined = undefined;
 
     // Try to find an open test case
@@ -84,9 +103,10 @@ export function currentTestCase() {
     }
 
     // Test case not found
-    return answer;
+    return new Option(answer);
 }
-export function currentProblem() {
+
+export function currentProblem(): Option<string> {
     // Try to find the problem using current open file
     if (vscode.window.activeTextEditor) {
         let path = vscode.window.activeTextEditor.document.uri.fsPath;
@@ -98,7 +118,7 @@ export function currentProblem() {
         }
 
         if (isProblemFolder(path)) {
-            return path;
+            return Option.some(path);
         }
     }
 
@@ -113,19 +133,12 @@ export function currentProblem() {
         }
 
         if (isProblemFolder(path)) {
-            return path;
+            return Option.some(path);
         }
     }
 
     // Problem not found
-    return undefined;
-}
-
-function createFolder(path: string) {
-    if (!existsSync(path)) {
-        createFolder(dirname(path));
-        mkdirSync(path);
-    }
+    return Option.none();
 }
 
 /**
@@ -133,27 +146,36 @@ function createFolder(path: string) {
  *
  * @param testingPath Use for unit tests
  */
-export function globalAtticPath(testPath: string | undefined = undefined) {
+export function globalHomePath(
+    testPath: string | undefined = undefined
+): string {
     if (testPath !== undefined) {
-        return join(testPath, ATTIC);
+        return testPath;
     }
 
-    let path: string | undefined = vscode.workspace
+    let path_: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
-        .get("solutionPath");
-    return join(path!, ATTIC);
+        .get("homePath");
+
+    let path = path_!;
+
+    if (path !== undefined) {
+        path = substituteArgWith(path);
+    }
+
+    return path;
 }
 
 /**
- * Create default environment that let acmX run properly
+ * Initialize acmx environment.
  */
 export function initAcmX(testPath: string | undefined = undefined) {
     // Create global attic.
-    let globalAttic = globalAtticPath(testPath);
-    createFolder(globalAttic);
+    let globalHome = globalHomePath(testPath)!;
+    createFolder(globalHome);
 
     // Create checker folder
-    let checkerFolder = join(globalAttic, "checkers");
+    let checkerFolder = join(globalHome, "checkers");
     createFolder(checkerFolder);
 
     // Copy testlib
@@ -174,26 +196,86 @@ export function initAcmX(testPath: string | undefined = undefined) {
         );
     }
 
+    let atticFolder = join(globalHome, ATTIC);
+    createFolder(atticFolder);
+
     // Compile checker
-    let compiledName = "wcmp.exe";
+    let compiledName = "wcmp";
     if (!existsSync(join(checkerFolder, compiledName))) {
         let checkerPath = join(checkerFolder, checkerName);
         let compiledPath = join(checkerFolder, compiledName);
-        child_process.spawnSync("g++", [
-            "-std=c++11",
-            `${checkerPath}`,
-            "-o",
-            `${compiledPath}`,
-        ]);
+        preRun(checkerPath, compiledPath, globalHome, FRIEND_TIMEOUT);
     }
 
-    if (!existsSync(join(checkerFolder, compiledName))) {
-        vscode.window.showErrorMessage("Compilation failed.");
-        return;
+    // Copy default languages config
+    let languagesFolder = join(globalHome, LANGUAGES);
+    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
+    if (!existsSync(languagesFolder)) {
+        createFolder(languagesFolder);
+    }
+
+    readdirSync(languageStaticFolder).forEach((file) => {
+        let target = join(languagesFolder, file);
+        if (!existsSync(target)) {
+            debug("language", `Copied new language configuration: ${file}`);
+            copyFileSync(join(languageStaticFolder, file), target);
+        } else {
+            debug("language", `Existing language configuration: ${file}`);
+        }
+    });
+}
+
+/**
+ * Copy template file into `path` folder.
+ *
+ * @param path
+ * @param template
+ * @param override
+ */
+function copyFromTemplate(
+    path: string,
+    template: string,
+    override: boolean
+): string {
+    let parts = template.split("@");
+
+    if (parts.length == 1) {
+        let fileName = basename(template);
+        let target = join(path, fileName);
+
+        if (override || !existsSync(target)) {
+            copyFileSync(template, target);
+        }
+
+        return target;
+    } else {
+        if (!existsSync(join(parts[0], parts[1]))) {
+            throw `Invalid template path ${template}. Target not found.`;
+        }
+        let folderPath = parts[0];
+        copySync(folderPath, path);
+        return join(path, parts[1]);
     }
 }
 
+function populateMainSolution(path: string, override: boolean): string {
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("templatePath");
+
+    if (templatePath === undefined || templatePath === "") {
+        templatePath = join(pathToStatic(), "templates", "sol.cpp");
+    } else {
+        templatePath = substituteArgWith(templatePath);
+    }
+
+    debug("newMainSolution", `Using template path: ${templatePath}`);
+
+    return copyFromTemplate(path, templatePath, override);
+}
+
 export function newArena(path: string) {
+    debug("newArena", `path: ${path}`);
     createFolder(path);
 
     let testcases = join(path, TESTCASES);
@@ -202,82 +284,110 @@ export function newArena(path: string) {
     let attic = join(path, ATTIC);
     createFolder(attic);
 
-    let templatePath: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("templatePath");
+    let config = ConfigFile.empty();
+    try {
+        // Try to load current config file if it exists.
+        config = ConfigFile.loadConfig(path);
+    } catch (err) {}
 
-    if (templatePath! === "") {
-        templatePath = join(pathToStatic(), "template.cpp");
+    if (config.mainSolution.isNone()) {
+        config.mainSolution = Option.some(populateMainSolution(path, true));
     }
 
-    let solution = join(path, solFile());
-
-    if (!existsSync(solution)) {
-        copyFileSync(templatePath!, join(path, solFile()));
-    }
-}
-
-export function removeExtension(name: string) {
-    let split = name.split(".");
-    if (split.length === 0) {
-        return name;
-    } else {
-        split.pop(); // drop extension
-        return split.join(".");
-    }
+    config.dump(path);
 }
 
 export function testCasesName(path: string) {
     return readdirSync(join(path, TESTCASES))
-        .filter(function (tc_path) {
-            return extname(tc_path) === ".in";
+        .filter(function (testCasePath) {
+            return extname(testCasePath) === ".in";
         })
-        .map(function (tc_path) {
-            return removeExtension(tc_path);
+        .map(function (testCasePath) {
+            return removeExtension(testCasePath);
         });
 }
 
-export function upgradeArena(path: string) {
-    // Create brute force solution
-    let brute = join(path, "brute.cpp");
+function addBruteSolution(path: string, config: ConfigFile) {
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.template", null)
+        .get("bruteTemplate");
 
-    if (!existsSync(brute)) {
-        // Create brute.cpp file
-        copyFileSync(join(pathToStatic(), "template.cpp"), brute);
+    if (templatePath === undefined || templatePath === "") {
+        templatePath = join(pathToStatic(), "templates", "brute.cpp");
     }
 
-    // Create test case generator
-    let generator = join(path, "gen.py");
+    config.bruteSolution = Option.some(
+        copyFromTemplate(path, templatePath, false)
+    );
+}
 
-    if (!existsSync(generator)) {
-        // TODO(#21): If generator already exist don't overwrite but log that it was not created.
-        gwen.create(path, generator);
+function addGenerator(path: string, config: ConfigFile) {
+    // TODO(#51): Use tcgen
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.template", null)
+        .get("generatorTemplate");
+
+    if (templatePath === undefined || templatePath === "") {
+        templatePath = join(pathToStatic(), "templates", "gen.py");
     }
 
-    // Create checker for multiple answers.
-    let checker = join(path, ATTIC, "checker.cpp");
+    config.generator = Option.some(copyFromTemplate(path, templatePath, false));
+}
 
-    if (!existsSync(checker)) {
-        let testlib_path = join(path, ATTIC, "testlib.h");
-        copyFileSync(join(pathToStatic(), "checkers", "wcmp.cpp"), checker);
-        copyFileSync(
-            join(pathToStatic(), "checkers", "testlib.h"),
-            testlib_path
+function addChecker(path: string, config: ConfigFile) {
+    let templatePath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.template", null)
+        .get("checkerTemplate");
+
+    if (templatePath === undefined || templatePath === "") {
+        // Don't add default checker if not template was added
+    } else {
+        config.checker = Option.some(
+            copyFromTemplate(path, templatePath, false)
         );
     }
+}
+
+export function upgradeArena(path: string) {
+    let config = ConfigFile.loadConfig(path);
+
+    // Load brute force solution
+    if (
+        config.bruteSolution.mapOr(true, (codePath) => {
+            return !existsSync(codePath);
+        })
+    ) {
+        addBruteSolution(path, config);
+    }
+
+    // Load generator
+    if (
+        config.generator.mapOr(true, (codePath) => {
+            return !existsSync(codePath);
+        })
+    ) {
+        addGenerator(path, config);
+    }
+
+    // Load checker
+    if (
+        config.checker.mapOr(true, (codePath) => {
+            return !existsSync(codePath);
+        })
+    ) {
+        addChecker(path, config);
+    }
+
+    config.dump(path);
 }
 
 function copyDefaultFilesToWorkspace(path: string) {
     let vscodeFolder = join(path, ".vscode");
     createFolder(vscodeFolder);
 
-    // acmx.configuration.tasks
     let tasksPath: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("tasks");
-    let launchPath: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("launch");
 
     if (tasksPath !== "") {
         if (tasksPath === undefined || !existsSync(tasksPath)) {
@@ -286,6 +396,10 @@ function copyDefaultFilesToWorkspace(path: string) {
             copyFileSync(tasksPath, join(vscodeFolder, "tasks.json"));
         }
     }
+
+    let launchPath: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("launch");
 
     if (launchPath !== "") {
         if (launchPath === undefined || !existsSync(launchPath)) {
@@ -308,11 +422,13 @@ function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
     problem.inputs!.forEach((value, index) => {
         let fd = openSync(join(path, TESTCASES, `${index}.in`), "w");
         writeSync(fd, value);
+        closeSync(fd);
     });
 
     problem.outputs!.forEach((value, index) => {
         let fd = openSync(join(path, TESTCASES, `${index}.ans`), "w");
         writeSync(fd, value);
+        closeSync(fd);
     });
 }
 
@@ -336,25 +452,35 @@ function newContest(path: string, contest: Contest) {
     });
 }
 
-export function newProblemFromCompanion(config: any) {
-    let _path: string | undefined = vscode.workspace
+export function getSolutionPath() {
+    let path: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("solutionPath");
-    let path = _path!;
 
-    let contestPath = join(path, config.group);
+    if (path !== undefined) {
+        path = substituteArgWith(path);
+    }
+
+    return path;
+}
+
+export function newProblemFromCompanion(config: any) {
+    let path = getSolutionPath();
+
+    let contestPath = join(path!, config.group);
     createFolder(contestPath);
 
     let problemPath = join(contestPath, config.name);
     let inputs: string[] = [];
     let outputs: string[] = [];
 
-    config.tests.forEach(function (test_case: any) {
-        inputs.push(test_case.input);
-        outputs.push(test_case.output);
+    config.tests.forEach(function (testCase: any) {
+        inputs.push(testCase.input);
+        outputs.push(testCase.output);
     });
 
     copyDefaultFilesToWorkspace(contestPath);
+
     newProblem(
         problemPath,
         new Problem(config.name, config.name, inputs, outputs),
@@ -374,7 +500,7 @@ export async function newContestFromId(
     site: SiteDescription,
     contestId: string
 ) {
-    let contest = await site.contestParser(contestId);
+    let contest = site.contestParser(contestId);
     let contestPath = join(path, site.name, contest.name);
 
     createFolder(contestPath);
@@ -384,279 +510,388 @@ export async function newContestFromId(
     return contestPath;
 }
 
-function get_checker_path() {
-    let path = currentProblem();
-    let default_checker = join(globalAtticPath(), "checkers", "wcmp.exe");
-
-    if (path === undefined) {
-        return default_checker;
-    }
-
-    let potential_checker_path = join(path, ATTIC, "checker.cpp");
-
-    if (existsSync(potential_checker_path)) {
-        let checker_output = join(path, ATTIC, "checker.exe");
-        compileCode(potential_checker_path, checker_output);
-        return checker_output;
-    }
-
-    return default_checker;
-}
-
-/**
- *
- * @param path
- * @param tcName
- * @param timeout in milliseconds
- */
-export function timedRun(path: string, tcName: string, timeout: number) {
+export function timedRun(
+    path: string,
+    tcName: string,
+    timeout: number,
+    solution: CompileResult,
+    checker: CompileResult
+): TestCaseResult {
     let tcInput = join(path, TESTCASES, `${tcName}.in`);
     let tcOutput = join(path, TESTCASES, `${tcName}.ans`);
     let tcCurrent = join(path, TESTCASES, `${tcName}.out`);
 
     let tcData = readFileSync(tcInput, "utf8");
 
-    let startTime = new Date().getTime();
-    let command = `${join(path, ATTIC, "sol.exe")}`;
+    let execution = run(
+        solution.code,
+        solution.getOutput(),
+        path,
+        tcData,
+        timeout
+    );
 
-    let result = child_process.spawnSync(command, {
-        input: tcData,
-        timeout,
-        killSignal: "SIGTERM",
-    });
-
-    let spanTime = new Date().getTime() - startTime;
+    let timeSpan = execution.timeSpan.unwrap();
 
     // Check if an error happened
-    if (result.status !== 0) {
-        if (spanTime < timeout) {
-            return new TestCaseResult(Verdict.RTE);
-        } else {
+    if (execution.failed()) {
+        if (execution.isTLE()) {
             return new TestCaseResult(Verdict.TLE);
+        } else {
+            return new TestCaseResult(Verdict.RTE);
         }
     }
 
     // Check output is ok
-    let currentFd = openSync(tcCurrent, "w");
-    writeSync(currentFd, result.stdout);
-    closeSync(currentFd);
+    writeBufferToFileSync(tcCurrent, execution.stdout());
 
-    let checker_path = get_checker_path();
-    let checker_result = child_process.spawnSync(checker_path, [
-        tcInput,
-        tcCurrent,
-        tcOutput,
-    ]);
+    let checkerExecution = runWithArgs(
+        checker.code,
+        checker.getOutput(),
+        join(path, ATTIC),
+        "",
+        FRIEND_TIMEOUT,
+        [tcInput, tcCurrent, tcOutput]
+    );
 
-    if (checker_result.status !== 0) {
+    if (checkerExecution.isTLE()) {
+        return new TestCaseResult(Verdict.FAIL);
+    } else if (checkerExecution.failed()) {
         return new TestCaseResult(Verdict.WA);
     } else {
-        return new TestCaseResult(Verdict.OK, spanTime);
+        return new TestCaseResult(Verdict.OK, timeSpan);
     }
 }
 
-export function showCompileError(path: string, compile_error: string) {
-    let error_path = join(path, ATTIC, "stderr");
-    let error_file = openSync(error_path, "w");
-    writeSync(error_file, compile_error);
-    let stderr_terminal = vscode.window.createTerminal("Compilation Error");
-    stderr_terminal.show();
-    if (os.platform() === "win32") {
-        stderr_terminal.sendText(`type "${error_path}"`);
-    } else if (os.platform() === "darwin") {
-        stderr_terminal.sendText(`less -R "${error_path}"`);
-    } else if (os.platform() === "linux") {
-        stderr_terminal.sendText(`less -R "${error_path}"`);
-    } else {
-        vscode.commands.executeCommand("vscode.setEditorLayout", {
-            orientation: 1,
-            groups: [
-                { groups: [{}], size: 0.6 },
-                { groups: [{}], size: 0.4 },
-            ],
-        });
-        vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(error_path),
-            vscode.ViewColumn.Two
-        );
+/**
+ * Test a solution for a problem.
+ * Return Option.none if an error happened.
+ *
+ * @param path
+ */
+export function testSolution(path: string): Option<SolutionResult> {
+    let config = ConfigFile.loadConfig(path);
+
+    // Load main solution (compile if necessary)
+    let mainSolution_ = getMainSolutionPath(path, config);
+    if (mainSolution_.isNone()) {
+        return Option.none();
     }
-}
+    let mainSolution = mainSolution_.unwrap();
 
-export function compileCode(pathCode: string, pathOutput: string) {
-    let pathCodeMD5 =
-        join(parse(pathOutput).dir, parse(pathOutput).name) + ".md5";
-    let md5data = "";
-
-    if (existsSync(pathCodeMD5)) {
-        md5data = readFileSync(pathCodeMD5, "utf8");
+    // Load checker (compile if necessary)
+    let checker_ = getCheckerPath(path, config);
+    if (checker_.isNone()) {
+        return Option.none();
     }
-
-    let codeMD5 = md5File.sync(pathCode);
-
-    if (codeMD5 === md5data) {
-        return {
-            status: 0,
-            stderr: "",
-        };
-    }
-
-    let instruction: string | undefined = vscode.workspace
-        .getConfiguration("acmx.execution", null)
-        .get("compile");
-    if (instruction === undefined || instruction === "") {
-        instruction = "g++ -std=c++17 $PROGRAM -o $OUTPUT";
-    }
-    let splitInstruction = instruction.split(" ");
-
-    for (let i = 0; i < splitInstruction.length; ++i) {
-        splitInstruction[i] = splitInstruction[i]
-            .replace("$PROGRAM", pathCode)
-            .replace("$OUTPUT", pathOutput);
-    }
-
-    let program = splitInstruction[0];
-    let args = splitInstruction.slice(1);
-
-    let result = child_process.spawnSync(program, args);
-    if (result.status === 0) {
-        let codeMD5fd = openSync(pathCodeMD5, "w");
-        writeSync(codeMD5fd, codeMD5 + "\n");
-        closeSync(codeMD5fd);
-    }
-    return result;
-}
-
-export function testSolution(path: string) {
-    let sol = join(path, solFile());
-    let out = join(path, ATTIC, "sol.exe");
-
-    if (!existsSync(sol)) {
-        vscode.window.showErrorMessage("Open a coding environment first");
-        throw new Error("");
-    }
-
-    // Compile solution
-    let result = compileCode(sol, out);
-
-    if (result.status !== 0) {
-        vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-        showCompileError(path, result.stderr.toString());
-        throw new Error("");
-    }
+    let checker = checker_.unwrap();
 
     let testcasesId = testCasesName(path);
 
     if (testcasesId.length === 0) {
-        return new SolutionResult(Verdict.NO_TESTCASES, undefined, undefined);
+        return Option.some(new SolutionResult(Verdict.NO_TESTCASES));
     }
 
     // Process all testcases in sorted order
     testcasesId.sort();
 
     // Run current test case first (if it exists)
-    let startTc = currentTestCase();
+    let startTestCase_ = currentTestCase();
 
-    if (startTc !== undefined) {
-        testcasesId = testcasesId.reverse().filter((name) => name !== startTc);
-        testcasesId.push(startTc);
+    if (startTestCase_.isSome()) {
+        let startTestCase = startTestCase_.unwrap();
+        testcasesId = testcasesId
+            .reverse()
+            .filter((name) => name !== startTestCase);
+        testcasesId.push(startTestCase);
         testcasesId = testcasesId.reverse();
     }
 
     let results: TestCaseResult[] = [];
-    let fail: SolutionResult | undefined = undefined;
+    let fail = Option.none<SolutionResult>();
+
     testcasesId.forEach((tcId) => {
-        // Run while there none have failed already
-        if (fail === undefined) {
-            let tcResult = timedRun(path, tcId, getTimeout());
-            if (tcResult.status !== Verdict.OK) {
-                fail = new SolutionResult(tcResult.status, tcId);
+        // Run on each test case and break on first failing case.
+        if (fail.isNone()) {
+            let tcResult = timedRun(
+                path,
+                tcId,
+                getTimeout(),
+                mainSolution,
+                checker
+            );
+
+            if (!tcResult.isOk()) {
+                fail = Option.some(new SolutionResult(tcResult.status, tcId));
             }
+
             results.push(tcResult);
         }
     });
 
-    if (fail === undefined) {
+    if (fail.isNone()) {
         let maxTime = 0;
         for (let i = 0; i < results.length; i++) {
             if (results[i].spanTime! > maxTime) {
                 maxTime = results[i].spanTime!;
             }
         }
-
-        return new SolutionResult(Verdict.OK, undefined, maxTime);
+        return Option.some(new SolutionResult(Verdict.OK, undefined, maxTime));
     } else {
         return fail;
     }
 }
 
-function generateTestCase(path: string) {
-    let python: string | undefined = vscode.workspace
-        .getConfiguration("acmx.execution", null)
-        .get("pythonPath");
-    let genResult = child_process.spawnSync(python!, [join(path, "gen.py")]);
+/**
+ * Try to compile code. Output binary (if necessary) will be stored on output.
+ * If there is no output binary, CompileResult.output will be Option.none
+ * If it fail to compile the code answer will be Option.none
+ *
+ * @param code Code to compile
+ * @param output Place to store result
+ * @param path Path to the problem (relevant to store errors if occurred)
+ */
+function getCompileResult(
+    code: string,
+    output: string,
+    path: string
+): Option<CompileResult> {
+    let execution = preRun(code, output, path, FRIEND_TIMEOUT);
 
-    let currentFd = openSync(join(path, TESTCASES, "gen.in"), "w");
-    writeSync(currentFd, genResult.stdout);
-    closeSync(currentFd);
+    if (execution.isNone()) {
+        // If there is no code to compile. Return current code as expected output.
+        return Option.some(new CompileResult(code));
+    }
+
+    if (execution.unwrap().failed()) {
+        return Option.none();
+    }
+
+    return Option.some(new CompileResult(code, output));
 }
 
-export function stressSolution(path: string, times: number) {
-    let sol = join(path, solFile());
-    let out = join(path, ATTIC, "sol");
-    let brute = join(path, "brute.cpp");
-
-    if (!existsSync(sol)) {
-        vscode.window.showErrorMessage("Open a coding environment first.");
-        throw new Error("");
+/**
+ * Find main solution from config. Compile it if necessary.
+ * Return Option.none if fail.
+ *
+ * @param path
+ */
+function getMainSolutionPath(
+    path: string,
+    config: ConfigFile
+): Option<CompileResult> {
+    if (config.mainSolution.isNone()) {
+        vscode.window.showErrorMessage("Open a coding environment.");
+        return Option.none();
     }
 
-    if (!existsSync(brute)) {
-        vscode.window.showErrorMessage("Upgrade environment first.");
-        throw new Error("");
+    let mainSolution = config.mainSolution.unwrap();
+    let mainSolutionOutput = join(path, ATTIC, "sol");
+
+    if (!existsSync(mainSolution)) {
+        vscode.window.showErrorMessage("Open a coding environment.");
+        return Option.none();
     }
 
-    let brute_out = join(path, ATTIC, "brute.exe");
+    return getCompileResult(mainSolution, mainSolutionOutput, path);
+}
 
-    let solCompileResult = compileCode(sol, out);
-    if (solCompileResult.status !== 0) {
-        vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
-        showCompileError(path, solCompileResult.stderr.toString());
-        throw new Error("");
+/**
+ * Find generator from config. Compile it if necessary.
+ * Return Option.none if fail.
+ *
+ * @param path
+ */
+function getGeneratorPath(
+    path: string,
+    config: ConfigFile
+): Option<CompileResult> {
+    if (config.generator.isNone()) {
+        vscode.window.showErrorMessage(
+            "No generator found. Upgrade environment first."
+        );
+        return Option.none();
     }
 
-    let bruteCompileResult = compileCode(brute, brute_out);
-    if (bruteCompileResult.status !== 0) {
-        vscode.window.showErrorMessage(`Compilation Error. ${brute}`);
-        showCompileError(brute, bruteCompileResult.stderr.toString());
-        throw new Error("");
+    let generatorCode = config.generator.unwrap();
+    let generatorOutput = join(path, ATTIC, "generator");
+
+    if (!existsSync(generatorCode)) {
+        vscode.window.showErrorMessage(
+            "No generator found. Upgrade environment first."
+        );
+        return Option.none();
     }
+
+    return getCompileResult(generatorCode, generatorOutput, path);
+}
+
+/**
+ * Find brute from config. Compile it if necessary.
+ * Return Option.none if fail.
+ *
+ * @param path
+ */
+function getBrutePath(path: string, config: ConfigFile): Option<CompileResult> {
+    if (config.bruteSolution.isNone()) {
+        vscode.window.showErrorMessage(
+            "No brute solution found. Upgrade environment first."
+        );
+        return Option.none();
+    }
+
+    let bruteCode = config.bruteSolution.unwrap();
+    let bruteOutput = join(path, ATTIC, "brute");
+
+    if (!existsSync(bruteCode)) {
+        vscode.window.showErrorMessage(
+            "No brute solution found. Upgrade environment first."
+        );
+        return Option.none();
+    }
+
+    return getCompileResult(bruteCode, bruteOutput, path);
+}
+
+/**
+ * Find checker path for current problem. First look in the config file
+ * Otherwise use wcmp (checker that compare by token).
+ *
+ * If local checker is found try to compile it.
+ */
+function getCheckerPath(
+    path: string,
+    config: ConfigFile
+): Option<CompileResult> {
+    let globalHome = globalHomePath();
+    let globalCheckerCode = join(globalHome, "checkers", "wcmp.cpp");
+    let globalCheckerOutput = join(globalHome, "checkers", "wcmp");
+
+    let globalChecker = preRun(
+        globalCheckerCode,
+        globalCheckerOutput,
+        globalHome,
+        FRIEND_TIMEOUT
+    );
+
+    if (globalChecker.isNone()) {
+        return Option.none();
+    }
+
+    if (config.checker.isNone()) {
+        return Option.some(
+            new CompileResult(globalCheckerCode, globalCheckerOutput)
+        );
+    }
+
+    let checkerCode = config.checker.unwrap();
+    let checkerOutput = join(path, ATTIC, CHECKER_BINARY);
+
+    if (!existsSync(checkerCode)) {
+        return Option.some(
+            new CompileResult(globalCheckerCode, globalCheckerOutput)
+        );
+    } else {
+        return getCompileResult(checkerCode, checkerOutput, path);
+    }
+}
+
+function generateTestCase(path: string, generator: CompileResult) {
+    let genExecution = run(
+        generator.code,
+        generator.getOutput(),
+        path,
+        "",
+        FRIEND_TIMEOUT
+    );
+
+    if (genExecution.failed()) {
+        throw "Failed generating test case.";
+    }
+
+    writeBufferToFileSync(
+        join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
+        genExecution.stdout()
+    );
+}
+
+export function stressSolution(
+    path: string,
+    times: number
+): Option<SolutionResult> {
+    let config = ConfigFile.loadConfig(path);
+
+    // Load main solution (compile if necessary)
+    let mainSolution_ = getMainSolutionPath(path, config);
+    if (mainSolution_.isNone()) {
+        return Option.none();
+    }
+    let mainSolution = mainSolution_.unwrap();
+
+    // Load brute solution (compile if necessary)
+    let bruteSolution_ = getBrutePath(path, config);
+    if (bruteSolution_.isNone()) {
+        return Option.none();
+    }
+    let bruteSolution = bruteSolution_.unwrap();
+
+    // Load generator solution (compile if necessary)
+    let generator_ = getGeneratorPath(path, config);
+    if (generator_.isNone()) {
+        return Option.none();
+    }
+    let generator = generator_.unwrap();
+
+    // Load checker solution (compile if necessary)
+    let checker_ = getCheckerPath(path, config);
+    if (checker_.isNone()) {
+        return Option.none();
+    }
+    let checker = checker_.unwrap();
 
     let results = [];
 
     for (let index = 0; index < times; index++) {
         // Generate input test case
-        generateTestCase(path);
+        generateTestCase(path, generator);
 
         // Generate output test case from brute.cpp
-        let tcData = readFileSync(join(path, TESTCASES, "gen.in"), "utf8");
+        let tcData = readFileSync(
+            join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
+            "utf8"
+        );
 
-        // Run without restrictions
-        // TODO(#25): Put time limit on all type of programs
-        let runResult = child_process.spawnSync(brute_out, {
-            input: tcData,
-        });
+        let bruteExecution = run(
+            bruteSolution.code,
+            bruteSolution.getOutput(),
+            path,
+            tcData,
+            FRIEND_TIMEOUT
+        );
+
+        if (bruteExecution.failed()) {
+            return Option.some(
+                new SolutionResult(Verdict.FAIL, GENERATED_TEST_CASE)
+            );
+        }
 
         // Finally write .ans
-        let currentFd = openSync(join(path, TESTCASES, "gen.ans"), "w");
-        writeSync(currentFd, runResult.stdout);
-        closeSync(currentFd);
+        writeBufferToFileSync(
+            join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
+            bruteExecution.stdout()
+        );
 
         // Check sol report same result than brute
-        let result = timedRun(path, "gen", getTimeout());
+        let result = timedRun(
+            path,
+            GENERATED_TEST_CASE,
+            getTimeout(),
+            mainSolution,
+            checker
+        );
 
-        if (result.status !== Verdict.OK) {
-            // now save that testcase
+        if (!result.isOk()) {
+            // now save the test case
             let index = 0;
             while (existsSync(join(path, TESTCASES, `gen.${index}.in`))) {
                 index += 1;
@@ -677,7 +912,9 @@ export function stressSolution(path: string, times: number) {
                     join(path, TESTCASES, `gen.${index}.out`)
                 );
             }
-            return new SolutionResult(result.status, `gen.${index}`);
+            return Option.some(
+                new SolutionResult(result.status, `gen.${index}`)
+            );
         }
 
         results.push(result);
@@ -685,32 +922,10 @@ export function stressSolution(path: string, times: number) {
 
     let maxTime = 0;
     for (let i = 0; i < results.length; i++) {
-        if (results[i].spanTime! > maxTime) {
-            maxTime = results[i].spanTime!;
+        if (results[i]!.spanTime! > maxTime) {
+            maxTime = results[i]!.spanTime!;
         }
     }
 
-    return new SolutionResult(Verdict.OK, undefined, maxTime);
-}
-
-export function verdictName(verdict: Verdict) {
-    switch (verdict) {
-        case Verdict.OK:
-            return "OK";
-
-        case Verdict.WA:
-            return "WA";
-
-        case Verdict.TLE:
-            return "TLE";
-
-        case Verdict.RTE:
-            return "RTE";
-
-        case Verdict.CE:
-            return "CE";
-
-        default:
-            throw new Error("Invalid Verdict");
-    }
+    return Option.some(new SolutionResult(Verdict.OK, undefined, maxTime));
 }

@@ -3,8 +3,6 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import {
     newArena,
-    ATTIC,
-    TESTCASES,
     upgradeArena,
     pathToStatic,
     testCasesName,
@@ -13,6 +11,7 @@ import {
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
 import { runWithTemporaryPath, MOCK_SITE } from "../testUtils";
+import { ATTIC, TESTCASES } from "../../primitives";
 
 const CONTEST = join(pathToStatic(), "testData", "exampleContest");
 

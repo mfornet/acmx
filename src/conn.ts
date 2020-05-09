@@ -1,10 +1,4 @@
-import { Contest, Problem, SiteDescription } from "./types";
-
-/**
- * Not a real site.
- *
- * Util to create personal problems and debug this tool.
- */
+import { Contest, Problem, SiteDescription } from "./primitives";
 
 /**
  * Not a real site.
