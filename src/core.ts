@@ -164,9 +164,12 @@ export function globalHomePath(testPath?: string): string {
  * Initialize acmx environment.
  */
 export function initAcmX(testPath?: string) {
+    debug("init-acmx");
+
     // Create global attic.
     let globalHome = globalHomePath(testPath)!;
     createFolder(globalHome);
+    debug("global-home", globalHome);
 
     // Copy default languages config
     let languagesFolder = join(globalHome, LANGUAGES);
@@ -174,10 +177,13 @@ export function initAcmX(testPath?: string) {
     if (!existsSync(languagesFolder)) {
         copySync(languageStaticFolder, languagesFolder);
     }
+    debug("language-folder", languagesFolder);
+    debug("language-static-folder", languageStaticFolder);
 
     // Create checker folder
     let checkerFolder = join(globalHome, "checkers");
     createFolder(checkerFolder);
+    debug("checker-folder", checkerFolder);
 
     // Copy testlib
     let testlib = "testlib.h";
@@ -199,10 +205,12 @@ export function initAcmX(testPath?: string) {
 
     let atticFolder = join(globalHome, ATTIC);
     createFolder(atticFolder);
+    debug("global-attic-folder", atticFolder);
 
     // Compile checker
     let compiledName = "wcmp";
     if (!existsSync(join(checkerFolder, compiledName))) {
+        debug("compile-checker");
         let checkerPath = join(checkerFolder, checkerName);
         let compiledPath = join(checkerFolder, compiledName);
         preRun(checkerPath, compiledPath, globalHome, FRIEND_TIMEOUT);

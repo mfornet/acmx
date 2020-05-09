@@ -13,7 +13,8 @@ import { extension, substituteArgsWith, debug, writeToFileSync } from "./utils";
 import { onCompilationError } from "./errors";
 import md5File = require("md5-file");
 
-function loadConfig(extension: string): LanguageCommand {
+function loadExtensionConfig(extension: string): LanguageCommand {
+    debug("load-extension-config", extension);
     let languagesPath = join(globalHomePath(), LANGUAGES);
     let candidates: string[] = [];
 
@@ -34,6 +35,7 @@ function loadConfig(extension: string): LanguageCommand {
     });
 
     if (filtered.length === 0) {
+        debug("fail-load-extension-config");
         throw new Error(
             `Configuration not found for extension ${extension}. Candidates are: ${candidates.join(
                 ","
@@ -51,6 +53,7 @@ function loadConfig(extension: string): LanguageCommand {
  * Check if code was already compiled
  */
 function checkMD5(code: string, path: string): boolean {
+    debug("check-md5", code);
     let pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
     let storedMD5 = "";
     if (existsSync(pathMD5)) {
@@ -64,6 +67,7 @@ function checkMD5(code: string, path: string): boolean {
  * Copy MD5 from current file into a folder to avoid compiling again.
  */
 function dumpMD5(code: string, path: string) {
+    debug("dump-md5", code);
     let pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
     let currentMD5 = md5File.sync(code);
     writeToFileSync(pathMD5, currentMD5);
@@ -85,13 +89,12 @@ export function preRun(
     timeout: number
 ): Option<Execution> {
     debug("pre-run", code);
-
     if (checkMD5(code, path)) {
         return Option.some(Execution.cached());
     }
 
     let codeExt = extension(code);
-    let language = loadConfig(codeExt);
+    let language = loadExtensionConfig(codeExt);
 
     if (language.preRun.length === 0) {
         // No preRun command, so nothing to run.
@@ -114,6 +117,7 @@ export function preRun(
         dumpMD5(code, path);
     }
 
+    debug("fin-pre-run", execution.status);
     return new Option(execution);
 }
 
@@ -135,9 +139,9 @@ export function runWithArgs(
     timeout: number,
     args: string[]
 ): Execution {
-    debug("run", code);
+    debug("run-with-args", code);
     let codeExt = extension(code);
-    let language = loadConfig(codeExt);
+    let language = loadExtensionConfig(codeExt);
 
     if (language.run === undefined || language.run.length === 0) {
         // No run command, so nothing to execute.
@@ -179,5 +183,6 @@ export function runSingle(
     });
     let timeSpan = new Date().getTime() - startTime;
 
+    debug("fin-execute", result, timeSpan);
     return new Execution(result, timeSpan, timeout);
 }
