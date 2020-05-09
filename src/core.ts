@@ -9,7 +9,7 @@ import {
     writeSync,
     renameSync,
 } from "fs";
-import { basename, dirname, extname, join, parse } from "path";
+import { basename, dirname, extname, join } from "path";
 import * as vscode from "vscode";
 import {
     Contest,
@@ -913,7 +913,7 @@ export function stressSolution(
                 );
             }
             return Option.some(
-                new SolutionResult(result.status, GENERATED_TEST_CASE)
+                new SolutionResult(result.status, `gen.${index}`)
             );
         }
 
