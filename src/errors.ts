@@ -20,7 +20,6 @@ export function onCompilationError(
 ) {
     debug("compile-error", `Compilation error ${code}`);
     vscode.window.showErrorMessage(`Compilation Error. ${code}`);
-    // TODO(now) Check this .toString()
     showCompileError(path, execution.stderr().toString("utf8"));
 }
 

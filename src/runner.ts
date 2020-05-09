@@ -32,7 +32,6 @@ function loadConfig(extension: string): LanguageCommand {
         }
     });
 
-    // TODO(now). Test this
     if (filtered.length === 0) {
         throw `Configuration not found for extension ${extension}. Candidates are: ${candidates.join(
             ","

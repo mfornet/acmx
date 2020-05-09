@@ -25,6 +25,7 @@ import {
     TESTCASES,
     ConfigFile,
     CHECKER_BINARY,
+    GENERATED_TEST_CASE,
 } from "./primitives";
 import {
     substituteArgWith,
@@ -34,12 +35,6 @@ import {
     writeBufferToFileSync,
 } from "./utils";
 import { preRun, run, runWithArgs } from "./runner";
-
-// TODO(now): More debugging.
-// TODO(now): Allow turn on/off debugging.
-// TODO(now): Better error handling.
-//              Never return undefined from any function (Return Error instead and handle it)
-// TODO(now): Refactor library
 
 /**
  * Path to static folder.
@@ -84,7 +79,7 @@ function isTestCase(path: string) {
     return ext === ".in" || ext === ".out" || ext === ".real";
 }
 
-export function currentTestCase() {
+export function currentTestCase(): Option<string> {
     let answer: string | undefined = undefined;
 
     // Try to find an open test case
@@ -106,8 +101,9 @@ export function currentTestCase() {
     }
 
     // Test case not found
-    return answer;
+    return new Option(answer);
 }
+
 export function currentProblem(): Option<string> {
     // Try to find the problem using current open file
     if (vscode.window.activeTextEditor) {
@@ -268,8 +264,8 @@ function populateMainSolution(path: string, override: boolean): string {
     return copyFromTemplate(path, templatePath, override);
 }
 
-export function newArena(path: string, config: ConfigFile) {
-    debug("newArena", `path: ${path} config: ${config}`);
+export function newArena(path: string) {
+    debug("newArena", `path: ${path}`);
     createFolder(path);
 
     let testcases = join(path, TESTCASES);
@@ -278,7 +274,17 @@ export function newArena(path: string, config: ConfigFile) {
     let attic = join(path, ATTIC);
     createFolder(attic);
 
-    config.mainSolution = Option.some(populateMainSolution(path, true));
+    let config = ConfigFile.empty();
+    try {
+        // Try to load current config file if it exists.
+        config = ConfigFile.loadConfig(path);
+    } catch (err) {}
+
+    if (config.mainSolution.isNone()) {
+        config.mainSolution = Option.some(populateMainSolution(path, true));
+    }
+
+    config.dump(path);
 }
 
 export function testCasesName(path: string) {
@@ -324,12 +330,14 @@ function addChecker(path: string, config: ConfigFile) {
         .get("checkerTemplate");
 
     if (templatePath === undefined || templatePath === "") {
+        // Don't add default checker if not template was added
+    } else {
         // TODO(now): Use folder with testlib.h
         // += @checker.cpp
-        templatePath = join(pathToStatic(), "templates", "checker.cpp");
+        config.checker = Option.some(
+            copyFromTemplate(path, templatePath, false)
+        );
     }
-
-    config.checker = Option.some(copyFromTemplate(path, templatePath, false));
 }
 
 export function upgradeArena(path: string) {
@@ -353,7 +361,7 @@ export function upgradeArena(path: string) {
         addGenerator(path, config);
     }
 
-    // Load generator
+    // Load checker
     if (
         config.checker.mapOr(true, (codePath) => {
             return !existsSync(codePath);
@@ -397,14 +405,11 @@ function copyDefaultFilesToWorkspace(path: string) {
 }
 
 function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
-    let config = ConfigFile.loadConfig(path);
-    newArena(path, config);
+    newArena(path);
 
     if (isWorkspace) {
         copyDefaultFilesToWorkspace(path);
     }
-
-    config.dump(path);
 
     problem.inputs!.forEach((value, index) => {
         let fd = openSync(join(path, TESTCASES, `${index}.in`), "w");
@@ -451,7 +456,6 @@ export function getSolutionPath() {
     return path;
 }
 
-// TODO(now): Create companion config for type checking
 export function newProblemFromCompanion(config: any) {
     let path = getSolutionPath();
 
@@ -462,7 +466,6 @@ export function newProblemFromCompanion(config: any) {
     let inputs: string[] = [];
     let outputs: string[] = [];
 
-    // TODO(now): Change test case any to something more reasonable
     config.tests.forEach(function (testCase: any) {
         inputs.push(testCase.input);
         outputs.push(testCase.output);
@@ -499,7 +502,6 @@ export async function newContestFromId(
     return contestPath;
 }
 
-// TODO(Now) Return option (or Result here)
 export function timedRun(
     path: string,
     tcName: string,
@@ -586,12 +588,14 @@ export function testSolution(path: string): Option<SolutionResult> {
     testcasesId.sort();
 
     // Run current test case first (if it exists)
-    let startTc = currentTestCase();
+    let startTestCase_ = currentTestCase();
 
-    // TODO(now): Check all comparisons with undefined everywhere
-    if (startTc !== undefined) {
-        testcasesId = testcasesId.reverse().filter((name) => name !== startTc);
-        testcasesId.push(startTc);
+    if (startTestCase_.isSome()) {
+        let startTestCase = startTestCase_.unwrap();
+        testcasesId = testcasesId
+            .reverse()
+            .filter((name) => name !== startTestCase);
+        testcasesId.push(startTestCase);
         testcasesId = testcasesId.reverse();
     }
 
@@ -755,7 +759,6 @@ function getCheckerPath(
     let globalCheckerCode = join(globalHome, "checkers", "wcmp.cpp");
     let globalCheckerOutput = join(globalHome, "checkers", "wcmp");
 
-    // TODO(now): Build attic on start
     let globalChecker = preRun(
         globalCheckerCode,
         globalCheckerOutput,
@@ -798,9 +801,8 @@ function generateTestCase(path: string, generator: CompileResult) {
         throw "Failed generating test case.";
     }
 
-    // TODO(now): Test the to string here (maybe change it in the function stdout)
     writeBufferToFileSync(
-        join(path, TESTCASES, "gen.in"),
+        join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
         genExecution.stdout()
     );
 }
@@ -846,7 +848,10 @@ export function stressSolution(
         generateTestCase(path, generator);
 
         // Generate output test case from brute.cpp
-        let tcData = readFileSync(join(path, TESTCASES, "gen.in"), "utf8");
+        let tcData = readFileSync(
+            join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
+            "utf8"
+        );
 
         let bruteExecution = run(
             bruteSolution.code,
@@ -856,19 +861,31 @@ export function stressSolution(
             FRIEND_TIMEOUT
         );
 
-        // TODO(Now): Handle the case when the brute gives timeout or runtime error
-        // TODO(now): Check that this to string is working
+        if (bruteExecution.failed()) {
+            return Option.some(
+                new SolutionResult(Verdict.FAIL, GENERATED_TEST_CASE)
+            );
+        }
+
         // Finally write .out
         writeBufferToFileSync(
-            join(path, TESTCASES, "gen.out"),
+            join(path, TESTCASES, GENERATED_TEST_CASE + ".out"),
             bruteExecution.stdout()
         );
 
         // Check sol report same result than brute
-        let result = timedRun(path, "gen", getTimeout(), mainSolution, checker);
+        let result = timedRun(
+            path,
+            GENERATED_TEST_CASE,
+            getTimeout(),
+            mainSolution,
+            checker
+        );
 
-        if (result.status !== Verdict.OK) {
-            return Option.some(new SolutionResult(result.status, "gen"));
+        if (!result.isOk()) {
+            return Option.some(
+                new SolutionResult(result.status, GENERATED_TEST_CASE)
+            );
         }
 
         results.push(result);

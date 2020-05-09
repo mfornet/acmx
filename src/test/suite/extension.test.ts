@@ -11,7 +11,7 @@ import {
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
 import { runWithTemporaryPath, MOCK_SITE } from "../testUtils";
-import { ATTIC, TESTCASES, ConfigFile } from "../../primitives";
+import { ATTIC, TESTCASES } from "../../primitives";
 
 const CONTEST = join(pathToStatic(), "testData", "exampleContest");
 
@@ -20,7 +20,7 @@ suite("Extension Test Suite", () => {
 
     test("New Arena", () => {
         runWithTemporaryPath((path: string) => {
-            newArena(path, ConfigFile.empty());
+            newArena(path);
             assert.ok(existsSync(join(path, "sol.cpp")));
             assert.ok(existsSync(join(path, ATTIC)));
             assert.ok(existsSync(join(path, TESTCASES)));
@@ -31,7 +31,7 @@ suite("Extension Test Suite", () => {
         this.timeout(5000);
 
         runWithTemporaryPath((path: string) => {
-            newArena(path, ConfigFile.empty());
+            newArena(path);
             upgradeArena(path);
 
             assert.ok(existsSync(join(path, "gen.py")));

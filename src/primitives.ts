@@ -1,7 +1,7 @@
 import { SpawnSyncReturns } from "child_process";
 import { join } from "path";
 import { writeToFileSync } from "./utils";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 
 export const ATTIC = "attic";
 export const TESTCASES = "testcases";
@@ -11,6 +11,7 @@ export const MAIN_SOLUTION_BINARY = "sol";
 export const CHECKER_BINARY = "checker";
 export const BRUTE_BINARY = "brute";
 export const GENERATOR_BINARY = "generator";
+export const GENERATED_TEST_CASE = "gen";
 
 export enum Verdict {
     OK, // Accepted
@@ -260,17 +261,51 @@ export class ConfigFile {
         writeToFileSync(join(path, ATTIC, "config.json"), configFile);
     }
 
-    // TODO(now): Check that those file really exist, otherwise, set to None
-    static loadConfig(path: string): ConfigFile {
-        let config = readFileSync(join(path, ATTIC, "config.json"), "utf8");
-        let parsed = JSON.parse(config);
+    /**
+     * Check that all files specified in configurations exist and remove it otherwise.
+     */
+    private verify() {
+        let changed = false;
 
-        return new ConfigFile(
+        if (!this.mainSolution.mapOr(true, existsSync)) {
+            this.mainSolution = Option.none();
+            changed = true;
+        }
+
+        if (!this.bruteSolution.mapOr(true, existsSync)) {
+            this.bruteSolution = Option.none();
+            changed = true;
+        }
+
+        if (!this.generator.mapOr(true, existsSync)) {
+            this.generator = Option.none();
+            changed = true;
+        }
+
+        if (!this.checker.mapOr(true, existsSync)) {
+            this.checker = Option.none();
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    static loadConfig(path: string): ConfigFile {
+        let configData = readFileSync(join(path, ATTIC, "config.json"), "utf8");
+        let parsed = JSON.parse(configData);
+
+        let config = new ConfigFile(
             parsed.mainSolution.value,
             parsed.bruteSolution.value,
             parsed.generator.value,
             parsed.checker.value
         );
+
+        if (config.verify()) {
+            config.dump(path);
+        }
+
+        return config;
     }
 
     static empty(): ConfigFile {
