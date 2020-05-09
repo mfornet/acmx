@@ -18,7 +18,9 @@ const CONTEST = join(pathToStatic(), "testData", "exampleContest");
 suite("Extension Test Suite", () => {
     vscode.window.showInformationMessage("Start all tests.");
 
-    test("New Arena", () => {
+    test("New Arena", function () {
+        this.timeout(5000);
+
         runWithTemporaryPath((path: string) => {
             newArena(path);
             assert.ok(existsSync(join(path, "sol.cpp")));
@@ -40,6 +42,8 @@ suite("Extension Test Suite", () => {
     });
 
     test("Parse Test Cases", function () {
+        this.timeout(5000);
+
         let path = join(CONTEST, "A");
         let result = testCasesName(path);
         let target = ["0", "1", "2"];
@@ -53,6 +57,8 @@ suite("Extension Test Suite", () => {
     });
 
     test("Create new problem from id", function () {
+        this.timeout(5000);
+
         runWithTemporaryPath((path: string) => {
             let problemId = "mockProblem";
             newProblemFromId(path, MOCK_SITE, problemId);
