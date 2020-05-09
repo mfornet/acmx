@@ -146,9 +146,7 @@ export function currentProblem(): Option<string> {
  *
  * @param testingPath Use for unit tests
  */
-export function globalHomePath(
-    testPath: string | undefined = undefined
-): string {
+export function globalHomePath(testPath?: string): string {
     if (testPath !== undefined) {
         return testPath;
     }
@@ -163,16 +161,25 @@ export function globalHomePath(
         path = substituteArgWith(path);
     }
 
+    path = substituteArgWith(path);
+
     return path;
 }
 
 /**
  * Initialize acmx environment.
  */
-export function initAcmX(testPath: string | undefined = undefined) {
+export function initAcmX(testPath?: string) {
     // Create global attic.
     let globalHome = globalHomePath(testPath)!;
     createFolder(globalHome);
+
+    // Copy default languages config
+    let languagesFolder = join(globalHome, LANGUAGES);
+    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
+    if (!existsSync(languagesFolder)) {
+        copySync(languageStaticFolder, languagesFolder);
+    }
 
     // Create checker folder
     let checkerFolder = join(globalHome, "checkers");
@@ -206,23 +213,6 @@ export function initAcmX(testPath: string | undefined = undefined) {
         let compiledPath = join(checkerFolder, compiledName);
         preRun(checkerPath, compiledPath, globalHome, FRIEND_TIMEOUT);
     }
-
-    // Copy default languages config
-    let languagesFolder = join(globalHome, LANGUAGES);
-    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
-    if (!existsSync(languagesFolder)) {
-        createFolder(languagesFolder);
-    }
-
-    readdirSync(languageStaticFolder).forEach((file) => {
-        let target = join(languagesFolder, file);
-        if (!existsSync(target)) {
-            debug("language", `Copied new language configuration: ${file}`);
-            copyFileSync(join(languageStaticFolder, file), target);
-        } else {
-            debug("language", `Existing language configuration: ${file}`);
-        }
-    });
 }
 
 /**
@@ -239,7 +229,7 @@ function copyFromTemplate(
 ): string {
     let parts = template.split("@");
 
-    if (parts.length == 1) {
+    if (parts.length === 1) {
         let fileName = basename(template);
         let target = join(path, fileName);
 
@@ -250,7 +240,9 @@ function copyFromTemplate(
         return target;
     } else {
         if (!existsSync(join(parts[0], parts[1]))) {
-            throw `Invalid template path ${template}. Target not found.`;
+            throw new Error(
+                `Invalid template path ${template}. Target not found.`
+            );
         }
         let folderPath = parts[0];
         copySync(folderPath, path);
@@ -260,8 +252,8 @@ function copyFromTemplate(
 
 function populateMainSolution(path: string, override: boolean): string {
     let templatePath: string | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("templatePath");
+        .getConfiguration("acmx.template", null)
+        .get("solutionPath");
 
     if (templatePath === undefined || templatePath === "") {
         templatePath = join(pathToStatic(), "templates", "sol.cpp");
@@ -455,7 +447,7 @@ function newContest(path: string, contest: Contest) {
 export function getSolutionPath() {
     let path: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
-        .get("solutionPath");
+        .get("library");
 
     if (path !== undefined) {
         path = substituteArgWith(path);
@@ -806,7 +798,7 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 
     if (genExecution.failed()) {
-        throw "Failed generating test case.";
+        throw new Error("Failed generating test case.");
     }
 
     writeBufferToFileSync(
