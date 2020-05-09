@@ -4,7 +4,7 @@
     "description": "Competitive Programming made simple",
     "icon": "images/logo.png",
     "publisher": "marx24",
-    "version": "0.2.9",
+    "version": "0.3.0-beta.0",
     "license": "MIT",
     "keywords": [
         "acm",
