@@ -25,7 +25,6 @@ import {
     upgradeArena,
     mainSolution,
 } from "./core";
-import { hideTerminals } from "./terminal";
 import {
     SiteDescription,
     Verdict,
@@ -332,7 +331,9 @@ async function addTestCase() {
 }
 
 async function coding() {
-    hideTerminals();
+    vscode.window.terminals.forEach((ter) => {
+        ter.hide();
+    }); //hides terminals
 
     let path_ = currentProblem();
 
