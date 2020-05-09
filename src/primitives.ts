@@ -68,8 +68,6 @@ export class SolutionResult {
 }
 
 export class Problem {
-    // TODO(now): Comment
-    // TODO(now): Use Option everywhere
     identifier?: string;
     name?: string;
     inputs?: string[];
@@ -316,10 +314,10 @@ export class ConfigFile {
         let parsed = JSON.parse(configData);
 
         let config = new ConfigFile(
-            parsed.mainSolution.value,
-            parsed.bruteSolution.value,
-            parsed.generator.value,
-            parsed.checker.value
+            parsed.mainSolution?.value,
+            parsed.bruteSolution?.value,
+            parsed.generator?.value,
+            parsed.checker?.value
         );
 
         if (config.verify()) {

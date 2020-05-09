@@ -40,5 +40,3 @@ export function startCompetitiveCompanionService() {
         debug("companion", `Started companion. Listening on port ${port}`);
     });
 }
-
-// TODO(Now): Create companion config result

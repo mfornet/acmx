@@ -35,6 +35,7 @@ import {
     writeBufferToFileSync,
 } from "./utils";
 import { preRun, run, runWithArgs } from "./runner";
+import { copySync } from "fs-extra";
 
 /**
  * Path to static folder.
@@ -235,17 +236,25 @@ function copyFromTemplate(
     template: string,
     override: boolean
 ): string {
-    // TODO(Now): Handle when template path are folders
-    //              Parse input file after @ and copy entire folder to target.
+    let parts = template.split("@");
 
-    let fileName = basename(template);
-    let target = join(path, fileName);
+    if (parts.length == 1) {
+        let fileName = basename(template);
+        let target = join(path, fileName);
 
-    if (override || !existsSync(target)) {
-        copyFileSync(template, target);
+        if (override || !existsSync(target)) {
+            copyFileSync(template, target);
+        }
+
+        return target;
+    } else {
+        if (!existsSync(join(parts[0], parts[1]))) {
+            throw `Invalid template path ${template}. Target not found.`;
+        }
+        let folderPath = parts[0];
+        copySync(folderPath, path);
+        return join(path, parts[1]);
     }
-
-    return target;
 }
 
 function populateMainSolution(path: string, override: boolean): string {
@@ -332,8 +341,6 @@ function addChecker(path: string, config: ConfigFile) {
     if (templatePath === undefined || templatePath === "") {
         // Don't add default checker if not template was added
     } else {
-        // TODO(now): Use folder with testlib.h
-        // += @checker.cpp
         config.checker = Option.some(
             copyFromTemplate(path, templatePath, false)
         );
