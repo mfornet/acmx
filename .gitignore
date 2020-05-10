@@ -10,3 +10,4 @@ out/
 .vscode-test/
 
 images/.DS_Store
+doc.md
