@@ -84,9 +84,10 @@ export function preRun(
     path: string,
     timeout: number
 ): Option<Execution> {
-    debug("pre-run", code);
+    debug("pre-run", code, output, path, timeout); //add more debug
 
-    if (checkMD5(code, path)) {
+    // check if md5 is same and wcmp is already compiled
+    if (checkMD5(code, path) && existsSync(output)) {
         return Option.some(Execution.cached());
     }
 
