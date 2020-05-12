@@ -36,6 +36,7 @@ import {
     createFolder,
     writeBufferToFileSync,
 } from "./utils";
+import { debugTestCase } from "./extension";
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 
@@ -556,7 +557,7 @@ export function timedRun(
     }
 }
 
-function getWebviewContent() {
+function testSolutionhtml() {
     return `<!DOCTYPE html>
 <html lang="en">
 <style>
@@ -573,8 +574,16 @@ function getWebviewContent() {
     <title>Testcase results</title>
 </head>
 <body>
-
+    <p>Enter prefix of testcase to open in side-by-side view: <input type="text" id="tstid" value="">
+    <button class="btn" type="button" onclick="opentstcase()">Open</button></p>
     <script>
+    function opentstcase() {
+        const vscode = acquireVsCodeApi();
+        var x = document.getElementById("tstid").value;
+        vscode.postMessage({
+            testcaseid: x
+        })
+    }
         window.addEventListener('message', event => {
 
             const message = event.data; // The JSON data our extension sent
@@ -594,7 +603,7 @@ function getWebviewContent() {
                     document.body.appendChild(testcase);
                 }
             }
-            else
+            else if(message.type == 'final')
             {
                 var testcase = document.createElement("h1");
                 if(message.judge == 'OK')
@@ -610,6 +619,12 @@ function getWebviewContent() {
                     document.body.appendChild(testcase);
                 }
             }
+            else if(message.type == 'updateQuery')
+            {
+                var testvalue = document.createElement("p");
+                testvalue.textContent = message.showupdate;
+                document.body.appendChild(testvalue);
+            }
         });
     </script>
 </body>
@@ -623,11 +638,16 @@ function getWebviewContent() {
  */
 export async function testSolution(path: string, panel: vscode.WebviewPanel) {
     let config = ConfigFile.loadConfig(path);
-
+    panel.webview.html = testSolutionhtml();
     // Load main solution (compile if necessary)
     let mainSolution_ = getMainSolutionPath(path, config);
     if (mainSolution_.isNone()) {
         return Option.none();
+    } else {
+        await panel.webview.postMessage({
+            type: "updateQuery",
+            showupdate: "Prepared main solution",
+        });
     }
     let mainSolution = mainSolution_.unwrap();
 
@@ -635,6 +655,11 @@ export async function testSolution(path: string, panel: vscode.WebviewPanel) {
     let checker_ = getCheckerPath(path, config);
     if (checker_.isNone()) {
         return Option.none();
+    } else {
+        await panel.webview.postMessage({
+            type: "updateQuery",
+            showupdate: "Prepared checker",
+        });
     }
     let checker = checker_.unwrap();
 
@@ -647,9 +672,6 @@ export async function testSolution(path: string, panel: vscode.WebviewPanel) {
     // Process all testcases in sorted order
     testcasesId.sort();
 
-    //start Webview
-
-    panel.webview.html = getWebviewContent();
     // Run current test case first (if it exists)
     let startTestCase_ = currentTestCase();
 
@@ -889,16 +911,87 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 }
 
-export function stressSolution(
+function stresshtml() {
+    return `<!DOCTYPE html>
+<html lang="en">
+<style>
+    p {
+    font-family: var(--vscode-editor-font-family);
+    }
+    h1 {
+    font-family: var(--vscode-editor-font-family);
+    }
+</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testcase results</title>
+</head>
+<body>
+    <script>
+        window.addEventListener('message', event => {
+
+            const message = event.data; // The JSON data our extension sent
+            if(message.type == 'testcase')
+            {
+                var testcase = document.createElement("p");
+                if(message.judge == 'OK')
+                {
+                    testcase.textContent = message.symbol + 'Testcase ' + message.id + ': OK';
+                    testcase.style.color = "green";
+                    document.body.appendChild(testcase);
+                }
+                else
+                {
+                    testcase.textContent = message.symbol + 'Testcase ' + message.id + ': ' + message.judge;
+                    testcase.style.color = "red";
+                    document.body.appendChild(testcase);
+                }
+            }
+            else if(message.type == 'final')
+            {
+                var testcase = document.createElement("h1");
+                if(message.judge == 'OK')
+                {
+                    testcase.textContent = message.symbol + 'Final Verdict: OK \xa0\xa0\xa0\xa0\xa0\xa0\xa0 Time: ' + message.time + 'ms';
+                    testcase.style.color = "green";
+                    document.body.appendChild(testcase);
+                }
+                else
+                {
+                    testcase.textContent = message.symbol + 'Final Verdict: ' + message.judge;
+                    testcase.style.color = "red";
+                    document.body.appendChild(testcase);
+                }
+            }
+            else if(message.type == 'updateQuery')
+            {
+                var testvalue = document.createElement("p");
+                testvalue.textContent = message.showupdate;
+                document.body.appendChild(testvalue);
+            }
+        });
+    </script>
+</body>
+</html>`;
+}
+export async function stressSolution(
     path: string,
-    times: number
-): Option<SolutionResult> {
+    times: number,
+    panel: vscode.WebviewPanel
+) {
+    panel.webview.html = stresshtml();
     let config = ConfigFile.loadConfig(path);
 
     // Load main solution (compile if necessary)
     let mainSolution_ = getMainSolutionPath(path, config);
     if (mainSolution_.isNone()) {
         return Option.none();
+    } else {
+        await panel.webview.postMessage({
+            type: "updateQuery",
+            showupdate: "Prepared main solution",
+        });
     }
     let mainSolution = mainSolution_.unwrap();
 
@@ -906,6 +999,11 @@ export function stressSolution(
     let bruteSolution_ = getBrutePath(path, config);
     if (bruteSolution_.isNone()) {
         return Option.none();
+    } else {
+        await panel.webview.postMessage({
+            type: "updateQuery",
+            showupdate: "Prepared brute solution",
+        });
     }
     let bruteSolution = bruteSolution_.unwrap();
 
@@ -965,30 +1063,47 @@ export function stressSolution(
         );
 
         if (!result.isOk()) {
+            await panel.webview.postMessage({
+                type: "testcase",
+                id: index,
+                judge: verdictName(result.status),
+                symbol: "❌",
+            });
+            await panel.webview.postMessage({
+                type: "final",
+                judge: verdictName(result.status),
+                symbol: "❌",
+            });
             // now save the test case
-            let index = 0;
-            while (existsSync(join(path, TESTCASES, `gen.${index}.in`))) {
-                index += 1;
+            let idx = 0;
+            while (existsSync(join(path, TESTCASES, `gen.${idx}.in`))) {
+                idx += 1;
             }
             renameSync(
                 join(path, TESTCASES, `gen.in`),
-                join(path, TESTCASES, `gen.${index}.in`)
+                join(path, TESTCASES, `gen.${idx}.in`)
             );
             if (existsSync(join(path, TESTCASES, `gen.ans`))) {
                 renameSync(
                     join(path, TESTCASES, `gen.ans`),
-                    join(path, TESTCASES, `gen.${index}.ans`)
+                    join(path, TESTCASES, `gen.${idx}.ans`)
                 );
             }
             if (existsSync(join(path, TESTCASES, `gen.out`))) {
                 renameSync(
                     join(path, TESTCASES, `gen.out`),
-                    join(path, TESTCASES, `gen.${index}.out`)
+                    join(path, TESTCASES, `gen.${idx}.out`)
                 );
             }
-            return Option.some(
-                new SolutionResult(result.status, `gen.${index}`)
-            );
+            debugTestCase(path, `gen.${idx}`);
+            return;
+        } else {
+            await panel.webview.postMessage({
+                type: "testcase",
+                id: index,
+                judge: "OK",
+                symbol: "✔️",
+            });
         }
 
         results.push(result);
@@ -1001,5 +1116,10 @@ export function stressSolution(
         }
     }
 
-    return Option.some(new SolutionResult(Verdict.OK, undefined, maxTime));
+    await panel.webview.postMessage({
+        type: "final",
+        time: maxTime,
+        judge: "OK",
+        symbol: "✔️",
+    });
 }

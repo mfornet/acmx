@@ -25,12 +25,7 @@ import {
     upgradeArena,
     mainSolution,
 } from "./core";
-import {
-    SiteDescription,
-    ATTIC,
-    FRIEND_TIMEOUT,
-    verdictName,
-} from "./primitives";
+import { SiteDescription, ATTIC, FRIEND_TIMEOUT } from "./primitives";
 import clipboardy = require("clipboardy");
 import { debug, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
@@ -129,7 +124,7 @@ async function addContest() {
     );
 }
 
-async function debugTestCase(path: string, tcId: string) {
+export async function debugTestCase(path: string, tcId: string) {
     // Change editor layout to show failing test
     await vscode.commands.executeCommand("vscode.setEditorLayout", {
         orientation: 0,
@@ -199,6 +194,9 @@ async function runSolution() {
     );
     await vscode.window.activeTextEditor?.document.save().then(() => {
         testSolution(path, panel);
+    });
+    panel.webview.onDidReceiveMessage((message) => {
+        debugTestCase(path, message.testcaseid);
     });
 }
 
@@ -366,26 +364,20 @@ async function stress() {
     if (stressTimes === undefined) {
         stressTimes = 10;
     }
-
-    let result_ = stressSolution(path, stressTimes);
-
-    if (result_.isNone()) {
-        return;
-    }
-
-    let result = result_.unwrap();
-
-    if (result.isOk()) {
-        vscode.window.showInformationMessage(
-            `OK. Time ${result.getMaxTime()}ms`
-        );
-    } else {
-        let failTestCaseId = result.getFailTestCaseId();
-        vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${failTestCaseId}`
-        );
-        debugTestCase(path, failTestCaseId);
-    }
+    await vscode.commands.executeCommand("vscode.setEditorLayout", {
+        orientation: 0,
+        groups: [{}, {}],
+    });
+    let panel = await vscode.window.createWebviewPanel(
+        "testcase-result",
+        "Test Cases Running",
+        vscode.ViewColumn.Two,
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+        }
+    );
+    stressSolution(path, stressTimes, panel);
 }
 
 async function upgrade() {
