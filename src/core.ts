@@ -27,6 +27,7 @@ import {
     ConfigFile,
     CHECKER_BINARY,
     GENERATED_TEST_CASE,
+    verdictName,
 } from "./primitives";
 import {
     substituteArgWith,
@@ -555,13 +556,37 @@ export function timedRun(
     }
 }
 
+function getWebviewContent() {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Coding</title>
+</head>
+<body>
+
+    <script>
+
+        window.addEventListener('message', event => {
+
+            const message = event.data; // The JSON data our extension sent
+            var testcase = document.createElement("p");
+            testcase.textContent = message.addtextline;
+            testcase.style.color = "blue";
+            document.body.appendChild(testcase);
+        });
+    </script>
+</body>
+</html>`;
+}
 /**
  * Test a solution for a problem.
  * Return Option.none if an error happened.
  *
  * @param path
  */
-export function testSolution(path: string): Option<SolutionResult> {
+export async function testSolution(path: string, panel: vscode.WebviewPanel) {
     let config = ConfigFile.loadConfig(path);
 
     // Load main solution (compile if necessary)
@@ -587,6 +612,9 @@ export function testSolution(path: string): Option<SolutionResult> {
     // Process all testcases in sorted order
     testcasesId.sort();
 
+    //start Webview
+
+    panel.webview.html = getWebviewContent();
     // Run current test case first (if it exists)
     let startTestCase_ = currentTestCase();
 
@@ -601,25 +629,33 @@ export function testSolution(path: string): Option<SolutionResult> {
 
     let results: TestCaseResult[] = [];
     let fail = Option.none<SolutionResult>();
-
-    testcasesId.forEach((tcId) => {
+    for (let tcId of testcasesId) {
         // Run on each test case and break on first failing case.
-        if (fail.isNone()) {
-            let tcResult = timedRun(
-                path,
-                tcId,
-                getTimeout(),
-                mainSolution,
-                checker
-            );
 
-            if (!tcResult.isOk()) {
-                fail = Option.some(new SolutionResult(tcResult.status, tcId));
-            }
-
-            results.push(tcResult);
+        let tcResult = timedRun(
+            path,
+            tcId,
+            getTimeout(),
+            mainSolution,
+            checker
+        );
+        if (!tcResult.isOk()) {
+            fail = Option.some(new SolutionResult(tcResult.status, tcId));
+            await panel.webview.postMessage({
+                addtextline:
+                    "❌ Testcase " +
+                    tcId +
+                    ": " +
+                    verdictName(fail.unwrap().status),
+            });
+        } else {
+            await panel.webview.postMessage({
+                addtextline: "✔️ Testcase " + tcId + ": OK",
+            });
         }
-    });
+
+        results.push(tcResult);
+    }
 
     if (fail.isNone()) {
         let maxTime = 0;
@@ -628,9 +664,13 @@ export function testSolution(path: string): Option<SolutionResult> {
                 maxTime = results[i].spanTime!;
             }
         }
-        return Option.some(new SolutionResult(Verdict.OK, undefined, maxTime));
+        await panel.webview.postMessage({
+            addtextline: "Final Verdict : OK. Time Required " + maxTime,
+        });
     } else {
-        return fail;
+        await panel.webview.postMessage({
+            addtextline: "Final Verdict : " + verdictName(fail.unwrap().status),
+        });
     }
 }
 

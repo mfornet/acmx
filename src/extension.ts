@@ -27,7 +27,6 @@ import {
 } from "./core";
 import {
     SiteDescription,
-    Verdict,
     ATTIC,
     FRIEND_TIMEOUT,
     verdictName,
@@ -185,29 +184,21 @@ async function runSolution() {
 
     let path = path_.unwrap();
     debug("run-solution", `${path}`);
-
+    await vscode.commands.executeCommand("vscode.setEditorLayout", {
+        orientation: 0,
+        groups: [{}, {}],
+    });
+    let panel = await vscode.window.createWebviewPanel(
+        "testcase-result",
+        "Test Cases Running",
+        vscode.ViewColumn.Two,
+        {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+        }
+    );
     await vscode.window.activeTextEditor?.document.save().then(() => {
-        let result_ = testSolution(path);
-
-        if (result_.isNone()) {
-            return;
-        }
-
-        let result = result_.unwrap();
-
-        if (result.isOk()) {
-            vscode.window.showInformationMessage(
-                `OK. Time ${result.getMaxTime()}ms`
-            );
-        } else if (result.status === Verdict.NO_TESTCASES) {
-            vscode.window.showErrorMessage(`No testcases.`);
-        } else {
-            let failTestCaseId = result.getFailTestCaseId();
-            vscode.window.showErrorMessage(
-                `${verdictName(result.status)} on test ${failTestCaseId}`
-            );
-            debugTestCase(path, failTestCaseId);
-        }
+        testSolution(path, panel);
     });
 }
 
