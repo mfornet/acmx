@@ -559,22 +559,57 @@ export function timedRun(
 function getWebviewContent() {
     return `<!DOCTYPE html>
 <html lang="en">
+<style>
+    p {
+    font-family: var(--vscode-editor-font-family);
+    }
+    h1 {
+    font-family: var(--vscode-editor-font-family);
+    }
+</style>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cat Coding</title>
+    <title>Testcase results</title>
 </head>
 <body>
 
     <script>
-
         window.addEventListener('message', event => {
 
             const message = event.data; // The JSON data our extension sent
-            var testcase = document.createElement("p");
-            testcase.textContent = message.addtextline;
-            testcase.style.color = "blue";
-            document.body.appendChild(testcase);
+            if(message.type == 'testcase')
+            {
+                var testcase = document.createElement("p");
+                if(message.judge == 'OK')
+                {
+                    testcase.textContent = message.symbol + 'Testcase ' + message.id + ': OK';
+                    testcase.style.color = "green";
+                    document.body.appendChild(testcase);
+                }
+                else
+                {
+                    testcase.textContent = message.symbol + 'Testcase ' + message.id + ': ' + message.judge;
+                    testcase.style.color = "red";
+                    document.body.appendChild(testcase);
+                }
+            }
+            else
+            {
+                var testcase = document.createElement("h1");
+                if(message.judge == 'OK')
+                {
+                    testcase.textContent = message.symbol + 'Final Verdict: OK \xa0\xa0\xa0\xa0\xa0\xa0\xa0 Time: ' + message.time + 'ms';
+                    testcase.style.color = "green";
+                    document.body.appendChild(testcase);
+                }
+                else
+                {
+                    testcase.textContent = message.symbol + 'Final Verdict: ' + message.judge;
+                    testcase.style.color = "red";
+                    document.body.appendChild(testcase);
+                }
+            }
         });
     </script>
 </body>
@@ -642,15 +677,17 @@ export async function testSolution(path: string, panel: vscode.WebviewPanel) {
         if (!tcResult.isOk()) {
             fail = Option.some(new SolutionResult(tcResult.status, tcId));
             await panel.webview.postMessage({
-                addtextline:
-                    "❌ Testcase " +
-                    tcId +
-                    ": " +
-                    verdictName(fail.unwrap().status),
+                type: "testcase",
+                id: tcId,
+                judge: verdictName(fail.unwrap().status),
+                symbol: "❌",
             });
         } else {
             await panel.webview.postMessage({
-                addtextline: "✔️ Testcase " + tcId + ": OK",
+                type: "testcase",
+                id: tcId,
+                judge: "OK",
+                symbol: "✔️",
             });
         }
 
@@ -665,11 +702,16 @@ export async function testSolution(path: string, panel: vscode.WebviewPanel) {
             }
         }
         await panel.webview.postMessage({
-            addtextline: "Final Verdict : OK. Time Required " + maxTime,
+            type: "final",
+            time: maxTime,
+            judge: "OK",
+            symbol: "✔️",
         });
     } else {
         await panel.webview.postMessage({
-            addtextline: "Final Verdict : " + verdictName(fail.unwrap().status),
+            type: "final",
+            judge: verdictName(fail.unwrap().status),
+            symbol: "❌",
         });
     }
 }
