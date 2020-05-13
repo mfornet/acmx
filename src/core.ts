@@ -36,7 +36,7 @@ import {
     createFolder,
     writeBufferToFileSync,
 } from "./utils";
-import { debugTestCase } from "./extension";
+import { openTestCase } from "./extension";
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 
@@ -574,16 +574,7 @@ function testSolutionhtml() {
     <title>Testcase results</title>
 </head>
 <body>
-    <p>Enter prefix of testcase to open in side-by-side view: <input type="text" id="tstid" value="">
-    <button class="btn" type="button" onclick="opentstcase()">Open</button></p>
     <script>
-    function opentstcase() {
-        const vscode = acquireVsCodeApi();
-        var x = document.getElementById("tstid").value;
-        vscode.postMessage({
-            testcaseid: x
-        })
-    }
         window.addEventListener('message', event => {
 
             const message = event.data; // The JSON data our extension sent
@@ -911,76 +902,12 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 }
 
-function stresshtml() {
-    return `<!DOCTYPE html>
-<html lang="en">
-<style>
-    p {
-    font-family: var(--vscode-editor-font-family);
-    }
-    h1 {
-    font-family: var(--vscode-editor-font-family);
-    }
-</style>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testcase results</title>
-</head>
-<body>
-    <script>
-        window.addEventListener('message', event => {
-
-            const message = event.data; // The JSON data our extension sent
-            if(message.type == 'testcase')
-            {
-                var testcase = document.createElement("p");
-                if(message.judge == 'OK')
-                {
-                    testcase.textContent = message.symbol + 'Testcase ' + message.id + ': OK';
-                    testcase.style.color = "green";
-                    document.body.appendChild(testcase);
-                }
-                else
-                {
-                    testcase.textContent = message.symbol + 'Testcase ' + message.id + ': ' + message.judge;
-                    testcase.style.color = "red";
-                    document.body.appendChild(testcase);
-                }
-            }
-            else if(message.type == 'final')
-            {
-                var testcase = document.createElement("h1");
-                if(message.judge == 'OK')
-                {
-                    testcase.textContent = message.symbol + 'Final Verdict: OK \xa0\xa0\xa0\xa0\xa0\xa0\xa0 Time: ' + message.time + 'ms';
-                    testcase.style.color = "green";
-                    document.body.appendChild(testcase);
-                }
-                else
-                {
-                    testcase.textContent = message.symbol + 'Final Verdict: ' + message.judge;
-                    testcase.style.color = "red";
-                    document.body.appendChild(testcase);
-                }
-            }
-            else if(message.type == 'updateQuery')
-            {
-                var testvalue = document.createElement("p");
-                testvalue.textContent = message.showupdate;
-                document.body.appendChild(testvalue);
-            }
-        });
-    </script>
-</body>
-</html>`;
-}
 export async function stressSolution(
     path: string,
     times: number,
     panel: vscode.WebviewPanel
 ) {
-    panel.webview.html = stresshtml();
+    panel.webview.html = testSolutionhtml();
     let config = ConfigFile.loadConfig(path);
 
     // Load main solution (compile if necessary)
@@ -1095,7 +1022,7 @@ export async function stressSolution(
                     join(path, TESTCASES, `gen.${idx}.out`)
                 );
             }
-            debugTestCase(path, `gen.${idx}`);
+            openTestCase(undefined, path, `gen.${idx}`);
             return;
         } else {
             await panel.webview.postMessage({

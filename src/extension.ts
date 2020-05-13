@@ -9,7 +9,7 @@ import {
     writeFileSync,
     writeSync,
 } from "fs";
-import { basename, dirname, extname, join } from "path";
+import { basename, dirname, join } from "path";
 import * as vscode from "vscode";
 import { startCompetitiveCompanionService } from "./companion";
 import { EMPTY } from "./conn";
@@ -27,8 +27,9 @@ import {
 } from "./core";
 import { SiteDescription, ATTIC, FRIEND_TIMEOUT } from "./primitives";
 import clipboardy = require("clipboardy");
-import { debug, removeExtension } from "./utils";
+import { debug } from "./utils";
 import { preRun, runSingle } from "./runner";
+import { parse } from "path";
 
 const TESTCASES = "testcases";
 
@@ -124,7 +125,11 @@ async function addContest() {
     );
 }
 
-export async function debugTestCase(path: string, tcId: string) {
+export async function openTestCase(
+    uriPath?: vscode.Uri,
+    path?: string,
+    tcId?: string
+) {
     // Change editor layout to show failing test
     await vscode.commands.executeCommand("vscode.setEditorLayout", {
         orientation: 0,
@@ -133,37 +138,44 @@ export async function debugTestCase(path: string, tcId: string) {
             { groups: [{}, [{}, {}]], size: 0.5 },
         ],
     });
-    let sol = mainSolution(path);
-    let inp = join(path, TESTCASES, `${tcId}.in`);
-    let out = join(path, TESTCASES, `${tcId}.ans`);
-    let cur = join(path, TESTCASES, `${tcId}.out`);
-
-    await vscode.commands.executeCommand(
-        "vscode.open",
-        vscode.Uri.file(sol),
-        vscode.ViewColumn.One
-    );
+    let inp = "";
+    let out = "";
+    let ans = "";
+    if (uriPath) {
+        let testid = parse(uriPath.fsPath).name;
+        let testpath = dirname(uriPath.fsPath);
+        inp = join(testpath, `${testid}.in`);
+        out = join(testpath, `${testid}.out`);
+        ans = join(testpath, `${testid}.ans`);
+    } else if (path && tcId) {
+        let sol = mainSolution(path);
+        inp = join(path, TESTCASES, `${tcId}.in`);
+        out = join(path, TESTCASES, `${tcId}.out`);
+        ans = join(path, TESTCASES, `${tcId}.ans`);
+        await vscode.commands.executeCommand(
+            "vscode.open",
+            vscode.Uri.file(sol),
+            vscode.ViewColumn.One
+        );
+    }
     await vscode.commands.executeCommand(
         "vscode.open",
         vscode.Uri.file(inp),
         vscode.ViewColumn.Two
     );
     // This file might not exist!
-    if (existsSync(cur)) {
+
+    if (existsSync(out)) {
         await vscode.commands.executeCommand(
             "vscode.open",
-            vscode.Uri.file(cur),
+            vscode.Uri.file(out),
             vscode.ViewColumn.Three
         );
+    }
+    if (existsSync(ans)) {
         await vscode.commands.executeCommand(
             "vscode.open",
-            vscode.Uri.file(out),
-            vscode.ViewColumn.Four
-        );
-    } else {
-        await vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(out),
+            vscode.Uri.file(ans),
             vscode.ViewColumn.Four
         );
     }
@@ -194,9 +206,6 @@ async function runSolution() {
     );
     await vscode.window.activeTextEditor?.document.save().then(() => {
         testSolution(path, panel);
-    });
-    panel.webview.onDidReceiveMessage((message) => {
-        debugTestCase(path, message.testcaseid);
     });
 }
 
@@ -230,56 +239,6 @@ async function compile() {
             vscode.window.showInformationMessage("Compilation successful.");
         }
     });
-}
-
-async function openTestCase() {
-    let path_ = currentProblem();
-
-    if (path_.isNone()) {
-        vscode.window.showErrorMessage("No active problem");
-        return;
-    }
-
-    let path = path_.unwrap();
-    let testCases: any[] = [];
-
-    // Read testcases
-    readdirSync(join(path, TESTCASES))
-        .filter(function (testCasePath) {
-            return extname(testCasePath) === ".in";
-        })
-        .map(function (testCasePath) {
-            let name = removeExtension(testCasePath);
-
-            testCases.push({
-                label: name,
-                target: name,
-            });
-        });
-
-    let tc = await vscode.window.showQuickPick(testCases, {
-        placeHolder: "Select test case",
-    });
-
-    if (tc !== undefined) {
-        let inp = join(path, TESTCASES, `${tc.target}.in`);
-        let out = join(path, TESTCASES, `${tc.target}.ans`);
-
-        await vscode.commands.executeCommand("vscode.setEditorLayout", {
-            orientation: 0,
-            groups: [{}, {}],
-        });
-        await vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(inp),
-            vscode.ViewColumn.One
-        );
-        await vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(out),
-            vscode.ViewColumn.Two
-        );
-    }
 }
 
 async function addTestCase() {
@@ -437,7 +396,7 @@ async function setChecker() {
     copyFileSync(checkerPath, checkerDest);
 }
 
-async function selectDebugTestCase(uriPath: vscode.Uri) {
+async function DebugTestCase(uriPath: vscode.Uri) {
     let testCaseName = basename(uriPath.path);
     let path = dirname(uriPath.path);
 
@@ -529,10 +488,6 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.runSolution",
         runSolution
     );
-    let openTestCaseCommand = vscode.commands.registerCommand(
-        "acmx.openTestCase",
-        openTestCase
-    );
     let addTestCaseCommand = vscode.commands.registerCommand(
         "acmx.addTestCase",
         addTestCase
@@ -551,9 +506,13 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.setChecker",
         setChecker
     );
-    let selectDebugTestCaseCommand = vscode.commands.registerCommand(
-        "acmx.selectDebugTestCase",
-        selectDebugTestCase
+    let DebugTestCaseCommand = vscode.commands.registerCommand(
+        "acmx.DebugTestCase",
+        DebugTestCase
+    );
+    let openTestCaseCommand = vscode.commands.registerCommand(
+        "acmx.openTestCase",
+        openTestCase
     );
     let copySubmissionToClipboardCommand = vscode.commands.registerCommand(
         "acmx.copyToClipboard",
@@ -568,14 +527,14 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
     context.subscriptions.push(runSolutionCommand);
-    context.subscriptions.push(openTestCaseCommand);
     context.subscriptions.push(addTestCaseCommand);
     context.subscriptions.push(codingCommand);
     context.subscriptions.push(stressCommand);
     context.subscriptions.push(upgradeCommand);
     context.subscriptions.push(compileCommand);
     context.subscriptions.push(setCheckerCommand);
-    context.subscriptions.push(selectDebugTestCaseCommand);
+    context.subscriptions.push(DebugTestCaseCommand);
+    context.subscriptions.push(openTestCaseCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
 
     context.subscriptions.push(debugTestCommand);

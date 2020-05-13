@@ -193,8 +193,8 @@
                 "title": "ACMX: Set Checker"
             },
             {
-                "command": "acmx.selectDebugTestCase",
-                "title": "Select Test Case"
+                "command": "acmx.DebugTestCase",
+                "title": "Debug Test Case"
             },
             {
                 "command": "acmx.copyToClipboard",
@@ -230,14 +230,23 @@
         "menus": {
             "explorer/context": [
                 {
-                    "command": "acmx.selectDebugTestCase",
+                    "command": "acmx.DebugTestCase",
+                    "group": "acmx@1",
+                    "when": "resourceExtname == .in"
+                },
+                {
+                    "command": "acmx.openTestCase",
                     "group": "acmx@1",
                     "when": "resourceExtname == .in"
                 }
             ],
             "commandPalette": [
                 {
-                    "command": "acmx.selectDebugTestCase",
+                    "command": "acmx.DebugTestCase",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.openTestCase",
                     "when": "false"
                 }
             ],
