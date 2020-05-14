@@ -193,12 +193,12 @@ async function runSolution() {
     debug("run-solution", `${path}`);
     await vscode.commands.executeCommand("vscode.setEditorLayout", {
         orientation: 0,
-        groups: [{}, {}],
+        groups: [{ size: 0.7 }, { size: 0.3 }],
     });
     let panel = await vscode.window.createWebviewPanel(
         "testcase-result",
         "Test Cases Running",
-        vscode.ViewColumn.Two,
+        vscode.ViewColumn.Beside,
         {
             enableScripts: true,
             retainContextWhenHidden: true,
