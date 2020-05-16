@@ -1,123 +1,46 @@
 # ACMX
 
-[![Build Status](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test)](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test) ![Visual Studio Marketplace Installs(https://marketplace.visualstudio.com/items?itemName=marx24.acmx)](https://img.shields.io/visual-studio-marketplace/i/marx24.acmx)
+[![Build Status](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test)](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test) ![Visual Studio Marketplace Installs(https://marketplace.visualstudio.com/items?itemName=marx24.acmx)](https://img.shields.io/visual-studio-marketplace/i/marx24.acmx) [![](images/telegram-badge.png)](https://t.me/acm_x)
 
 **acmX** is tool that empower contestants to solve competitive programming problems easily.
 
-## Features
+### Features
 
--   Contest/Problem parsing. (Through [Competitive-Companion](https://github.com/jmerle/competitive-companion) extension).
--   Running solution against testcases automatically.
--   Add custom testcases easily.
--   Verdict reporting (OK, WA, RTE, TLE, CE).
--   Smart generator creation. Test cases generator is created using `tcgen` program synthesis tool by inspecting testcases.
--   Stressing solution against brute using a generator (Useful to find corner cases).
+* Contest/Problem parsing. (Via [Competitive-Companion](https://github.com/mfornet/acmx/wiki#competitive-companion) extension).
+* Running solution against testcases.
+* Automatic verdict results (OK, WA, RTE, TLE, CE).
+* Manage testcases easily.
+* Stressing solution against brute solution using a generator (Useful to find corner cases).
+* Support for multiple languages.
 
-## Join the conversation
+## Documentation
 
-We have a group to discuss about this tool in Telegram. [Join here](https://t.me/acm_x).
-
-## How am I supposed to use **acmX**
-
-**acmX** have been designed to run automatically boilerplate actions [I](https://codeforces.com/profile/marX) repeat often in competitive programming. Next is the expected pipeline to interact with it. It is important that you [setup some configurations](#getting-started) before start using the tool.
-
--   Open Visual Studio Code
-
--   Open online contest/problem you want to solve and click on competitive-companion extension button. All problems along with the testcases are downloaded and you are ready to code.
-
--   Start coding awesome solution inside file `sol.cpp`.
-
--   After you finish call `Run` and automatically your program will be compiled and run against every testcases. If the solutions is right, it will be reported as `Ok` otherwise you will see failing testcase in a _cool layout_. You can always go back to original layout calling `View: Code`.
-
--   Add more testcases than provided in statement using `Add Test Case`, or modify and see existing testcases by calling `Open Test Case`.
-
--   If your solution keep failing you can stress it using a generator and a brute solution. Call `Upgrade` to create both generator (`gen.py`) and correct (`brute.cpp`) programs. Right now generator must be written in python. After both codes are ready call `Stress` and your original code will be tested on random test cases from generator against correct solution.
-
-The environment structure is the following:
-
-```file
-    round-525/
-        A/
-            sol.cpp
-            brute.cpp
-            gen.py
-            attic/...
-            testcases/
-                1.in
-                1.out
-                1.real
-                ...
-        B/...
-        C/...
-        D/...
-        E/...
-```
-
-Certainly **acmX** can be (and hopefully will be) extended so that it fits everyone pipeline. If **acmX** almost fit yours, feel free to improve it and make a PR! I'll be happy to hear from you and give you support. If you find any issue report it at [github issue tracker](https://github.com/mfornet/acmx/issues).
+Check [the wiki](https://github.com/mfornet/acmx/wiki) for details about all features and help.
 
 ## Getting started
 
-You need to tell **acmX** which folder are you going to use to save all the problems and contests. To do that:
+**acmX** have been designed to run automatically boilerplate actions repeated often in competitive programming. Next is the expected pipeline to interact with it.
 
--   Open settings (from command palette) or `Ctrl+,`
--   Go to `acmx.configuration.solutionPath`
--   Set this value to the path you are going to use for storing contests and problems. (e.g. `/path/to/my/solutions`)
+![Getting started](images/getting-started.gif)
 
-Parsing problems and contests is done via [Competitive-Companion](https://github.com/jmerle/competitive-companion) extension. To use it with `acmX`:
+1. Install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=marx24.acmx).
 
--   Install the extension for your browser:
-    -   [Chrome](https://chrome.google.com/webstore/detail/competitive-companion/cjnmckjndlpiamhfimnnjmnckgghkjbl)
-    -   [Firefox](https://addons.mozilla.org/en-US/firefox/addon/competitive-companion/)
--   [Change the port used by the extension](https://github.com/jmerle/competitive-companion#custom-tools) to 10042. This is the port used by default in `acmX`. If you want to use any other port, open settings and update `acmx.companion.port`. This require restart vscode to take effect. You should also change the port on the extension.
+2. Install competitive companion.
 
-I encourage everyone to read and change [all settings](#settings) before first use. Anyway, after updating `acmx.configuration.solutionPath` it should work good for C++ users.
+3. Open online contest/problem you want to solve and parse with competitive-companion extension. All problems along with the testcases are downloaded and you are ready to code.
 
-## How does stressing the solution work
+4. Work on your solution on `sol.cpp`.
 
-To stress the solution your code is compared to a correct code against a large sample of testcases. In order to do that you should execute `ACMX: Upgrade` from the command palette. Two files will be created.
+5. After you finish call `Run` and automatically your program will be compiled and run against every testcases. If the solutions is correct, it will be reported as `Ok` otherwise you will see failing test case. You can always go back to original layout calling `View: Code`.
 
--   `brute.cpp` This should be a correct solution. A code that is expected to report correct output. It doesn't matter if it's slow as long as you only check this program against small testcases.
--   `gen.py` Every time this code is executed is expected to print a random testcases.
+## Join the conversation
 
-**AWESOME** `gen.py` is created automatically by inspecting testcases if you install [`tcgen`](https://github.com/mfornet/tcgen).
-To install `tcgen` just run:
+We have a group to discuss about this tool in [Telegram](https://t.me/acm_x).
 
-`pip install tcgen`
+## Contributing
 
-## Default template is awful, how can I change it
+The easiest was to contribute is giving a star to the [github repository](https://github.com/mfornet/acmx) and to the [extension in the marketplace](https://marketplace.visualstudio.com/items?itemName=marx24.acmx) if you found the extension useful.
 
-Create a file with your template. In settings, set `acmx.configuration.templatePath` to the path to your template.
+If you found a bug using the extension or have some suggestion [open an issue](https://github.com/mfornet/acmx/issues) to discuss about it.
 
-## I code in java, can I use this tool
-
-Yes, of course, and any other language you want. Just make sure to update your [language configuration](doc/languages.md) setting.
-
-## This problem has multiple correct answers, what can I do
-
-Set checker properly for this problem via **ACMX: Set Checker**. Checkers can use [testlib.h](https://github.com/MikeMirzayanov/testlib) which is recommended.
-
-## Commands
-
-Call this commands from the command palette (`Ctrl + Shift + P`).
-
--   acmx.addProblem (**ACMX: New Problem**): Create a new problem. Make environment skeleton and download testcases.
--   acmx.addContest (**ACMX: New Contest**): Create a new contest. Make environment skeleton and download testcases.
--   acmx.runSolution (**ACMX: Run**): Compile and run current solution against testcases.
--   acmx.openTestCase (**ACMX: Open Test Case**): Open a particular testcase.
--   acmx.addTestCase (**ACMX: Add Test Case**): Add a new testcase.
--   acmx.coding (**ACMX: View: Code**): Return to 1 column layout (better to code).
--   acmx.stress (**ACMX: Stress**): Run the solution against correct program using testcases from generator. Useful to find failing and corner cases. Must call upgrade first.
--   acmx.setChecker (**ACMX: Set Checker**): Create checker file. Allow to select a checker among a pool of custom checkers.
--   acmx.upgrade (**ACMX: Upgrade**): Create additional files before calling `Stress`.
--   acmx.compile (**ACMX: Compile**): Compile `sol.cpp`.
-
-## Settings
-
--   **acmx.configuration.templatePath**: Path to template file. Leave empty to use default template.
--   **acmx.configuration.solutionPath**: Path to folder where contest will be created and stored. To set active workspace use `.`
--   **acmx.configuration.extension**: Extension of the programming language you will use to code solutions. Default `cpp` for c++
--   **acmx.run.timeLimit**: Maximum time limit in seconds to run the program on each test case.
--   **acmx.execution.compile**: Command to compile C++ programs. Refer to the code as $PROGRAM, and output file as $OUTPUT.
--   **acmx.execution.pythonPath**: Path to python executable. This will be used to run generator.
--   **acmx.stress.times**: Number of times to run solution on random generated test cases against
-    brute solution.
+If you want to implement some feature but you are not sure where to start check [good first issues](https://github.com/mfornet/acmx/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). You can join [dev channel](https://t.me/acm_x_dev) in Telegram too.
