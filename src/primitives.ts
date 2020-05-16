@@ -310,6 +310,14 @@ export class ConfigFile {
     }
 
     static loadConfig(path: string): ConfigFile {
+        let configPath = join(path, ATTIC, "config.json");
+
+        if (!existsSync(configPath)) {
+            let config = ConfigFile.empty();
+            config.mainSolution = Option.some(join(path, "sol.cpp"));
+            return config;
+        }
+
         let configData = readFileSync(join(path, ATTIC, "config.json"), "utf8");
         let parsed = JSON.parse(configData);
 

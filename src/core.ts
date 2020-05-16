@@ -673,7 +673,9 @@ function getMainSolutionPath(
     config: ConfigFile
 ): Option<CompileResult> {
     if (config.mainSolution.isNone()) {
-        vscode.window.showErrorMessage("Open a coding environment.");
+        vscode.window.showErrorMessage(
+            "Set main solution or open a coding environment."
+        );
         return Option.none();
     }
 
@@ -681,7 +683,9 @@ function getMainSolutionPath(
     let mainSolutionOutput = join(path, ATTIC, "sol");
 
     if (!existsSync(mainSolution)) {
-        vscode.window.showErrorMessage("Open a coding environment.");
+        vscode.window.showErrorMessage(
+            `Main solution ${mainSolution} doesn't exists. Open a coding environment.`
+        );
         return Option.none();
     }
 
