@@ -4,20 +4,18 @@
 
 **acmX** is tool that empower contestants to solve competitive programming problems easily.
 
-## Features
+### Features
 
-* Contest/Problem parsing. (Via [Competitive-Companion](https://github.com/jmerle/competitive-companion) extension).
+* Contest/Problem parsing. (Via [Competitive-Companion](https://github.com/mfornet/acmx/wiki#competitive-companion) extension).
 * Running solution against testcases.
 * Automatic verdict results (OK, WA, RTE, TLE, CE).
 * Manage testcases easily.
 * Stressing solution against brute solution using a generator (Useful to find corner cases).
 * Support for multiple languages.
 
-Check out all features in [the wiki](https://github.com/mfornet/acmx/wiki).
+## Documentation
 
-## Join the conversation
-
-We have a group to discuss about this tool in [Telegram](https://t.me/acm_x).
+Check [the wiki](https://github.com/mfornet/acmx/wiki) for details about all features and help.
 
 ## Getting started
 
@@ -34,6 +32,10 @@ We have a group to discuss about this tool in [Telegram](https://t.me/acm_x).
 4. Work on your solution on `sol.cpp`.
 
 5. After you finish call `Run` and automatically your program will be compiled and run against every testcases. If the solutions is correct, it will be reported as `Ok` otherwise you will see failing test case. You can always go back to original layout calling `View: Code`.
+
+## Join the conversation
+
+We have a group to discuss about this tool in [Telegram](https://t.me/acm_x).
 
 ## Contributing
 
