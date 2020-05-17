@@ -9,5 +9,3 @@ out/
 .vscode/
 .vscode-test/
 
-images/.DS_Store
-doc.md

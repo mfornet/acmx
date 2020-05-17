@@ -504,7 +504,10 @@ async function copySubmissionToClipboard() {
         let submissionCommands = submissionCommand!.split(" ");
 
         for (let i = 0; i < submissionCommands.length; i++) {
-            submissionCommands[i] = submissionCommands[i].replace("$CODE", sol);
+            submissionCommands[i] = submissionCommands[i].replace(
+                "$PROGRAM",
+                sol
+            );
         }
 
         let execution = runSingle(submissionCommands, FRIEND_TIMEOUT, "");
