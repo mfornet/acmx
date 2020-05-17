@@ -54,6 +54,18 @@
                         "description": "Whether to show 'Compile File' icon in editor title menu.",
                         "scope": "resource"
                     },
+                    "acmx.execution.showUpgradeIconInEditorTitleMenu": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to show 'Upgrade' icon in editor title menu.",
+                        "scope": "resource"
+                    },
+                    "acmx.execution.showStressIconInEditorTitleMenu": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to show 'Upgrade' icon in editor title menu.",
+                        "scope": "resource"
+                    },
                     "acmx.stress.times": {
                         "type": "number",
                         "default": 10,
@@ -154,11 +166,19 @@
             },
             {
                 "command": "acmx.stress",
-                "title": "ACMX: Stress"
+                "title": "ACMX: Stress",
+                "icon": {
+                    "light": "./images/stress-light.svg",
+                    "dark": "./images/stress-dark.svg"
+                }
             },
             {
                 "command": "acmx.upgrade",
-                "title": "ACMX: Upgrade"
+                "title": "ACMX: Upgrade",
+                "icon": {
+                    "light": "./images/upgrade-light.svg",
+                    "dark": "./images/upgrade-dark.svg"
+                }
             },
             {
                 "command": "acmx.compile",
@@ -213,6 +233,16 @@
                     "command": "acmx.selectDebugTestCase",
                     "group": "acmx@1",
                     "when": "resourceExtname == .in"
+                },
+                {
+                    "when": "config.acmx.execution.showUpgradeIconInEditorTitleMenu",
+                    "command": "acmx.upgrade",
+                    "group": "navigation"
+                },
+                {
+                    "when": "config.acmx.execution.showStressIconInEditorTitleMenu",
+                    "command": "acmx.stress",
+                    "group": "navigation"
                 }
             ],
             "commandPalette": [
