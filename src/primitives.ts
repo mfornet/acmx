@@ -275,21 +275,6 @@ export class ConfigFile {
         this.checker = new Option(checker);
     }
 
-    /**
-     * Check configuration file already exist, and create it otherwise with
-     * default solution problem.
-     */
-    static checkExist(path: string) {
-        if (!existsSync(join(path, ATTIC, "config.json"))) {
-            let config = ConfigFile.empty();
-            let mainSolution = join(path, "sol.cpp");
-            if (existsSync(mainSolution)) {
-                config.mainSolution = Option.some(mainSolution);
-            }
-            config.dump(path);
-        }
-    }
-
     dump(path: string) {
         let configFile = JSON.stringify(this, null, 2);
         writeToFileSync(join(path, ATTIC, "config.json"), configFile);
@@ -324,38 +309,22 @@ export class ConfigFile {
         return changed;
     }
 
-    static loadConfig(
-        path: string,
-        checkExist: boolean = false
-    ): Option<ConfigFile> {
-        if (checkExist) {
-            ConfigFile.checkExist(path);
+    static loadConfig(path: string): ConfigFile {
+        let configData = readFileSync(join(path, ATTIC, "config.json"), "utf8");
+        let parsed = JSON.parse(configData);
+
+        let config = new ConfigFile(
+            parsed.mainSolution?.value,
+            parsed.bruteSolution?.value,
+            parsed.generator?.value,
+            parsed.checker?.value
+        );
+
+        if (config.verify()) {
+            config.dump(path);
         }
 
-        let configPath = join(path, ATTIC, "config.json");
-
-        if (existsSync(configPath)) {
-            let configData = readFileSync(
-                join(path, ATTIC, "config.json"),
-                "utf8"
-            );
-            let parsed = JSON.parse(configData);
-
-            let config = new ConfigFile(
-                parsed.mainSolution?.value,
-                parsed.bruteSolution?.value,
-                parsed.generator?.value,
-                parsed.checker?.value
-            );
-
-            if (config.verify()) {
-                config.dump(path);
-            }
-
-            return Option.some(config);
-        } else {
-            return Option.none();
-        }
+        return config;
     }
 
     static empty(): ConfigFile {

@@ -37,12 +37,6 @@ export function substituteArgWith(
         arg = arg.replace("$HOME", process.env["HOME"]);
     }
 
-    // Windows equivalent for unix $HOME. Note that if $HOME environment variable exist
-    // it will be used instead of USERPROFILE.
-    if (process.env["USERPROFILE"] !== undefined) {
-        arg = arg.replace("$HOME", process.env["USERPROFILE"]);
-    }
-
     return arg;
 }
 

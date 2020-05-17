@@ -52,7 +52,7 @@ export function pathToStatic() {
  * @param path Problem path
  */
 export function mainSolution(path: string): string {
-    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    let config = ConfigFile.loadConfig(path);
     if (config.mainSolution.isNone()) {
         config.mainSolution = Option.some(populateMainSolution(path, false));
     }
@@ -276,7 +276,11 @@ export function newArena(path: string) {
     let attic = join(path, ATTIC);
     createFolder(attic);
 
-    let config = ConfigFile.loadConfig(path, true).unwrapOr(ConfigFile.empty());
+    let config = ConfigFile.empty();
+    try {
+        // Try to load current config file if it exists.
+        config = ConfigFile.loadConfig(path);
+    } catch (err) {}
 
     if (config.mainSolution.isNone()) {
         config.mainSolution = Option.some(populateMainSolution(path, true));
@@ -337,7 +341,7 @@ function addChecker(path: string, config: ConfigFile) {
 }
 
 export function upgradeArena(path: string) {
-    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    let config = ConfigFile.loadConfig(path);
 
     // Load brute force solution
     if (
@@ -558,7 +562,7 @@ export function timedRun(
  * @param path
  */
 export function testSolution(path: string): Option<SolutionResult> {
-    let config = ConfigFile.loadConfig(path, true).unwrap();
+    let config = ConfigFile.loadConfig(path);
 
     // Load main solution (compile if necessary)
     let mainSolution_ = getMainSolutionPath(path, config);
@@ -669,9 +673,7 @@ function getMainSolutionPath(
     config: ConfigFile
 ): Option<CompileResult> {
     if (config.mainSolution.isNone()) {
-        vscode.window.showErrorMessage(
-            "Set main solution or open a coding environment."
-        );
+        vscode.window.showErrorMessage("Open a coding environment.");
         return Option.none();
     }
 
@@ -679,9 +681,7 @@ function getMainSolutionPath(
     let mainSolutionOutput = join(path, ATTIC, "sol");
 
     if (!existsSync(mainSolution)) {
-        vscode.window.showErrorMessage(
-            `Main solution ${mainSolution} doesn't exists. Open a coding environment.`
-        );
+        vscode.window.showErrorMessage("Open a coding environment.");
         return Option.none();
     }
 
@@ -811,7 +811,7 @@ export function stressSolution(
     path: string,
     times: number
 ): Option<SolutionResult> {
-    let config = ConfigFile.loadConfig(path, true).unwrap();
+    let config = ConfigFile.loadConfig(path);
 
     // Load main solution (compile if necessary)
     let mainSolution_ = getMainSolutionPath(path, config);
