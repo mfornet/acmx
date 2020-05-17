@@ -2,13 +2,6 @@
 
 Notable updates of **acmX**
 
-## 0.3.0
-
-* Add support for [multiple languages](https://github.com/mfornet/acmx/wiki#custom-compile-and-run-command).
-* Save generated test case on stressing if fails
-* Recompile only if file changed after last successful compilation
-* Move md5 files to attic
-
 ## 0.2.9
 
 * Revert diff feature. Display expected output and current output side be side #53
