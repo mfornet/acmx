@@ -23,8 +23,6 @@ import {
     Verdict,
 } from "./types";
 import md5File = require("md5-file");
-import os = require("os");
-
 export const TESTCASES = "testcases";
 export const ATTIC = "attic";
 
@@ -459,28 +457,18 @@ export function showCompileError(path: string, compile_error: string) {
     let error_path = join(path, ATTIC, "stderr");
     let error_file = openSync(error_path, "w");
     writeSync(error_file, compile_error);
-    let stderr_terminal = vscode.window.createTerminal("Compilation Error");
-    stderr_terminal.show();
-    if (os.platform() === "win32") {
-        stderr_terminal.sendText(`type "${error_path}"`);
-    } else if (os.platform() === "darwin") {
-        stderr_terminal.sendText(`less -R "${error_path}"`);
-    } else if (os.platform() === "linux") {
-        stderr_terminal.sendText(`less -R "${error_path}"`);
-    } else {
-        vscode.commands.executeCommand("vscode.setEditorLayout", {
-            orientation: 1,
-            groups: [
-                { groups: [{}], size: 0.6 },
-                { groups: [{}], size: 0.4 },
-            ],
-        });
-        vscode.commands.executeCommand(
-            "vscode.open",
-            vscode.Uri.file(error_path),
-            vscode.ViewColumn.Two
-        );
-    }
+    vscode.commands.executeCommand("vscode.setEditorLayout", {
+        orientation: 1,
+        groups: [
+            { groups: [{}], size: 0.6 },
+            { groups: [{}], size: 0.4 },
+        ],
+    });
+    vscode.commands.executeCommand(
+        "vscode.open",
+        vscode.Uri.file(error_path),
+        vscode.ViewColumn.Two
+    );
 }
 
 export function compileCode(pathCode: string, pathOutput: string) {
