@@ -6,7 +6,7 @@ import { readFileSync, existsSync } from "fs";
 export const ATTIC = "attic";
 export const TESTCASES = "testcases";
 export const LANGUAGES = "languages";
-export const FRIEND_TIMEOUT = 50_000; //increase limit to allow wcmp to compile TODO: Allow checker to compile without time limit
+export const FRIEND_TIMEOUT = 10_000;
 export const MAIN_SOLUTION_BINARY = "sol";
 export const CHECKER_BINARY = "checker";
 export const BRUTE_BINARY = "brute";
