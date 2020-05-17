@@ -215,7 +215,7 @@ export class Option<T> {
 
     unwrap(): T {
         if (this.value === undefined) {
-            throw new Error("Expected value found undefined");
+            throw "Expected value found undefined";
         } else {
             return this.value;
         }
@@ -353,6 +353,6 @@ export function verdictName(verdict: Verdict) {
             return "FAIL";
 
         default:
-            throw new Error("Invalid Verdict");
+            throw "Invalid Verdict";
     }
 }
