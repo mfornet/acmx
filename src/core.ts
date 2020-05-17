@@ -9,7 +9,6 @@ import {
     readdirSync,
     readFileSync,
     writeSync,
-    renameSync,
 } from "fs";
 import { basename, dirname, extname, join, parse } from "path";
 import * as vscode from "vscode";
@@ -635,7 +634,7 @@ export function stressSolution(path: string, times: number) {
             input: tcData,
         });
 
-        // Finally write .ans
+        // Finally write .out
         let currentFd = openSync(join(path, TESTCASES, "gen.ans"), "w");
         writeSync(currentFd, runResult.stdout);
         closeSync(currentFd);
@@ -644,28 +643,7 @@ export function stressSolution(path: string, times: number) {
         let result = timedRun(path, "gen", getTimeout());
 
         if (result.status !== Verdict.OK) {
-            // now save that testcase
-            let index = 0;
-            while (existsSync(join(path, TESTCASES, `gen.${index}.in`))) {
-                index += 1;
-            }
-            renameSync(
-                join(path, TESTCASES, `gen.in`),
-                join(path, TESTCASES, `gen.${index}.in`)
-            );
-            if (existsSync(join(path, TESTCASES, `gen.ans`))) {
-                renameSync(
-                    join(path, TESTCASES, `gen.ans`),
-                    join(path, TESTCASES, `gen.${index}.ans`)
-                );
-            }
-            if (existsSync(join(path, TESTCASES, `gen.out`))) {
-                renameSync(
-                    join(path, TESTCASES, `gen.out`),
-                    join(path, TESTCASES, `gen.${index}.out`)
-                );
-            }
-            return new SolutionResult(result.status, `gen.${index}`);
+            return new SolutionResult(result.status, "gen");
         }
 
         results.push(result);
