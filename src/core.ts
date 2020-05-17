@@ -42,7 +42,7 @@ import { copySync } from "fs-extra";
  * Path to static folder.
  */
 export function pathToStatic() {
-    return join(dirname(dirname(__filename)), "static");
+    return join(dirname(__dirname), "static");
 }
 
 /**
