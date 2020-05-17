@@ -1,5 +1,0 @@
-{
-    "preRun": ["$OUTPUT"],
-    "run": ["g++", "-std=c++17", "-DACMX", "$CODE", "-o", "$OUTPUT", "--debug"],
-    "ext": "cpp"
-}

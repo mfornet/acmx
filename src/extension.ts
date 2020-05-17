@@ -1,4 +1,5 @@
 "use strict";
+import * as child_process from "child_process";
 import {
     closeSync,
     copyFileSync,
@@ -14,27 +15,23 @@ import * as vscode from "vscode";
 import { startCompetitiveCompanionService } from "./companion";
 import { EMPTY } from "./conn";
 import {
+    ATTIC,
+    compileCode,
     currentProblem,
-    getSolutionPath,
     initAcmX,
     newContestFromId,
     newProblemFromId,
     pathToStatic,
+    removeExtension,
+    solFile,
     stressSolution,
     testSolution,
     upgradeArena,
-    mainSolution,
-} from "./core";
-import {
-    SiteDescription,
-    Verdict,
-    ATTIC,
-    FRIEND_TIMEOUT,
     verdictName,
-} from "./primitives";
+    showCompileError,
+} from "./core";
+import { SiteDescription, Verdict } from "./types";
 import clipboardy = require("clipboardy");
-import { debug, removeExtension } from "./utils";
-import { preRun, runSingle } from "./runner";
 
 const TESTCASES = "testcases";
 
@@ -52,24 +49,20 @@ async function addProblem() {
         return;
     }
 
-    let path = getSolutionPath();
+    let path: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("solutionPath");
     path = join(path!, site.name, "single");
 
-    let problemPath = newProblemFromId(path, site, id);
+    let problemPath = await newProblemFromId(path, site, id);
 
     await vscode.commands.executeCommand(
         "vscode.openFolder",
         vscode.Uri.file(problemPath)
     );
-
-    // TODO(#42): Run two commands below
-    // await vscode.commands.executeCommand(
-    //     "vscode.open",
-    //     vscode.Uri.file(mainSolution(problemPath))
-    // );
-    // vscode.window.showInformationMessage(
-    //     `Add problem ${site}/${id} at ${path}`
-    // );
+    // TODO(#42): Just want to run two commands below
+    // await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(solFile()));
+    // vscode.window.showInformationMessage(`Add problem ${site}/${id} at ${path}`);
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
@@ -96,7 +89,10 @@ function parseNumberOfProblems(numberOfProblems: string | undefined) {
 }
 
 async function addContest() {
-    let path = getSolutionPath();
+    let path: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("solutionPath");
+
     let site: SiteDescription = EMPTY;
 
     let id = undefined;
@@ -139,7 +135,7 @@ async function debugTestCase(path: string, tcId: string) {
             { groups: [{}, [{}, {}]], size: 0.5 },
         ],
     });
-    let sol = mainSolution(path);
+    let sol = join(path, solFile());
     let inp = join(path, TESTCASES, `${tcId}.in`);
     let out = join(path, TESTCASES, `${tcId}.ans`);
     let cur = join(path, TESTCASES, `${tcId}.out`);
@@ -176,54 +172,40 @@ async function debugTestCase(path: string, tcId: string) {
 }
 
 async function runSolution() {
-    let path_ = currentProblem();
-
-    if (path_.isNone()) {
-        vscode.window.showErrorMessage("No active problem");
-        return;
-    }
-
-    let path = path_.unwrap();
-    debug("run-solution", `${path}`);
+    let path = currentProblem();
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
-        let result_ = testSolution(path);
-
-        if (result_.isNone()) {
+        if (path === undefined) {
+            vscode.window.showErrorMessage("No active problem");
             return;
         }
 
-        let result = result_.unwrap();
+        let result = testSolution(path);
 
-        if (result.isOk()) {
+        if (result.status === Verdict.OK) {
             vscode.window.showInformationMessage(
-                `OK. Time ${result.getMaxTime()}ms`
+                `OK. Time ${result.maxTime!}ms`
             );
         } else if (result.status === Verdict.NO_TESTCASES) {
             vscode.window.showErrorMessage(`No testcases.`);
         } else {
-            let failTestCaseId = result.getFailTestCaseId();
             vscode.window.showErrorMessage(
-                `${verdictName(result.status)} on test ${failTestCaseId}`
+                `${verdictName(result.status)} on test ${result.failTcId}`
             );
-            debugTestCase(path, failTestCaseId);
+            debugTestCase(path, result.failTcId!);
         }
     });
 }
 
 async function compile() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let path = path_.unwrap();
-
-    debug("compile", `${path}`);
-
-    let sol = mainSolution(path);
+    let sol = join(path, solFile());
     let out = join(path, ATTIC, "sol");
 
     if (!existsSync(sol)) {
@@ -233,42 +215,43 @@ async function compile() {
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
         // Compile solution
-        let result = preRun(sol, out, path!, FRIEND_TIMEOUT);
+        let result = compileCode(sol, out);
 
-        if (result.isNone()) {
-            vscode.window.showInformationMessage("No compilation needed.");
-        } else if (!result.unwrap().failed()) {
-            vscode.window.showInformationMessage("Compilation successful.");
+        if (result.status !== 0) {
+            vscode.window.showErrorMessage(`Compilation Error. ${sol}`);
+            showCompileError(path!, result.stderr.toString());
+            throw new Error("");
+        } else {
+            vscode.window.showInformationMessage("Compilation successfully.");
         }
     });
 }
 
 async function openTestCase() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let path = path_.unwrap();
-    let testCases: any[] = [];
+    let tcs: any[] = [];
 
     // Read testcases
     readdirSync(join(path, TESTCASES))
-        .filter(function (testCasePath) {
-            return extname(testCasePath) === ".in";
+        .filter(function (tc_path) {
+            return extname(tc_path) === ".in";
         })
-        .map(function (testCasePath) {
-            let name = removeExtension(testCasePath);
+        .map(function (tc_path) {
+            let name = removeExtension(tc_path);
 
-            testCases.push({
+            tcs.push({
                 label: name,
                 target: name,
             });
         });
 
-    let tc = await vscode.window.showQuickPick(testCases, {
+    let tc = await vscode.window.showQuickPick(tcs, {
         placeHolder: "Select test case",
     });
 
@@ -294,14 +277,12 @@ async function openTestCase() {
 }
 
 async function addTestCase() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
-
-    let path = path_.unwrap();
 
     let index = 0;
     while (existsSync(join(path, TESTCASES, `${index}.hand.in`))) {
@@ -335,20 +316,18 @@ async function coding() {
         ter.hide();
     }); //hides terminals
 
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
-
-    let path = path_.unwrap();
 
     await vscode.commands.executeCommand("vscode.setEditorLayout", {
         groups: [{}],
     });
 
-    let sol = mainSolution(path);
+    let sol = join(path, solFile());
 
     await vscode.commands.executeCommand(
         "vscode.open",
@@ -358,14 +337,12 @@ async function coding() {
 }
 
 async function stress() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
-
-    let path = path_.unwrap();
 
     let stressTimes: number | undefined = vscode.workspace
         .getConfiguration("acmx.stress", null)
@@ -376,36 +353,25 @@ async function stress() {
         stressTimes = 10;
     }
 
-    let result_ = stressSolution(path, stressTimes);
+    let result = stressSolution(path, stressTimes);
 
-    if (result_.isNone()) {
-        return;
-    }
-
-    let result = result_.unwrap();
-
-    if (result.isOk()) {
-        vscode.window.showInformationMessage(
-            `OK. Time ${result.getMaxTime()}ms`
-        );
+    if (result.status === Verdict.OK) {
+        vscode.window.showInformationMessage(`OK. Time ${result.maxTime!}ms`);
     } else {
-        let failTestCaseId = result.getFailTestCaseId();
         vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${failTestCaseId}`
+            `${verdictName(result.status)} on test ${result.failTcId}`
         );
-        debugTestCase(path, failTestCaseId);
+        debugTestCase(path, result.failTcId!);
     }
 }
 
 async function upgrade() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
-
-    let path = path_.unwrap();
 
     upgradeArena(path);
 }
@@ -417,41 +383,39 @@ function fileList(dir: string): string[] {
 }
 
 async function setChecker() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let path = path_.unwrap();
-
-    let allCheckersPlain = fileList(join(pathToStatic(), "checkers"))
+    let all_checkers_plain = fileList(join(pathToStatic(), "checkers"))
         .filter((name: string) => name !== "testlib.h")
         .map((name: string) => name.slice(0, name.length - 4));
 
-    let allChecker = allCheckersPlain.map((value: string) => {
+    let all_checkers = all_checkers_plain.map((value: string) => {
         return {
             label: value,
             target: value + ".cpp",
         };
     });
 
-    let checkerInfo = await vscode.window.showQuickPick(allChecker, {
+    let checker_info = await vscode.window.showQuickPick(all_checkers, {
         placeHolder: "Select custom checker.",
     });
 
-    if (checkerInfo === undefined) {
+    if (checker_info === undefined) {
         vscode.window.showErrorMessage("Checker not provided.");
         return;
     }
 
-    let checker = checkerInfo.target;
+    let checker = checker_info.target;
 
-    let checkerPath = join(pathToStatic(), "checkers", checker);
-    let checkerDest = join(path, ATTIC, "checker.cpp");
+    let checker_path = join(pathToStatic(), "checkers", checker);
+    let checker_dest = join(path, ATTIC, "checker.cpp");
 
-    copyFileSync(checkerPath, checkerDest);
+    copyFileSync(checker_path, checker_dest);
 }
 
 async function selectDebugTestCase(uriPath: vscode.Uri) {
@@ -482,20 +446,19 @@ async function selectDebugTestCase(uriPath: vscode.Uri) {
 }
 
 async function copySubmissionToClipboard() {
-    let path_ = currentProblem();
+    let path = currentProblem();
 
-    if (path_.isNone()) {
+    if (path === undefined) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
 
-    let path = path_.unwrap();
     let submissionCommand:
         | string
         | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("copyToClipboardCommand");
-    let sol = mainSolution(path);
+    let sol = join(path, solFile());
     let content = "";
 
     if (submissionCommand === undefined || submissionCommand === "") {
@@ -510,14 +473,17 @@ async function copySubmissionToClipboard() {
             );
         }
 
-        let execution = runSingle(submissionCommands, FRIEND_TIMEOUT, "");
+        let result = child_process.spawnSync(
+            submissionCommands[0],
+            submissionCommands.slice(1)
+        );
 
-        if (execution.failed()) {
+        if (result.status !== 0) {
             vscode.window.showErrorMessage("Fail generating submission.");
             return;
         }
 
-        content = execution.stdout().toString("utf8");
+        content = result.stdout.toString();
     }
 
     clipboardy.writeSync(content);
