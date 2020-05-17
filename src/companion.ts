@@ -11,9 +11,10 @@ export function startCompetitiveCompanionService() {
     if (process.env.ACMX_TESTING === "1") {
         port = 10041; // Use this port for testing.
     } else {
-        port = vscode.workspace
-            .getConfiguration()
-            .get("acmx.companion.port", 10042);
+        let port_: number | undefined = vscode.workspace
+            .getConfiguration("acmx.companion", null)
+            .get("port");
+        port = port_!;
     }
 
     app.use(bodyParser.json());
