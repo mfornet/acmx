@@ -1,14 +1,5 @@
 {
-    "preRun": [
-        "g++",
-        "-fdiagnostics-color=always",
-        "-std=c++17",
-        "-DACMX",
-        "$CODE",
-        "-o",
-        "$OUTPUT",
-        "--debug"
-    ],
-    "run": ["$OUTPUT"],
+    "preRun": ["$OUTPUT"],
+    "run": ["g++", "-std=c++17", "-DACMX", "$CODE", "-o", "$OUTPUT", "--debug"],
     "ext": "cpp"
 }
