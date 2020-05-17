@@ -15,7 +15,7 @@ import { startCompetitiveCompanionService } from "./companion";
 import { EMPTY } from "./conn";
 import {
     currentProblem,
-    getSolutionPath,
+    getLibraryPath,
     initAcmX,
     newContestFromId,
     newProblemFromId,
@@ -52,7 +52,7 @@ async function addProblem() {
         return;
     }
 
-    let path = getSolutionPath();
+    let path = getLibraryPath();
     path = join(path!, site.name, "single");
 
     let problemPath = newProblemFromId(path, site, id);
@@ -96,7 +96,7 @@ function parseNumberOfProblems(numberOfProblems: string | undefined) {
 }
 
 async function addContest() {
-    let path = getSolutionPath();
+    let path = getLibraryPath();
     let site: SiteDescription = EMPTY;
 
     let id = undefined;
@@ -367,14 +367,9 @@ async function stress() {
 
     let path = path_.unwrap();
 
-    let stressTimes: number | undefined = vscode.workspace
-        .getConfiguration("acmx.stress", null)
-        .get("times");
-
-    // Use default
-    if (stressTimes === undefined) {
-        stressTimes = 10;
-    }
+    let stressTimes = vscode.workspace
+        .getConfiguration()
+        .get("acmx.stress.times", 10);
 
     let result_ = stressSolution(path, stressTimes);
 
@@ -490,15 +485,14 @@ async function copySubmissionToClipboard() {
     }
 
     let path = path_.unwrap();
-    let submissionCommand:
-        | string
-        | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("copyToClipboardCommand");
+    let submissionCommand = vscode.workspace
+        .getConfiguration()
+        .get("acmx.configuration.copyToClipboardCommand", "");
+
     let sol = mainSolution(path);
     let content = "";
 
-    if (submissionCommand === undefined || submissionCommand === "") {
+    if (submissionCommand === "") {
         content = readFileSync(sol, "utf8");
     } else {
         let submissionCommands = submissionCommand!.split(" ");
