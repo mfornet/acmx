@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
 import { newProblemFromCompanion } from "./core";
 
-import * as express from "express";
+const app = require("express")();
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
 
 export function startCompetitiveCompanionService() {
     let port = 0;
-    let app = express();
 
     if (process.env.ACMX_TESTING === "1") {
         port = 10041; // Use this port for testing.

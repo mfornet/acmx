@@ -32,7 +32,7 @@ import {
     FRIEND_TIMEOUT,
     verdictName,
 } from "./primitives";
-import * as clipboardy from "clipboardy";
+import clipboardy = require("clipboardy");
 import { debug, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
 
