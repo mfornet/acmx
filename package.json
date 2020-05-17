@@ -233,16 +233,6 @@
                     "command": "acmx.selectDebugTestCase",
                     "group": "acmx@1",
                     "when": "resourceExtname == .in"
-                },
-                {
-                    "when": "config.acmx.execution.showUpgradeIconInEditorTitleMenu",
-                    "command": "acmx.upgrade",
-                    "group": "navigation"
-                },
-                {
-                    "when": "config.acmx.execution.showStressIconInEditorTitleMenu",
-                    "command": "acmx.stress",
-                    "group": "navigation"
                 }
             ],
             "commandPalette": [
@@ -260,6 +250,16 @@
                 {
                     "when": "config.acmx.execution.showCompileIconInEditorTitleMenu",
                     "command": "acmx.compile",
+                    "group": "navigation"
+                },
+                {
+                    "when": "config.acmx.execution.showUpgradeIconInEditorTitleMenu",
+                    "command": "acmx.upgrade",
+                    "group": "navigation"
+                },
+                {
+                    "when": "config.acmx.execution.showStressIconInEditorTitleMenu",
+                    "command": "acmx.stress",
                     "group": "navigation"
                 }
             ]
