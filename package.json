@@ -66,6 +66,12 @@
                         "description": "Whether to show 'Upgrade' icon in editor title menu.",
                         "scope": "resource"
                     },
+                    "acmx.execution.showSubmitIconInEditorTitleMenu": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to show 'Submit File' icon in editor title menu.",
+                        "scope": "resource"
+                    },
                     "acmx.stress.times": {
                         "type": "number",
                         "default": 10,
@@ -199,6 +205,14 @@
             {
                 "command": "acmx.copyToClipboard",
                 "title": "ACMX: Copy Submission"
+            },
+            {
+                "command": "acmx.submitSolution",
+                "title": "ACMX: Submit",
+                "icon": {
+                    "light": "./images/upgrade-light.svg",
+                    "dark": "./images/upgrade-dark.svg"
+                }
             }
         ],
         "keybindings": [
@@ -225,6 +239,10 @@
             {
                 "command": "acmx.copyToClipboard",
                 "key": "ctrl+alt+m"
+            },
+            {
+                "command": "acmx.submitSolution",
+                "key": "ctrl+alt+i"
             }
         ],
         "menus": {
@@ -260,6 +278,11 @@
                 {
                     "when": "config.acmx.execution.showStressIconInEditorTitleMenu",
                     "command": "acmx.stress",
+                    "group": "navigation"
+                },
+                {
+                    "when": "config.acmx.execution.showSubmitIconInEditorTitleMenu",
+                    "command": "acmx.submitSolution",
                     "group": "navigation"
                 }
             ]

@@ -521,6 +521,32 @@ async function copySubmissionToClipboard() {
     vscode.window.showInformationMessage("Submission copied to clipboard!");
 }
 
+async function submitSolution() {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+    debug("submit-solution", `${path}`);
+
+    await vscode.window.activeTextEditor?.document.save().then(() => {
+        vscode.commands.executeCommand( // await ??
+            "workbench.action.terminal.focus"
+        );
+        path = "cf " + path + "1354 a"
+        debug("submit-solution", `${path}`);
+        vscode.commands.executeCommand(
+            "workbench.action.terminal.sendSequence",
+            path
+            //"1354",
+            //"a"
+        );
+    });
+}
+
 async function debugTest() {
     vscode.window.showInformationMessage(String.fromCharCode(65));
 }
@@ -574,6 +600,11 @@ export function activate(context: vscode.ExtensionContext) {
         copySubmissionToClipboard
     );
 
+    let submitSolutionCommand = vscode.commands.registerCommand(
+        "acmx.submitSolution",
+        submitSolution
+    );
+
     let debugTestCommand = vscode.commands.registerCommand(
         "acmx.debugTest",
         debugTest
@@ -591,6 +622,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(selectDebugTestCaseCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
+
+    context.subscriptions.push(submitSolutionCommand);
 
     context.subscriptions.push(debugTestCommand);
 }
