@@ -523,26 +523,26 @@ async function copySubmissionToClipboard() {
 
 async function submitSolution() {
     let path_ = currentProblem();
-
+    
     if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
-
+    
     let path = path_.unwrap();
-    debug("submit-solution", `${path}`);
+
+    let solpath = "\"" + mainSolution(path) + "\"";
+    debug("submit-solution-path", `${solpath}`);
+    let cfcommand = "cf submit -f" + " " + solpath + " " + "1354" + " " + "a"
+    debug("submit-solution-command", `${cfcommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
         vscode.commands.executeCommand( // await ??
             "workbench.action.terminal.focus"
         );
-        path = "cf " + path + "1354 a"
-        debug("submit-solution", `${path}`);
         vscode.commands.executeCommand(
             "workbench.action.terminal.sendSequence",
-            path
-            //"1354",
-            //"a"
+            { "text" : cfcommand }
         );
     });
 }
