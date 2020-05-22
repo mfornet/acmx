@@ -25,4 +25,4 @@ export function hideTerminals() {
     vscode.window.terminals.forEach((ter) => {
         ter.hide();
     });
-} 
+}

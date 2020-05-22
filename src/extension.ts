@@ -35,7 +35,7 @@ import {
 import * as clipboardy from "clipboardy";
 import { debug, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
-import { acmxTerminal } from "./terminal"
+import { acmxTerminal } from "./terminal";
 
 const TESTCASES = "testcases";
 
@@ -524,17 +524,17 @@ async function copySubmissionToClipboard() {
 
 async function submitSolution() {
     let path_ = currentProblem();
-    
+
     if (path_.isNone()) {
         vscode.window.showErrorMessage("No active problem");
         return;
     }
-    
+
     let path = path_.unwrap();
 
-    let solpath = "\"" + mainSolution(path) + "\"";
+    let solpath = '"' + mainSolution(path) + '"';
     debug("submit-solution-path", `${solpath}`);
-    let cfcommand = "cf submit -f" + " " + solpath + " " + "1354" + " " + "a"
+    let cfcommand = "cf submit -f" + " " + solpath + " " + "1354" + " " + "a";
     debug("submit-solution-command", `${cfcommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
