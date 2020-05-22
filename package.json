@@ -63,7 +63,7 @@
                     "acmx.execution.showStressIconInEditorTitleMenu": {
                         "type": "boolean",
                         "default": true,
-                        "description": "Whether to show 'Upgrade' icon in editor title menu.",
+                        "description": "Whether to show 'Stress' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showSubmitIconInEditorTitleMenu": {
@@ -210,8 +210,8 @@
                 "command": "acmx.submitSolution",
                 "title": "ACMX: Submit",
                 "icon": {
-                    "light": "./images/upgrade-light.svg",
-                    "dark": "./images/upgrade-dark.svg"
+                    "light": "./images/submit-light.svg",
+                    "dark": "./images/submit-dark.svg"
                 }
             }
         ],

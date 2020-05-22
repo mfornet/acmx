@@ -35,6 +35,7 @@ import {
 import * as clipboardy from "clipboardy";
 import { debug, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
+import { acmxTerminal } from "./terminal"
 
 const TESTCASES = "testcases";
 
@@ -537,13 +538,16 @@ async function submitSolution() {
     debug("submit-solution-command", `${cfcommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
-        vscode.commands.executeCommand( // await ??
-            "workbench.action.terminal.focus"
-        );
-        vscode.commands.executeCommand(
-            "workbench.action.terminal.sendSequence",
-            { "text" : cfcommand }
-        );
+        // vscode.commands.executeCommand( // await ??
+        //     "workbench.action.terminal.focus"
+        // );
+        // vscode.commands.executeCommand(
+        //     "workbench.action.terminal.sendSequence",
+        //     { "text" : cfcommand }
+        // );
+        let ter = acmxTerminal();
+        ter.show();
+        ter.sendText(cfcommand);
     });
 }
 
