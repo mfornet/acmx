@@ -177,6 +177,9 @@ export function initAcmX(testPath?: string) {
     // Copy default languages config
     let languagesFolder = join(globalHome, LANGUAGES);
     let languageStaticFolder = join(pathToStatic(), LANGUAGES);
+    // TODO: Check for each languages, and copy if don't exist.
+    //       Rationale: If we add a new language by default, users that already have this
+    //       file created, won't have the new languages by default.
     if (!existsSync(languagesFolder)) {
         copySync(languageStaticFolder, languagesFolder);
     }
