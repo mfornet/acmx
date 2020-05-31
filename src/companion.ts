@@ -24,11 +24,23 @@ export function startCompetitiveCompanionService() {
         const data = req.body;
 
         res.sendStatus(200);
-        let contestPath = newProblemFromCompanion(data);
-        await vscode.commands.executeCommand(
-            "vscode.openFolder",
-            vscode.Uri.file(contestPath)
+        let problmeInContest = newProblemFromCompanion(data);
+
+        let contestPath = problmeInContest.contestPath;
+        let mainSolution = problmeInContest.problemConfig.mainSolution.unwrapOr(
+            ""
         );
+
+        console.log("BEFORE", contestPath, mainSolution);
+
+        await vscode.commands
+            .executeCommand("vscode.openFolder", vscode.Uri.file(contestPath))
+            .then(async () => {
+                await vscode.commands.executeCommand(
+                    "vscode.open",
+                    vscode.Uri.file(mainSolution)
+                );
+            });
     });
 
     app.listen(port, (err: any) => {

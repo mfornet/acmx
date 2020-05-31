@@ -364,6 +364,16 @@ export class ConfigFile {
     }
 }
 
+export class ProblemInContest {
+    problemConfig: ConfigFile;
+    contestPath: string;
+
+    constructor(problemConfig: ConfigFile, contestPath: string) {
+        this.problemConfig = problemConfig;
+        this.contestPath = contestPath;
+    }
+}
+
 export function verdictName(verdict: Verdict) {
     switch (verdict) {
         case Verdict.OK:

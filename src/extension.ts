@@ -61,15 +61,6 @@ async function addProblem() {
         "vscode.openFolder",
         vscode.Uri.file(problemPath)
     );
-
-    // TODO(#42): Run two commands below
-    // await vscode.commands.executeCommand(
-    //     "vscode.open",
-    //     vscode.Uri.file(mainSolution(problemPath))
-    // );
-    // vscode.window.showInformationMessage(
-    //     `Add problem ${site}/${id} at ${path}`
-    // );
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
