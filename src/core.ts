@@ -38,6 +38,7 @@ import {
 } from "./utils";
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
+import { CompanionConfig, TestCase } from "./companion";
 
 /**
  * Path to static folder.
@@ -182,11 +183,19 @@ export function initAcmX(testPath?: string) {
     // Copy default languages config
     let languagesFolder = globalLanguagePath();
     let languageStaticFolder = join(pathToStatic(), LANGUAGES);
-    // TODO: Check for each languages, and copy if don't exist.
-    //       Rationale: If we add a new language by default, users that already have this
-    //       file created, won't have the new languages by default.
     if (!existsSync(languagesFolder)) {
         copySync(languageStaticFolder, languagesFolder);
+    } else {
+        // TODO: Set time limit from command.
+        // TODO: Test this is really working.
+        readdirSync(languageStaticFolder).forEach((languageName) => {
+            if (!existsSync(join(languagesFolder, languageName))) {
+                copySync(
+                    join(languageStaticFolder, languageName),
+                    join(languagesFolder, languageName)
+                );
+            }
+        });
     }
 
     // Create checker folder
@@ -472,10 +481,11 @@ export function getSolutionPath() {
  * Create new problem with configuration from competitive companion.
  *
  * @param config Json file with all data received from competitive companion.
- *
- * TODO: Change type of config(any) to a class with explicit arguments.
  */
-export function newProblemFromCompanion(config: any) {
+export function newProblemFromCompanion(
+    config: CompanionConfig,
+    tests: TestCase[]
+) {
     let path = getSolutionPath();
 
     let contestPath = join(path!, config.group);
@@ -485,7 +495,7 @@ export function newProblemFromCompanion(config: any) {
     let inputs: string[] = [];
     let outputs: string[] = [];
 
-    config.tests.forEach(function (testCase: any) {
+    tests.forEach(function (testCase: TestCase) {
         inputs.push(testCase.input);
         outputs.push(testCase.output);
     });
@@ -497,6 +507,9 @@ export function newProblemFromCompanion(config: any) {
         new Problem(config.name, config.name, inputs, outputs),
         false
     );
+
+    problemConfig.setCompanionConfig(config);
+    problemConfig.dump(problemPath);
 
     return new ProblemInContest(problemConfig, contestPath);
 }
@@ -621,16 +634,12 @@ export function testSolution(path: string): Option<SolutionResult> {
     let results: TestCaseResult[] = [];
     let fail = Option.none<SolutionResult>();
 
+    let timeout = config.timeLimit().unwrapOr(getTimeout());
+
     testcasesId.forEach((tcId) => {
         // Run on each test case and break on first failing case.
         if (fail.isNone()) {
-            let tcResult = timedRun(
-                path,
-                tcId,
-                getTimeout(),
-                mainSolution,
-                checker
-            );
+            let tcResult = timedRun(path, tcId, timeout, mainSolution, checker);
 
             if (!tcResult.isOk()) {
                 fail = Option.some(new SolutionResult(tcResult.status, tcId));
@@ -866,6 +875,8 @@ export function stressSolution(
 
     let results = [];
 
+    let timeout = config.timeLimit().unwrapOr(getTimeout());
+
     for (let index = 0; index < times; index++) {
         // Generate input test case
         generateTestCase(path, generator);
@@ -900,7 +911,7 @@ export function stressSolution(
         let result = timedRun(
             path,
             GENERATED_TEST_CASE,
-            getTimeout(),
+            timeout,
             mainSolution,
             checker
         );

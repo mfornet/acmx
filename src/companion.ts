@@ -5,6 +5,32 @@ import * as express from "express";
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
 
+export class CompanionConfig {
+    name: string;
+    group: string;
+    url: string;
+    memoryLimit: number;
+    timeLimit: number;
+
+    constructor(data: any) {
+        this.name = data.name;
+        this.group = data.group;
+        this.url = data.url;
+        this.memoryLimit = data.memoryLimit;
+        this.timeLimit = data.timeLimit;
+    }
+}
+
+export class TestCase {
+    input: string;
+    output: string;
+
+    constructor(data: any) {
+        this.input = data.input;
+        this.output = data.output;
+    }
+}
+
 export function startCompetitiveCompanionService() {
     let port = 0;
     let app = express();
@@ -22,12 +48,17 @@ export function startCompetitiveCompanionService() {
 
     app.post("/", async (req: any, res: any) => {
         const data = req.body;
+        let companionConfig = new CompanionConfig(data);
+
+        let tests: TestCase[] = data.tests.map((value: any) => {
+            return new TestCase(value);
+        });
 
         res.sendStatus(200);
-        let problmeInContest = newProblemFromCompanion(data);
+        let problemInContest = newProblemFromCompanion(companionConfig, tests);
 
-        let contestPath = problmeInContest.contestPath;
-        let mainSolution = problmeInContest.problemConfig.mainSolution.unwrapOr(
+        let contestPath = problemInContest.contestPath;
+        let mainSolution = problemInContest.problemConfig.mainSolution.unwrapOr(
             ""
         );
 
@@ -47,7 +78,6 @@ export function startCompetitiveCompanionService() {
             process.exit(1);
         }
 
-        // TODO(#21): Move to logs of the extension for debugging purposes.
         debug("companion", `Started companion. Listening on port ${port}`);
     });
 }
