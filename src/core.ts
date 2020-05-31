@@ -167,6 +167,10 @@ export function globalHomePath(testPath?: string): string {
     return path;
 }
 
+export function globalLanguagePath() {
+    return join(globalHomePath(), LANGUAGES);
+}
+
 /**
  * Initialize acmx environment.
  */
@@ -176,7 +180,7 @@ export function initAcmX(testPath?: string) {
     createFolder(globalHome);
 
     // Copy default languages config
-    let languagesFolder = join(globalHome, LANGUAGES);
+    let languagesFolder = globalLanguagePath();
     let languageStaticFolder = join(pathToStatic(), LANGUAGES);
     // TODO: Check for each languages, and copy if don't exist.
     //       Rationale: If we add a new language by default, users that already have this

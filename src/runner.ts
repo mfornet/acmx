@@ -1,12 +1,6 @@
 import { spawnSync } from "child_process";
-import {
-    Execution,
-    LanguageCommand,
-    Option,
-    LANGUAGES,
-    ATTIC,
-} from "./primitives";
-import { globalHomePath } from "./core";
+import { Execution, LanguageCommand, Option, ATTIC } from "./primitives";
+import { globalLanguagePath } from "./core";
 import { join, basename } from "path";
 import { readdirSync, readFileSync, existsSync } from "fs";
 import { extension, substituteArgsWith, debug, writeToFileSync } from "./utils";
@@ -14,7 +8,7 @@ import { onCompilationError } from "./errors";
 import md5File = require("md5-file");
 
 function loadConfig(extension: string): LanguageCommand {
-    let languagesPath = join(globalHomePath(), LANGUAGES);
+    let languagesPath = globalLanguagePath();
     let candidates: string[] = [];
 
     let filtered = readdirSync(languagesPath).filter((file) => {

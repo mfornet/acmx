@@ -165,6 +165,10 @@
                 "title": "ACMX: View: Code"
             },
             {
+                "command": "acmx.editLanguage",
+                "title": "ACMX: Edit Language"
+            },
+            {
                 "command": "acmx.stress",
                 "title": "ACMX: Stress",
                 "icon": {

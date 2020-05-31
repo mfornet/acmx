@@ -31,8 +31,6 @@ export function startCompetitiveCompanionService() {
             ""
         );
 
-        console.log("BEFORE", contestPath, mainSolution);
-
         await vscode.commands
             .executeCommand("vscode.openFolder", vscode.Uri.file(contestPath))
             .then(async () => {
