@@ -367,34 +367,38 @@ async function stress() {
 
     let path = path_.unwrap();
 
-    let stressTimes: number | undefined = vscode.workspace
+    let _stressTimes: number | undefined = vscode.workspace
         .getConfiguration("acmx.stress", null)
         .get("times");
 
-    // Use default
-    if (stressTimes === undefined) {
-        stressTimes = 10;
+    // Default stress times is 10
+    let stressTimes = 10;
+
+    if (_stressTimes !== undefined) {
+        stressTimes = _stressTimes;
     }
 
-    let result_ = stressSolution(path, stressTimes);
+    await vscode.window.activeTextEditor?.document.save().then(() => {
+        let result_ = stressSolution(path, stressTimes);
 
-    if (result_.isNone()) {
-        return;
-    }
+        if (result_.isNone()) {
+            return;
+        }
 
-    let result = result_.unwrap();
+        let result = result_.unwrap();
 
-    if (result.isOk()) {
-        vscode.window.showInformationMessage(
-            `OK. Time ${result.getMaxTime()}ms`
-        );
-    } else {
-        let failTestCaseId = result.getFailTestCaseId();
-        vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${failTestCaseId}`
-        );
-        debugTestCase(path, failTestCaseId);
-    }
+        if (result.isOk()) {
+            vscode.window.showInformationMessage(
+                `OK. Time ${result.getMaxTime()}ms`
+            );
+        } else {
+            let failTestCaseId = result.getFailTestCaseId();
+            vscode.window.showErrorMessage(
+                `${verdictName(result.status)} on test ${failTestCaseId}`
+            );
+            debugTestCase(path, failTestCaseId);
+        }
+    });
 }
 
 async function upgrade() {
