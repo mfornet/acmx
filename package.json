@@ -44,25 +44,25 @@
                     },
                     "acmx.execution.showRunIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Run File' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showCompileIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Compile File' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showUpgradeIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Upgrade' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showStressIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Upgrade' icon in editor title menu.",
                         "scope": "resource"
                     },
@@ -163,6 +163,10 @@
             {
                 "command": "acmx.coding",
                 "title": "ACMX: View: Code"
+            },
+            {
+                "command": "acmx.editLanguage",
+                "title": "ACMX: Edit Language"
             },
             {
                 "command": "acmx.stress",

@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test)](https://img.shields.io/github/workflow/status/mfornet/acmx/vscode-ext-test) [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/marx24.acmx)](https://marketplace.visualstudio.com/items?itemName=marx24.acmx) [![Telegram chat](https://img.shields.io/badge/telegram-chat-blue?logo=telegram)](https://t.me/acm_x) [![Version](https://img.shields.io/github/package-json/v/mfornet/acmx?color=green&logo=visual-studio-code&logoColor=blue)](https://github.com/mfornet/acmx/releases)
 
-**acmX** is tool that empower contestants to solve competitive programming problems easily.
+**acmX** is a tool that empower contestants to solve competitive programming problems easily.
 
 ### Features
 

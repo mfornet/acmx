@@ -24,6 +24,7 @@ import {
     testSolution,
     upgradeArena,
     mainSolution,
+    globalLanguagePath,
 } from "./core";
 import {
     SiteDescription,
@@ -61,15 +62,6 @@ async function addProblem() {
         "vscode.openFolder",
         vscode.Uri.file(problemPath)
     );
-
-    // TODO(#42): Run two commands below
-    // await vscode.commands.executeCommand(
-    //     "vscode.open",
-    //     vscode.Uri.file(mainSolution(problemPath))
-    // );
-    // vscode.window.showInformationMessage(
-    //     `Add problem ${site}/${id} at ${path}`
-    // );
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
@@ -367,34 +359,38 @@ async function stress() {
 
     let path = path_.unwrap();
 
-    let stressTimes: number | undefined = vscode.workspace
+    let _stressTimes: number | undefined = vscode.workspace
         .getConfiguration("acmx.stress", null)
         .get("times");
 
-    // Use default
-    if (stressTimes === undefined) {
-        stressTimes = 10;
+    // Default stress times is 10
+    let stressTimes = 10;
+
+    if (_stressTimes !== undefined) {
+        stressTimes = _stressTimes;
     }
 
-    let result_ = stressSolution(path, stressTimes);
+    await vscode.window.activeTextEditor?.document.save().then(() => {
+        let result_ = stressSolution(path, stressTimes);
 
-    if (result_.isNone()) {
-        return;
-    }
+        if (result_.isNone()) {
+            return;
+        }
 
-    let result = result_.unwrap();
+        let result = result_.unwrap();
 
-    if (result.isOk()) {
-        vscode.window.showInformationMessage(
-            `OK. Time ${result.getMaxTime()}ms`
-        );
-    } else {
-        let failTestCaseId = result.getFailTestCaseId();
-        vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${failTestCaseId}`
-        );
-        debugTestCase(path, failTestCaseId);
-    }
+        if (result.isOk()) {
+            vscode.window.showInformationMessage(
+                `OK. Time ${result.getMaxTime()}ms`
+            );
+        } else {
+            let failTestCaseId = result.getFailTestCaseId();
+            vscode.window.showErrorMessage(
+                `${verdictName(result.status)} on test ${failTestCaseId}`
+            );
+            debugTestCase(path, failTestCaseId);
+        }
+    });
 }
 
 async function upgrade() {
@@ -521,6 +517,34 @@ async function copySubmissionToClipboard() {
     vscode.window.showInformationMessage("Submission copied to clipboard!");
 }
 
+async function editLanguage() {
+    let languages: any[] = [];
+
+    readdirSync(globalLanguagePath())
+        .filter(function (testCasePath) {
+            return extname(testCasePath) === ".json";
+        })
+        .map(function (testCasePath) {
+            let name = removeExtension(testCasePath);
+
+            languages.push({
+                label: name,
+                target: testCasePath,
+            });
+        });
+
+    let selectedLanguage = await vscode.window.showQuickPick(languages, {
+        placeHolder: "Select language",
+    });
+
+    if (selectedLanguage !== undefined) {
+        await vscode.commands.executeCommand(
+            "vscode.open",
+            vscode.Uri.file(join(globalLanguagePath(), selectedLanguage.target))
+        );
+    }
+}
+
 async function debugTest() {
     vscode.window.showInformationMessage(String.fromCharCode(65));
 }
@@ -573,6 +597,10 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.copyToClipboard",
         copySubmissionToClipboard
     );
+    let editLanguageCommand = vscode.commands.registerCommand(
+        "acmx.editLanguage",
+        editLanguage
+    );
 
     let debugTestCommand = vscode.commands.registerCommand(
         "acmx.debugTest",
@@ -591,6 +619,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(selectDebugTestCaseCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
+    context.subscriptions.push(editLanguageCommand);
 
     context.subscriptions.push(debugTestCommand);
 }

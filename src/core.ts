@@ -27,6 +27,7 @@ import {
     ConfigFile,
     CHECKER_BINARY,
     GENERATED_TEST_CASE,
+    ProblemInContest,
 } from "./primitives";
 import {
     substituteArgWith,
@@ -166,6 +167,10 @@ export function globalHomePath(testPath?: string): string {
     return path;
 }
 
+export function globalLanguagePath() {
+    return join(globalHomePath(), LANGUAGES);
+}
+
 /**
  * Initialize acmx environment.
  */
@@ -175,7 +180,7 @@ export function initAcmX(testPath?: string) {
     createFolder(globalHome);
 
     // Copy default languages config
-    let languagesFolder = join(globalHome, LANGUAGES);
+    let languagesFolder = globalLanguagePath();
     let languageStaticFolder = join(pathToStatic(), LANGUAGES);
     // TODO: Check for each languages, and copy if don't exist.
     //       Rationale: If we add a new language by default, users that already have this
@@ -269,7 +274,7 @@ function populateMainSolution(path: string, override: boolean): string {
     return copyFromTemplate(path, templatePath, override);
 }
 
-export function newArena(path: string) {
+export function newArena(path: string): ConfigFile {
     debug("newArena", `path: ${path}`);
     createFolder(path);
 
@@ -286,6 +291,8 @@ export function newArena(path: string) {
     }
 
     config.dump(path);
+
+    return config;
 }
 
 export function testCasesName(path: string) {
@@ -403,8 +410,12 @@ function copyDefaultFilesToWorkspace(path: string) {
     }
 }
 
-function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
-    newArena(path);
+function newProblem(
+    path: string,
+    problem: Problem,
+    isWorkspace: boolean
+): ConfigFile {
+    let config = newArena(path);
 
     if (isWorkspace) {
         copyDefaultFilesToWorkspace(path);
@@ -421,6 +432,8 @@ function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
         writeSync(fd, value);
         closeSync(fd);
     });
+
+    return config;
 }
 
 export function newProblemFromId(
@@ -455,6 +468,13 @@ export function getSolutionPath() {
     return path;
 }
 
+/**
+ * Create new problem with configuration from competitive companion.
+ *
+ * @param config Json file with all data received from competitive companion.
+ *
+ * TODO: Change type of config(any) to a class with explicit arguments.
+ */
 export function newProblemFromCompanion(config: any) {
     let path = getSolutionPath();
 
@@ -472,13 +492,13 @@ export function newProblemFromCompanion(config: any) {
 
     copyDefaultFilesToWorkspace(contestPath);
 
-    newProblem(
+    let problemConfig = newProblem(
         problemPath,
         new Problem(config.name, config.name, inputs, outputs),
         false
     );
 
-    return contestPath;
+    return new ProblemInContest(problemConfig, contestPath);
 }
 
 /**
