@@ -186,8 +186,6 @@ export function initAcmX(testPath?: string) {
     if (!existsSync(languagesFolder)) {
         copySync(languageStaticFolder, languagesFolder);
     } else {
-        // TODO: Set time limit from command.
-        // TODO: Test this is really working.
         readdirSync(languageStaticFolder).forEach((languageName) => {
             if (!existsSync(join(languagesFolder, languageName))) {
                 copySync(
@@ -634,6 +632,8 @@ export function testSolution(path: string): Option<SolutionResult> {
     let results: TestCaseResult[] = [];
     let fail = Option.none<SolutionResult>();
 
+    // Try to find time limit from local config first, otherwise use global time limit.
+    // TODO: Add to wiki about this feature, and how to change custom time limit.
     let timeout = config.timeLimit().unwrapOr(getTimeout());
 
     testcasesId.forEach((tcId) => {

@@ -128,13 +128,17 @@ async function debugTestCase(path: string, tcId: string) {
         orientation: 0,
         groups: [
             { groups: [{}], size: 0.5 },
-            { groups: [{}, [{}, {}]], size: 0.5 },
+            {
+                groups: [{ groups: [{}, {}] }, {}],
+                size: 0.5,
+            },
         ],
     });
+
     let sol = mainSolution(path);
     let inp = join(path, TESTCASES, `${tcId}.in`);
-    let out = join(path, TESTCASES, `${tcId}.ans`);
-    let cur = join(path, TESTCASES, `${tcId}.out`);
+    let ans = join(path, TESTCASES, `${tcId}.ans`);
+    let out = join(path, TESTCASES, `${tcId}.out`);
 
     await vscode.commands.executeCommand(
         "vscode.open",
@@ -147,10 +151,10 @@ async function debugTestCase(path: string, tcId: string) {
         vscode.ViewColumn.Two
     );
     // This file might not exist!
-    if (existsSync(cur)) {
+    if (existsSync(out)) {
         await vscode.commands.executeCommand(
             "vscode.open",
-            vscode.Uri.file(cur),
+            vscode.Uri.file(ans),
             vscode.ViewColumn.Three
         );
         await vscode.commands.executeCommand(
@@ -161,7 +165,7 @@ async function debugTestCase(path: string, tcId: string) {
     } else {
         await vscode.commands.executeCommand(
             "vscode.open",
-            vscode.Uri.file(out),
+            vscode.Uri.file(ans),
             vscode.ViewColumn.Four
         );
     }
