@@ -536,8 +536,7 @@ async function submitSolution() {
     let config = ConfigFile.loadConfig(path, true).unwrap();
     let compileResult = getMainSolutionPath(path, config);
 
-    if (compileResult.isNone())
-    {
+    if (compileResult.isNone()) {
         vscode.window.showErrorMessage("Could not get the code");
         return;
     }
@@ -552,7 +551,8 @@ async function submitSolution() {
         return;
     }
 
-    let cfcommand = "cf submit -f" + " " + mainSolutionPath + " " + url_.unwrap();
+    let cfcommand =
+        "cf submit -f" + " " + mainSolutionPath + " " + url_.unwrap();
     debug("submit-solution-command", `${cfcommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
