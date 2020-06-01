@@ -696,7 +696,7 @@ function getCompileResult(
  *
  * @param path
  */
-function getMainSolutionPath(
+export function getMainSolutionPath(
     path: string,
     config: ConfigFile
 ): Option<CompileResult> {

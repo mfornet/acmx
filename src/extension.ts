@@ -25,6 +25,7 @@ import {
     upgradeArena,
     mainSolution,
     globalLanguagePath,
+    getMainSolutionPath,
 } from "./core";
 import {
     SiteDescription,
@@ -32,6 +33,7 @@ import {
     ATTIC,
     FRIEND_TIMEOUT,
     verdictName,
+    ConfigFile,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
 import { debug, removeExtension } from "./utils";
@@ -531,10 +533,26 @@ async function submitSolution() {
     }
 
     let path = path_.unwrap();
+    let config = ConfigFile.loadConfig(path, true).unwrap();
+    let compileResult = getMainSolutionPath(path, config);
 
-    let solpath = '"' + mainSolution(path) + '"';
-    debug("submit-solution-path", `${solpath}`);
-    let cfcommand = "cf submit -f" + " " + solpath + " " + "1354" + " " + "a";
+    if (compileResult.isNone())
+    {
+        vscode.window.showErrorMessage("Could not get the code");
+        return;
+    }
+
+    let mainSolutionPath = '"' + compileResult.unwrap().code + '"';
+    debug("submit-solution-path", `${mainSolutionPath}`);
+
+    let url_ = config.url();
+
+    if (url_.isNone()) {
+        vscode.window.showErrorMessage("No active url");
+        return;
+    }
+
+    let cfcommand = "cf submit -f" + " " + mainSolutionPath + " " + url_.unwrap();
     debug("submit-solution-command", `${cfcommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
