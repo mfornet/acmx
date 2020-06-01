@@ -63,7 +63,13 @@
                     "acmx.execution.showStressIconInEditorTitleMenu": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Whether to show 'Upgrade' icon in editor title menu.",
+                        "description": "Whether to show 'Stress' icon in editor title menu.",
+                        "scope": "resource"
+                    },
+                    "acmx.execution.showSubmitIconInEditorTitleMenu": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to show 'Submit' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.stress.times": {

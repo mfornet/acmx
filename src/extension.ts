@@ -522,6 +522,35 @@ async function copySubmissionToClipboard() {
     vscode.window.showInformationMessage("Submission copied to clipboard!");
 }
 
+async function submitSolution() {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let solpath = '"' + mainSolution(path) + '"';
+    debug("submit-solution-path", `${solpath}`);
+    let cfcommand = "cf submit -f" + " " + solpath + " " + "1354" + " " + "a";
+    debug("submit-solution-command", `${cfcommand}`);
+
+    await vscode.window.activeTextEditor?.document.save().then(() => {
+        // vscode.commands.executeCommand( // await ??
+        //     "workbench.action.terminal.focus"
+        // );
+        // vscode.commands.executeCommand(
+        //     "workbench.action.terminal.sendSequence",
+        //     { "text" : cfcommand }
+        // );
+        let ter = acmxTerminal();
+        ter.show();
+        ter.sendText(cfcommand);
+    });
+}
+
 async function editLanguage() {
     let languages: any[] = [];
 
