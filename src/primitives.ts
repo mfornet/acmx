@@ -2,11 +2,13 @@ import { SpawnSyncReturns } from "child_process";
 import { join } from "path";
 import { writeToFileSync } from "./utils";
 import { readFileSync, existsSync } from "fs";
+import { CompanionConfig } from "./companion";
 
 export const ATTIC = "attic";
 export const TESTCASES = "testcases";
 export const LANGUAGES = "languages";
-export const FRIEND_TIMEOUT = 50_000; //increase limit to allow wcmp to compile TODO: Allow checker to compile without time limit
+// TODO(#68): Allow checker to compile without time limit (this should be added after cancel is available).
+export const FRIEND_TIMEOUT = 50_000;
 export const MAIN_SOLUTION_BINARY = "sol";
 export const CHECKER_BINARY = "checker";
 export const BRUTE_BINARY = "brute";
@@ -229,6 +231,14 @@ export class Option<T> {
         }
     }
 
+    map<R>(predicate: (arg: T) => R): Option<R> {
+        if (this.isSome()) {
+            return Option.some(predicate(this.unwrap()));
+        } else {
+            return Option.none();
+        }
+    }
+
     mapOr<R>(value: R, predicate: (arg: T) => R): R {
         if (this.isSome()) {
             return predicate(this.unwrap());
@@ -262,6 +272,7 @@ export class ConfigFile {
     bruteSolution: Option<string>;
     generator: Option<string>;
     checker: Option<string>;
+    companionConfig: Option<CompanionConfig>;
 
     constructor(
         mainSolution?: string,
@@ -273,6 +284,11 @@ export class ConfigFile {
         this.bruteSolution = new Option(bruteSolution);
         this.generator = new Option(generator);
         this.checker = new Option(checker);
+        this.companionConfig = Option.none();
+    }
+
+    setCompanionConfig(companionConfig: CompanionConfig) {
+        this.companionConfig = Option.some(companionConfig);
     }
 
     /**
@@ -348,6 +364,8 @@ export class ConfigFile {
                 parsed.checker?.value
             );
 
+            config.setCompanionConfig(parsed.companionConfig?.value);
+
             if (config.verify()) {
                 config.dump(path);
             }
@@ -360,6 +378,20 @@ export class ConfigFile {
 
     static empty(): ConfigFile {
         return new ConfigFile();
+    }
+
+    timeLimit(): Option<number> {
+        return this.companionConfig.map((config) => config.timeLimit);
+    }
+}
+
+export class ProblemInContest {
+    problemConfig: ConfigFile;
+    contestPath: string;
+
+    constructor(problemConfig: ConfigFile, contestPath: string) {
+        this.problemConfig = problemConfig;
+        this.contestPath = contestPath;
     }
 }
 

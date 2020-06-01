@@ -4,7 +4,7 @@
     "description": "Competitive Programming made simple",
     "icon": "images/logo.png",
     "publisher": "marx24",
-    "version": "0.3.2",
+    "version": "0.3.3-beta",
     "license": "MIT",
     "keywords": [
         "acm",
@@ -44,32 +44,26 @@
                     },
                     "acmx.execution.showRunIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Run File' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showCompileIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Compile File' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showUpgradeIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "description": "Whether to show 'Upgrade' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.execution.showStressIconInEditorTitleMenu": {
                         "type": "boolean",
-                        "default": true,
-                        "description": "Whether to show 'Stress' icon in editor title menu.",
-                        "scope": "resource"
-                    },
-                    "acmx.execution.showSubmitIconInEditorTitleMenu": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Whether to show 'Submit File' icon in editor title menu.",
+                        "default": false,
+                        "description": "Whether to show 'Upgrade' icon in editor title menu.",
                         "scope": "resource"
                     },
                     "acmx.stress.times": {
@@ -169,6 +163,10 @@
             {
                 "command": "acmx.coding",
                 "title": "ACMX: View: Code"
+            },
+            {
+                "command": "acmx.editLanguage",
+                "title": "ACMX: Edit Language"
             },
             {
                 "command": "acmx.stress",

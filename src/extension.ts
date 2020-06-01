@@ -24,6 +24,7 @@ import {
     testSolution,
     upgradeArena,
     mainSolution,
+    globalLanguagePath,
 } from "./core";
 import {
     SiteDescription,
@@ -62,15 +63,6 @@ async function addProblem() {
         "vscode.openFolder",
         vscode.Uri.file(problemPath)
     );
-
-    // TODO(#42): Run two commands below
-    // await vscode.commands.executeCommand(
-    //     "vscode.open",
-    //     vscode.Uri.file(mainSolution(problemPath))
-    // );
-    // vscode.window.showInformationMessage(
-    //     `Add problem ${site}/${id} at ${path}`
-    // );
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
@@ -137,13 +129,17 @@ async function debugTestCase(path: string, tcId: string) {
         orientation: 0,
         groups: [
             { groups: [{}], size: 0.5 },
-            { groups: [{}, [{}, {}]], size: 0.5 },
+            {
+                groups: [{ groups: [{}, {}] }, {}],
+                size: 0.5,
+            },
         ],
     });
+
     let sol = mainSolution(path);
     let inp = join(path, TESTCASES, `${tcId}.in`);
-    let out = join(path, TESTCASES, `${tcId}.ans`);
-    let cur = join(path, TESTCASES, `${tcId}.out`);
+    let ans = join(path, TESTCASES, `${tcId}.ans`);
+    let out = join(path, TESTCASES, `${tcId}.out`);
 
     await vscode.commands.executeCommand(
         "vscode.open",
@@ -156,10 +152,10 @@ async function debugTestCase(path: string, tcId: string) {
         vscode.ViewColumn.Two
     );
     // This file might not exist!
-    if (existsSync(cur)) {
+    if (existsSync(out)) {
         await vscode.commands.executeCommand(
             "vscode.open",
-            vscode.Uri.file(cur),
+            vscode.Uri.file(ans),
             vscode.ViewColumn.Three
         );
         await vscode.commands.executeCommand(
@@ -170,7 +166,7 @@ async function debugTestCase(path: string, tcId: string) {
     } else {
         await vscode.commands.executeCommand(
             "vscode.open",
-            vscode.Uri.file(out),
+            vscode.Uri.file(ans),
             vscode.ViewColumn.Four
         );
     }
@@ -368,34 +364,38 @@ async function stress() {
 
     let path = path_.unwrap();
 
-    let stressTimes: number | undefined = vscode.workspace
+    let _stressTimes: number | undefined = vscode.workspace
         .getConfiguration("acmx.stress", null)
         .get("times");
 
-    // Use default
-    if (stressTimes === undefined) {
-        stressTimes = 10;
+    // Default stress times is 10
+    let stressTimes = 10;
+
+    if (_stressTimes !== undefined) {
+        stressTimes = _stressTimes;
     }
 
-    let result_ = stressSolution(path, stressTimes);
+    await vscode.window.activeTextEditor?.document.save().then(() => {
+        let result_ = stressSolution(path, stressTimes);
 
-    if (result_.isNone()) {
-        return;
-    }
+        if (result_.isNone()) {
+            return;
+        }
 
-    let result = result_.unwrap();
+        let result = result_.unwrap();
 
-    if (result.isOk()) {
-        vscode.window.showInformationMessage(
-            `OK. Time ${result.getMaxTime()}ms`
-        );
-    } else {
-        let failTestCaseId = result.getFailTestCaseId();
-        vscode.window.showErrorMessage(
-            `${verdictName(result.status)} on test ${failTestCaseId}`
-        );
-        debugTestCase(path, failTestCaseId);
-    }
+        if (result.isOk()) {
+            vscode.window.showInformationMessage(
+                `OK. Time ${result.getMaxTime()}ms`
+            );
+        } else {
+            let failTestCaseId = result.getFailTestCaseId();
+            vscode.window.showErrorMessage(
+                `${verdictName(result.status)} on test ${failTestCaseId}`
+            );
+            debugTestCase(path, failTestCaseId);
+        }
+    });
 }
 
 async function upgrade() {
@@ -522,33 +522,32 @@ async function copySubmissionToClipboard() {
     vscode.window.showInformationMessage("Submission copied to clipboard!");
 }
 
-async function submitSolution() {
-    let path_ = currentProblem();
+async function editLanguage() {
+    let languages: any[] = [];
 
-    if (path_.isNone()) {
-        vscode.window.showErrorMessage("No active problem");
-        return;
-    }
+    readdirSync(globalLanguagePath())
+        .filter(function (testCasePath) {
+            return extname(testCasePath) === ".json";
+        })
+        .map(function (testCasePath) {
+            let name = removeExtension(testCasePath);
 
-    let path = path_.unwrap();
+            languages.push({
+                label: name,
+                target: testCasePath,
+            });
+        });
 
-    let solpath = '"' + mainSolution(path) + '"';
-    debug("submit-solution-path", `${solpath}`);
-    let cfcommand = "cf submit -f" + " " + solpath + " " + "1354" + " " + "a";
-    debug("submit-solution-command", `${cfcommand}`);
-
-    await vscode.window.activeTextEditor?.document.save().then(() => {
-        // vscode.commands.executeCommand( // await ??
-        //     "workbench.action.terminal.focus"
-        // );
-        // vscode.commands.executeCommand(
-        //     "workbench.action.terminal.sendSequence",
-        //     { "text" : cfcommand }
-        // );
-        let ter = acmxTerminal();
-        ter.show();
-        ter.sendText(cfcommand);
+    let selectedLanguage = await vscode.window.showQuickPick(languages, {
+        placeHolder: "Select language",
     });
+
+    if (selectedLanguage !== undefined) {
+        await vscode.commands.executeCommand(
+            "vscode.open",
+            vscode.Uri.file(join(globalLanguagePath(), selectedLanguage.target))
+        );
+    }
 }
 
 async function debugTest() {
@@ -603,6 +602,10 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.copyToClipboard",
         copySubmissionToClipboard
     );
+    let editLanguageCommand = vscode.commands.registerCommand(
+        "acmx.editLanguage",
+        editLanguage
+    );
 
     let submitSolutionCommand = vscode.commands.registerCommand(
         "acmx.submitSolution",
@@ -626,6 +629,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(selectDebugTestCaseCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
+    context.subscriptions.push(editLanguageCommand);
 
     context.subscriptions.push(submitSolutionCommand);
 

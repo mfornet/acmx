@@ -27,6 +27,7 @@ import {
     ConfigFile,
     CHECKER_BINARY,
     GENERATED_TEST_CASE,
+    ProblemInContest,
 } from "./primitives";
 import {
     substituteArgWith,
@@ -37,6 +38,7 @@ import {
 } from "./utils";
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
+import { CompanionConfig, TestCase } from "./companion";
 
 /**
  * Path to static folder.
@@ -166,6 +168,10 @@ export function globalHomePath(testPath?: string): string {
     return path;
 }
 
+export function globalLanguagePath() {
+    return join(globalHomePath(), LANGUAGES);
+}
+
 /**
  * Initialize acmx environment.
  */
@@ -175,10 +181,19 @@ export function initAcmX(testPath?: string) {
     createFolder(globalHome);
 
     // Copy default languages config
-    let languagesFolder = join(globalHome, LANGUAGES);
+    let languagesFolder = globalLanguagePath();
     let languageStaticFolder = join(pathToStatic(), LANGUAGES);
     if (!existsSync(languagesFolder)) {
         copySync(languageStaticFolder, languagesFolder);
+    } else {
+        readdirSync(languageStaticFolder).forEach((languageName) => {
+            if (!existsSync(join(languagesFolder, languageName))) {
+                copySync(
+                    join(languageStaticFolder, languageName),
+                    join(languagesFolder, languageName)
+                );
+            }
+        });
     }
 
     // Create checker folder
@@ -266,7 +281,7 @@ function populateMainSolution(path: string, override: boolean): string {
     return copyFromTemplate(path, templatePath, override);
 }
 
-export function newArena(path: string) {
+export function newArena(path: string): ConfigFile {
     debug("newArena", `path: ${path}`);
     createFolder(path);
 
@@ -283,6 +298,8 @@ export function newArena(path: string) {
     }
 
     config.dump(path);
+
+    return config;
 }
 
 export function testCasesName(path: string) {
@@ -400,8 +417,12 @@ function copyDefaultFilesToWorkspace(path: string) {
     }
 }
 
-function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
-    newArena(path);
+function newProblem(
+    path: string,
+    problem: Problem,
+    isWorkspace: boolean
+): ConfigFile {
+    let config = newArena(path);
 
     if (isWorkspace) {
         copyDefaultFilesToWorkspace(path);
@@ -418,6 +439,8 @@ function newProblem(path: string, problem: Problem, isWorkspace: boolean) {
         writeSync(fd, value);
         closeSync(fd);
     });
+
+    return config;
 }
 
 export function newProblemFromId(
@@ -452,7 +475,15 @@ export function getSolutionPath() {
     return path;
 }
 
-export function newProblemFromCompanion(config: any) {
+/**
+ * Create new problem with configuration from competitive companion.
+ *
+ * @param config Json file with all data received from competitive companion.
+ */
+export function newProblemFromCompanion(
+    config: CompanionConfig,
+    tests: TestCase[]
+) {
     let path = getSolutionPath();
 
     let contestPath = join(path!, config.group);
@@ -462,20 +493,23 @@ export function newProblemFromCompanion(config: any) {
     let inputs: string[] = [];
     let outputs: string[] = [];
 
-    config.tests.forEach(function (testCase: any) {
+    tests.forEach(function (testCase: TestCase) {
         inputs.push(testCase.input);
         outputs.push(testCase.output);
     });
 
     copyDefaultFilesToWorkspace(contestPath);
 
-    newProblem(
+    let problemConfig = newProblem(
         problemPath,
         new Problem(config.name, config.name, inputs, outputs),
         false
     );
 
-    return contestPath;
+    problemConfig.setCompanionConfig(config);
+    problemConfig.dump(problemPath);
+
+    return new ProblemInContest(problemConfig, contestPath);
 }
 
 /**
@@ -598,16 +632,14 @@ export function testSolution(path: string): Option<SolutionResult> {
     let results: TestCaseResult[] = [];
     let fail = Option.none<SolutionResult>();
 
+    // Try to find time limit from local config first, otherwise use global time limit.
+    // TODO: Add to wiki about this feature, and how to change custom time limit.
+    let timeout = config.timeLimit().unwrapOr(getTimeout());
+
     testcasesId.forEach((tcId) => {
         // Run on each test case and break on first failing case.
         if (fail.isNone()) {
-            let tcResult = timedRun(
-                path,
-                tcId,
-                getTimeout(),
-                mainSolution,
-                checker
-            );
+            let tcResult = timedRun(path, tcId, timeout, mainSolution, checker);
 
             if (!tcResult.isOk()) {
                 fail = Option.some(new SolutionResult(tcResult.status, tcId));
@@ -843,6 +875,8 @@ export function stressSolution(
 
     let results = [];
 
+    let timeout = config.timeLimit().unwrapOr(getTimeout());
+
     for (let index = 0; index < times; index++) {
         // Generate input test case
         generateTestCase(path, generator);
@@ -877,7 +911,7 @@ export function stressSolution(
         let result = timedRun(
             path,
             GENERATED_TEST_CASE,
-            getTimeout(),
+            timeout,
             mainSolution,
             checker
         );
