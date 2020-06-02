@@ -541,8 +541,8 @@ async function submitSolution() {
         return;
     }
 
-    let mainSolutionPath = '"' + compileResult.unwrap().code + '"';
-    debug("submit-solution-path", `${mainSolutionPath}`);
+    let mainSolutionPath = compileResult.unwrap().code;
+    debug("submit-main-solution-path", `${mainSolutionPath}`);
 
     let url_ = config.url();
 
@@ -551,18 +551,10 @@ async function submitSolution() {
         return;
     }
 
-    let cfcommand =
-        "cf submit -f" + " " + mainSolutionPath + " " + url_.unwrap();
+    let cfcommand = `cf submit -f "${mainSolutionPath}" "${url_.unwrap()}"`;
     debug("submit-solution-command", `${cfcommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
-        // vscode.commands.executeCommand( // await ??
-        //     "workbench.action.terminal.focus"
-        // );
-        // vscode.commands.executeCommand(
-        //     "workbench.action.terminal.sendSequence",
-        //     { "text" : cfcommand }
-        // );
         let ter = acmxTerminal();
         ter.show();
         ter.sendText(cfcommand);
