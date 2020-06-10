@@ -383,6 +383,10 @@ export class ConfigFile {
     timeLimit(): Option<number> {
         return this.companionConfig.map((config) => config.timeLimit);
     }
+
+    url(): Option<string> {
+        return this.companionConfig.map((config) => config.url);
+    }
 }
 
 export class ProblemInContest {

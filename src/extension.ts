@@ -25,6 +25,7 @@ import {
     upgradeArena,
     mainSolution,
     globalLanguagePath,
+    getMainSolutionPath,
 } from "./core";
 import {
     SiteDescription,
@@ -32,10 +33,12 @@ import {
     ATTIC,
     FRIEND_TIMEOUT,
     verdictName,
+    ConfigFile,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
 import { debug, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
+import { acmxTerminal } from "./terminal";
 
 const TESTCASES = "testcases";
 
@@ -521,6 +524,43 @@ async function copySubmissionToClipboard() {
     vscode.window.showInformationMessage("Submission copied to clipboard!");
 }
 
+async function submitSolution() {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+    let config = ConfigFile.loadConfig(path, true).unwrap();
+    let compileResult = getMainSolutionPath(path, config);
+
+    if (compileResult.isNone()) {
+        vscode.window.showErrorMessage("Could not get the code");
+        return;
+    }
+
+    let mainSolutionPath = compileResult.unwrap().code;
+    debug("submit-main-solution-path", `${mainSolutionPath}`);
+
+    let url_ = config.url();
+
+    if (url_.isNone()) {
+        vscode.window.showErrorMessage("No active url");
+        return;
+    }
+
+    let cfcommand = `cf submit -f "${mainSolutionPath}" "${url_.unwrap()}"`;
+    debug("submit-solution-command", `${cfcommand}`);
+
+    await vscode.window.activeTextEditor?.document.save().then(() => {
+        let ter = acmxTerminal();
+        ter.show();
+        ter.sendText(cfcommand);
+    });
+}
+
 async function editLanguage() {
     let languages: any[] = [];
 
@@ -606,6 +646,11 @@ export function activate(context: vscode.ExtensionContext) {
         editLanguage
     );
 
+    let submitSolutionCommand = vscode.commands.registerCommand(
+        "acmx.submitSolution",
+        submitSolution
+    );
+
     let debugTestCommand = vscode.commands.registerCommand(
         "acmx.debugTest",
         debugTest
@@ -624,6 +669,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(selectDebugTestCaseCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
     context.subscriptions.push(editLanguageCommand);
+
+    context.subscriptions.push(submitSolutionCommand);
 
     context.subscriptions.push(debugTestCommand);
 }
