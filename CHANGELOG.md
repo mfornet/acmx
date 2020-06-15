@@ -2,6 +2,16 @@
 
 Notable updates of **acmX**
 
+## 0.3.3
+
+* Added [builtin submit](https://github.com/mfornet/acmx/wiki/Submit) functionality for Codeforces using [cf-tool](https://github.com/xalanq/cf-tool).
+* Layout change. Input and Expected answer are displayed in the top. Current output is displayed in the bottom. This gives more space the the current output, which is helpful while debugging.
+* Open main solution automatically after parsing with competitive companion.
+* Edit language definition (compile and run command) using quick pick. Execute `ACMX: Edit Language`.
+* Extra metadata from competitive companion is stored in config.json.
+* Buttons for several commands Compile / Run / Upgrade / Stress / Submit. Buttons are hidden by default enable them in [settings](https://github.com/mfornet/acmx/wiki/Settings-And-Commands).
+* Bundled the extension with webpack. Loading time and extension size decreased.
+
 ## 0.3.0
 
 * Add support for [multiple languages](https://github.com/mfornet/acmx/wiki#custom-compile-and-run-command).
