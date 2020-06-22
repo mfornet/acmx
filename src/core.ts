@@ -464,12 +464,24 @@ function newContest(path: string, contest: Contest) {
 }
 
 export function getSolutionPath() {
-    let path: string | undefined = vscode.workspace
+    let path_: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("library");
 
-    if (path !== undefined) {
-        path = substituteArgWith(path);
+    if (path_ === undefined || path_ === "") {
+        return undefined;
+    }
+
+    let path = substituteArgWith(path_);
+
+    if (path[0] !== "/") {
+        let cwd = vscode.workspace.rootPath;
+
+        if (cwd === undefined) {
+            return undefined;
+        }
+
+        path = join(cwd, path);
     }
 
     return path;
