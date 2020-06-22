@@ -2,6 +2,10 @@
 
 Notable updates of **acmX**
 
+## 0.3.4
+
+* Allow using relative path as the path to store problems/contests/
+
 ## 0.3.3
 
 * Added [builtin submit](https://github.com/mfornet/acmx/wiki/Submit) functionality for Codeforces using [cf-tool](https://github.com/xalanq/cf-tool).
