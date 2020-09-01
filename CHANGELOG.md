@@ -2,6 +2,10 @@
 
 Notable updates of **acmX**
 
+## 0.3.5
+
+* Fix issue with path in Window
+
 ## 0.3.4
 
 * Allow using relative path as the path to store problems/contests/

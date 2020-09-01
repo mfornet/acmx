@@ -9,7 +9,7 @@ import {
     writeSync,
     renameSync,
 } from "fs";
-import { basename, dirname, extname, join } from "path";
+import { basename, dirname, extname, join, isAbsolute } from "path";
 import * as vscode from "vscode";
 import {
     Contest,
@@ -474,7 +474,7 @@ export function getSolutionPath() {
 
     let path = substituteArgWith(path_);
 
-    if (path[0] !== "/") {
+    if (!isAbsolute(path)) {
         let cwd = vscode.workspace.rootPath;
 
         if (cwd === undefined) {
