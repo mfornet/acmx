@@ -34,6 +34,7 @@ import {
     FRIEND_TIMEOUT,
     verdictName,
     ConfigFile,
+    Option,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
 import { debug, removeExtension } from "./utils";
@@ -455,6 +456,9 @@ async function setChecker() {
     let checkerDest = join(path, ATTIC, "checker.cpp");
 
     copyFileSync(checkerPath, checkerDest);
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.checker = Option.some(checkerDest);
+    config.dump(path);
 }
 
 async function selectDebugTestCase(uriPath: vscode.Uri) {
@@ -496,8 +500,8 @@ async function copySubmissionToClipboard() {
     let submissionCommand:
         | string
         | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("copyToClipboardCommand");
+            .getConfiguration("acmx.configuration", null)
+            .get("copyToClipboardCommand");
     let sol = mainSolution(path);
     let content = "";
 
@@ -676,4 +680,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
