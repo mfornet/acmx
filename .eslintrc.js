@@ -11,50 +11,41 @@ yarn eslint . --ext .js,.jsx,.ts,.tsx
 Happy linting! 💖
 */
 module.exports = {
-    "env": {
-        "es6": true,
-        "node": true
+    env: {
+        es6: true,
+        node: true,
     },
-    "extends": [
+    extends: [
         "eslint-config-prettier",
-        "eslint-config-prettier/@typescript-eslint"
+        "eslint-config-prettier/@typescript-eslint",
     ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "project": "tsconfig.json",
-        "sourceType": "module"
+    parser: "@typescript-eslint/parser",
+    parserOptions: {
+        project: "tsconfig.json",
+        sourceType: "module",
     },
-    "plugins": [
-        "@typescript-eslint",
-        "prettier",
-    ],
-    "rules": {
+    plugins: ["@typescript-eslint", "prettier"],
+    rules: {
         "prettier/prettier": "error",
         "@typescript-eslint/class-name-casing": "warn",
         "@typescript-eslint/member-delimiter-style": [
             "warn",
             {
-                "multiline": {
-                    "delimiter": "semi",
-                    "requireLast": true
+                multiline: {
+                    delimiter: "semi",
+                    requireLast: true,
                 },
-                "singleline": {
-                    "delimiter": "semi",
-                    "requireLast": false
-                }
-            }
+                singleline: {
+                    delimiter: "semi",
+                    requireLast: false,
+                },
+            },
         ],
-        "@typescript-eslint/semi": [
-            "warn",
-            "always"
-        ],
-        "curly": "warn",
-        "eqeqeq": [
-            "warn",
-            "always"
-        ],
+        "@typescript-eslint/semi": ["warn", "always"],
+        curly: "warn",
+        eqeqeq: ["warn", "always"],
         "no-redeclare": "warn",
         "no-throw-literal": "warn",
-        "no-unused-expressions": "warn"
-    }
+        "no-unused-expressions": "warn",
+    },
 };

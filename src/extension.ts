@@ -34,6 +34,7 @@ import {
     FRIEND_TIMEOUT,
     verdictName,
     ConfigFile,
+    Option,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
 import { debug, removeExtension } from "./utils";
@@ -455,6 +456,9 @@ async function setChecker() {
     let checkerDest = join(path, ATTIC, "checker.cpp");
 
     copyFileSync(checkerPath, checkerDest);
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.checker = Option.some(checkerDest);
+    config.dump(path);
 }
 
 async function selectDebugTestCase(uriPath: vscode.Uri) {
