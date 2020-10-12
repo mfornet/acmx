@@ -6,13 +6,13 @@
 
 ### Features
 
-* Contest/Problem parsing. (Via [Competitive-Companion](https://github.com/mfornet/acmx/wiki#competitive-companion) extension).
-* [Running solution against testcases](https://github.com/mfornet/acmx/wiki#evaluate-submission).
-* Automatic verdict results (OK, WA, RTE, TLE, CE).
-* [Manage testcases easily](https://github.com/mfornet/acmx/wiki/Test-Cases).
-* [Stress solution](https://github.com/mfornet/acmx/wiki/Stress-Testing) against brute solution using a generator (Useful to find corner cases).
-* [Support for multiple languages](https://github.com/mfornet/acmx/wiki/Languages).
-* [Smart copy](https://github.com/mfornet/acmx/wiki/Smart-Copy).
+-   Contest/Problem parsing. (Via [Competitive-Companion](https://github.com/mfornet/acmx/wiki#competitive-companion) extension).
+-   [Running solution against testcases](https://github.com/mfornet/acmx/wiki#evaluate-submission).
+-   Automatic verdict results (OK, WA, RTE, TLE, CE).
+-   [Manage testcases easily](https://github.com/mfornet/acmx/wiki/Test-Cases).
+-   [Stress solution](https://github.com/mfornet/acmx/wiki/Stress-Testing) against brute solution using a generator (Useful to find corner cases).
+-   [Support for multiple languages](https://github.com/mfornet/acmx/wiki/Languages).
+-   [Smart copy](https://github.com/mfornet/acmx/wiki/Smart-Copy).
 
 ## Documentation
 

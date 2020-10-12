@@ -7,9 +7,7 @@
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
-        "lib": [
-            "es6"
-        ],
+        "lib": ["es6"],
         "sourceMap": true,
         "rootDir": "src",
         /* Strict Type-Checking Option */
@@ -21,8 +19,5 @@
         // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
         // "noUnusedParameters": true,  /* Report errors on unused parameters. */
     },
-    "exclude": [
-        "node_modules",
-        ".vscode-test"
-    ]
+    "exclude": ["node_modules", ".vscode-test"]
 }
