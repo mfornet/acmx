@@ -1,5 +1,4 @@
 "use strict";
-var sanitize = require("sanitize-filename");
 import {
     closeSync,
     copyFileSync,
@@ -423,7 +422,6 @@ function newProblem(
     problem: Problem,
     isWorkspace: boolean
 ): ConfigFile {
-    path = sanitize(path);
     let config = newArena(path);
 
     if (isWorkspace) {
