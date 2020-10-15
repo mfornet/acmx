@@ -500,8 +500,8 @@ async function copySubmissionToClipboard() {
     let submissionCommand:
         | string
         | undefined = vscode.workspace
-            .getConfiguration("acmx.configuration", null)
-            .get("copyToClipboardCommand");
+        .getConfiguration("acmx.configuration", null)
+        .get("copyToClipboardCommand");
     let sol = mainSolution(path);
     let content = "";
 
@@ -680,4 +680,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}
