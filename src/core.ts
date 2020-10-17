@@ -39,6 +39,7 @@ import {
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 import { CompanionConfig, TestCase } from "./companion";
+import { spawnSync } from "child_process";
 
 /**
  * Path to static folder.
@@ -326,8 +327,7 @@ function addBruteSolution(path: string, config: ConfigFile) {
     );
 }
 
-function addGenerator(path: string, config: ConfigFile) {
-    // TODO(#51): Use tcgen
+async function addGenerator(path: string, config: ConfigFile) {
     let templatePath: string | undefined = vscode.workspace
         .getConfiguration("acmx.template", null)
         .get("generatorTemplate");
@@ -336,7 +336,11 @@ function addGenerator(path: string, config: ConfigFile) {
         templatePath = join(pathToStatic(), "templates", "gen.py");
     }
 
-    config.generator = Option.some(copyFromTemplate(path, templatePath, false));
+    var gen_path = Option.some(copyFromTemplate(path, templatePath, false));
+
+    config.generator = gen_path;
+    spawnSync("python", ["-m", `tcgen`, "--path", `${join(path, TESTCASES)}`, "--output", `${gen_path.unwrap()}`]);
+
 }
 
 function addChecker(path: string, config: ConfigFile) {
