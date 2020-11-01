@@ -5,6 +5,7 @@ import { Execution, ATTIC } from "./primitives";
 import { join } from "path";
 import { openSync, writeSync } from "fs";
 import os = require("os");
+import { compileErrorTerminal } from "./terminal";
 
 /**
  * Check if the execution failed and show relevant error.
@@ -28,14 +29,14 @@ export function showCompileError(path: string, compileError: string) {
     let errorPath = join(path, ATTIC, "stderr");
     let errorFile = openSync(errorPath, "w");
     writeSync(errorFile, compileError);
-    let stderrTerminal = vscode.window.createTerminal("Compilation Error");
+    let stderrTerminal = compileErrorTerminal();
     stderrTerminal.show();
     if (os.platform() === "win32") {
         stderrTerminal.sendText(`type "${errorPath}"`);
     } else if (os.platform() === "darwin") {
-        stderrTerminal.sendText(`less -R "${errorPath}"`);
+        stderrTerminal.sendText(`cat "${errorPath}"`);
     } else if (os.platform() === "linux") {
-        stderrTerminal.sendText(`less -R "${errorPath}"`);
+        stderrTerminal.sendText(`cat "${errorPath}"`);
     } else {
         vscode.commands.executeCommand("vscode.setEditorLayout", {
             orientation: 1,

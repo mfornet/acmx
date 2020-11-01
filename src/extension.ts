@@ -6,6 +6,7 @@ import {
     openSync,
     readdirSync,
     readFileSync,
+    renameSync,
     writeFileSync,
     writeSync,
 } from "fs";
@@ -37,7 +38,8 @@ import {
     Option,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
-import { debug, removeExtension } from "./utils";
+import * as tmp from "tmp";
+import { debug, getExtension, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
 import { acmxTerminal } from "./terminal";
 
@@ -430,14 +432,20 @@ async function setChecker() {
 
     let path = path_.unwrap();
 
-    let allCheckersPlain = fileList(join(pathToStatic(), "checkers"))
-        .filter((name: string) => name !== "testlib.h")
-        .map((name: string) => name.slice(0, name.length - 4));
-
+    let allCheckersPlain = fileList(join(pathToStatic(), "checkers")).filter(
+        (name: string) => name !== "testlib.h"
+    );
     let allChecker = allCheckersPlain.map((value: string) => {
+        var data = readFileSync(
+            join(pathToStatic(), "checkers", value),
+            "utf8"
+        );
+        var regex = /setName\("(.*?)"\)/;
+        var matched = regex.exec(data)![1];
         return {
-            label: value,
-            target: value + ".cpp",
+            label: value.slice(0, value.length - 4),
+            detail: matched,
+            target: value,
         };
     });
 
@@ -488,7 +496,7 @@ async function selectDebugTestCase(uriPath: vscode.Uri) {
     closeSync(launchTaskFdW);
 }
 
-async function copySubmissionToClipboard() {
+async function selectMainSolution(uriPath: vscode.Uri) {
     let path_ = currentProblem();
 
     if (path_.isNone()) {
@@ -497,7 +505,83 @@ async function copySubmissionToClipboard() {
     }
 
     let path = path_.unwrap();
-    let submissionCommand:
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.mainSolution = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+async function selectBruteSolution(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.bruteSolution = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+async function selectGenerator(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.generator = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+async function selectChecker(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.checker = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+function assignedCopyToClipboardCommand(): Boolean {
+    let generateCodeCommand:
+        | string
+        | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("copyToClipboardCommand");
+    return generateCodeCommand !== undefined;
+}
+
+// Run `copyToClipboardCommand` command to convert current code
+// in code ready for submission. This is useful when we want to apply
+// some filters to the code, or some libraries should be inlined.
+function codeToSubmit(): string | undefined {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+    let generateCodeCommand:
         | string
         | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
@@ -505,16 +589,19 @@ async function copySubmissionToClipboard() {
     let sol = mainSolution(path);
     let content = "";
 
-    if (submissionCommand === undefined || submissionCommand === "") {
+    if (generateCodeCommand === undefined || generateCodeCommand === "") {
         content = readFileSync(sol, "utf8");
     } else {
-        let submissionCommands = submissionCommand!.split(" ");
+        let generateCodeCommands = generateCodeCommand!.split(" ");
 
-        for (let i = 0; i < submissionCommands.length; i++) {
-            submissionCommands[i] = submissionCommands[i].replace("$CODE", sol);
+        for (let i = 0; i < generateCodeCommands.length; i++) {
+            generateCodeCommands[i] = generateCodeCommands[i].replace(
+                "$CODE",
+                sol
+            );
         }
 
-        let execution = runSingle(submissionCommands, FRIEND_TIMEOUT, "");
+        let execution = runSingle(generateCodeCommands, FRIEND_TIMEOUT, "");
 
         if (execution.failed()) {
             vscode.window.showErrorMessage("Fail generating submission.");
@@ -524,8 +611,16 @@ async function copySubmissionToClipboard() {
         content = execution.stdout().toString("utf8");
     }
 
-    clipboardy.writeSync(content);
-    vscode.window.showInformationMessage("Submission copied to clipboard!");
+    return content;
+}
+
+async function copySubmissionToClipboard() {
+    let content = codeToSubmit();
+
+    if (content !== undefined) {
+        clipboardy.writeSync(content);
+        vscode.window.showInformationMessage("Submission copied to clipboard!");
+    }
 }
 
 async function submitSolution() {
@@ -555,13 +650,37 @@ async function submitSolution() {
         return;
     }
 
-    let cfcommand = `cf submit -f "${mainSolutionPath}" "${url_.unwrap()}"`;
-    debug("submit-solution-command", `${cfcommand}`);
+    let submitCommand: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("submitCommand");
+
+    if (submitCommand === undefined || submitCommand === "") {
+        vscode.window.showErrorMessage(
+            "acmx.configuration.submitCommand not set"
+        );
+        return;
+    }
+
+    if (assignedCopyToClipboardCommand()) {
+        let content = codeToSubmit();
+        let outputFile = tmp.fileSync();
+        writeSync(outputFile.fd, content);
+        let nameWithExtension =
+            outputFile.name + getExtension(mainSolutionPath);
+        renameSync(outputFile.name, nameWithExtension);
+        mainSolutionPath = nameWithExtension;
+    }
+
+    submitCommand = submitCommand
+        .replace("$CODE", mainSolutionPath)
+        .replace("$URL", url_.unwrap());
+
+    debug("submit-solution-command", `${submitCommand}`);
 
     await vscode.window.activeTextEditor?.document.save().then(() => {
         let ter = acmxTerminal();
         ter.show();
-        ter.sendText(cfcommand);
+        ter.sendText(submitCommand!);
     });
 }
 
@@ -641,6 +760,22 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.selectDebugTestCase",
         selectDebugTestCase
     );
+    let selectMainSolutionCommand = vscode.commands.registerCommand(
+        "acmx.selectMainSolution",
+        selectMainSolution
+    );
+    let selectBruteSolutionCommand = vscode.commands.registerCommand(
+        "acmx.selectBruteSolution",
+        selectBruteSolution
+    );
+    let selectGeneratorCommand = vscode.commands.registerCommand(
+        "acmx.selectGenerator",
+        selectGenerator
+    );
+    let selectCheckerCommand = vscode.commands.registerCommand(
+        "acmx.selectChecker",
+        selectChecker
+    );
     let copySubmissionToClipboardCommand = vscode.commands.registerCommand(
         "acmx.copyToClipboard",
         copySubmissionToClipboard
@@ -671,6 +806,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(compileCommand);
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(selectDebugTestCaseCommand);
+    context.subscriptions.push(selectMainSolutionCommand);
+    context.subscriptions.push(selectBruteSolutionCommand);
+    context.subscriptions.push(selectGeneratorCommand);
+    context.subscriptions.push(selectCheckerCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
     context.subscriptions.push(editLanguageCommand);
 

@@ -101,6 +101,15 @@ export function removeExtension(name: string) {
     }
 }
 
+export function getExtension(name: string) {
+    let split = name.split(".");
+    if (split.length <= 1) {
+        return "";
+    } else {
+        return "." + split[split.length - 1];
+    }
+}
+
 export function createFolder(path: string) {
     if (!existsSync(path)) {
         createFolder(dirname(path));

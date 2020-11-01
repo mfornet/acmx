@@ -4,7 +4,7 @@
     "description": "Competitive Programming made simple",
     "icon": "images/logo.png",
     "publisher": "marx24",
-    "version": "0.3.5",
+    "version": "0.3.6",
     "license": "MIT",
     "keywords": [
         "acm",
@@ -81,7 +81,13 @@
                     "acmx.configuration.copyToClipboardCommand": {
                         "type": "string",
                         "default": "",
-                        "description": "Command to run to copy to clipboard. Leave empty to copy main program. Refer to the code as $PROGRAM",
+                        "description": "Command to run to copy to clipboard. Leave empty to copy main program. Refer to the code as $CODE",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.submitCommand": {
+                        "type": "string",
+                        "default": "cf submit -f $CODE $URL",
+                        "description": "Command to run on submit. Refer to the path to code as $CODE and to the problem url as $URL.",
                         "scope": "resource"
                     },
                     "acmx.configuration.tasks": {
@@ -207,6 +213,22 @@
                 "title": "Select Test Case"
             },
             {
+                "command": "acmx.selectMainSolution",
+                "title": "Select Main Solution"
+            },
+            {
+                "command": "acmx.selectBruteSolution",
+                "title": "Select Brute Solution"
+            },
+            {
+                "command": "acmx.selectGenerator",
+                "title": "Select Generator"
+            },
+            {
+                "command": "acmx.selectChecker",
+                "title": "Select Checker"
+            },
+            {
                 "command": "acmx.copyToClipboard",
                 "title": "ACMX: Copy Submission"
             },
@@ -255,11 +277,43 @@
                     "command": "acmx.selectDebugTestCase",
                     "group": "acmx@1",
                     "when": "resourceExtname == .in"
+                },
+                {
+                    "command": "acmx.selectMainSolution",
+                    "group": "acmx@1"
+                },
+                {
+                    "command": "acmx.selectBruteSolution",
+                    "group": "acmx@1"
+                },
+                {
+                    "command": "acmx.selectGenerator",
+                    "group": "acmx@1"
+                },
+                {
+                    "command": "acmx.selectChecker",
+                    "group": "acmx@1"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "acmx.selectDebugTestCase",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectMainSolution",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectBruteSolution",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectGenerator",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectChecker",
                     "when": "false"
                 }
             ],
@@ -343,6 +397,7 @@
         "express": "^4.16.4",
         "fs-extra": "^9.0.0",
         "md5-file": "^4.0.0",
-        "rimraf": "^3.0.2"
+        "rimraf": "^3.0.2",
+        "tmp": "^0.1.0"
     }
 }
