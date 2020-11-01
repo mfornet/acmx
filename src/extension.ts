@@ -430,14 +430,20 @@ async function setChecker() {
 
     let path = path_.unwrap();
 
-    let allCheckersPlain = fileList(join(pathToStatic(), "checkers"))
-        .filter((name: string) => name !== "testlib.h")
-        .map((name: string) => name.slice(0, name.length - 4));
-
+    let allCheckersPlain = fileList(join(pathToStatic(), "checkers")).filter(
+        (name: string) => name !== "testlib.h"
+    );
     let allChecker = allCheckersPlain.map((value: string) => {
+        var data = readFileSync(
+            join(pathToStatic(), "checkers", value),
+            "utf8"
+        );
+        var regex = /setName\("(.*?)"\)/;
+        var matched = regex.exec(data)![1];
         return {
-            label: value,
-            target: value + ".cpp",
+            label: value.slice(0, value.length - 4),
+            detail: matched,
+            target: value,
         };
     });
 

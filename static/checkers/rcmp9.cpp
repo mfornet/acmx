@@ -5,15 +5,15 @@ using namespace std;
 
 const double EPS = 1E-9;
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
-    setName("compare two sequences of doubles, max absolute or relative error = %.10f", EPS);
+    setName("compare two sequences of doubles, max absolute or relative error = 1E-9");
     registerTestlibCmd(argc, argv);
 
     int n = 0;
     double j = 0, p = 0;
 
-    while (!ans.seekEof()) 
+    while (!ans.seekEof())
     {
         n++;
         j = ans.readDouble();
@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
         if (!doubleCompare(j, p, EPS))
         {
             quitf(_wa, "%d%s numbers differ - expected: '%.10f', found: '%.10f', error = '%.10f'",
-                n, englishEnding(n).c_str(), j, p, doubleDelta(j, p));
+                  n, englishEnding(n).c_str(), j, p, doubleDelta(j, p));
         }
     }
 
