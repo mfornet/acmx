@@ -605,7 +605,6 @@ async function submitSolution() {
             outputFile.name + getExtension(mainSolutionPath);
         renameSync(outputFile.name, nameWithExtension);
         mainSolutionPath = nameWithExtension;
-        console.log(">>>", nameWithExtension);
     }
 
     submitCommand = submitCommand
