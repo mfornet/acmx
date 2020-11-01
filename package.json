@@ -213,6 +213,22 @@
                 "title": "Select Test Case"
             },
             {
+                "command": "acmx.selectMainSolution",
+                "title": "Select Main Solution"
+            },
+            {
+                "command": "acmx.selectBruteSolution",
+                "title": "Select Brute Solution"
+            },
+            {
+                "command": "acmx.selectGenerator",
+                "title": "Select Generator"
+            },
+            {
+                "command": "acmx.selectChecker",
+                "title": "Select Checker"
+            },
+            {
                 "command": "acmx.copyToClipboard",
                 "title": "ACMX: Copy Submission"
             },
@@ -261,11 +277,43 @@
                     "command": "acmx.selectDebugTestCase",
                     "group": "acmx@1",
                     "when": "resourceExtname == .in"
+                },
+                {
+                    "command": "acmx.selectMainSolution",
+                    "group": "acmx@1"
+                },
+                {
+                    "command": "acmx.selectBruteSolution",
+                    "group": "acmx@1"
+                },
+                {
+                    "command": "acmx.selectGenerator",
+                    "group": "acmx@1"
+                },
+                {
+                    "command": "acmx.selectChecker",
+                    "group": "acmx@1"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "acmx.selectDebugTestCase",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectMainSolution",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectBruteSolution",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectGenerator",
+                    "when": "false"
+                },
+                {
+                    "command": "acmx.selectChecker",
                     "when": "false"
                 }
             ],
