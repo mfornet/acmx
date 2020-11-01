@@ -339,8 +339,14 @@ async function addGenerator(path: string, config: ConfigFile) {
     var gen_path = Option.some(copyFromTemplate(path, templatePath, false));
 
     config.generator = gen_path;
-    spawnSync("python", ["-m", `tcgen`, "--path", `${join(path, TESTCASES)}`, "--output", `${gen_path.unwrap()}`]);
-
+    spawnSync("python", [
+        "-m",
+        `tcgen`,
+        "--path",
+        `${join(path, TESTCASES)}`,
+        "--output",
+        `${gen_path.unwrap()}`,
+    ]);
 }
 
 function addChecker(path: string, config: ConfigFile) {
