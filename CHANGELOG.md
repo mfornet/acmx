@@ -2,6 +2,14 @@
 
 Notable updates of **acmX**
 
+## 0.3.6
+
+- Select with right click main solution, brute solution, generator and checker.
+- Reuse the same terminal on every compile error.
+- Allow custom submit commands. Check the wiki for details: https://github.com/mfornet/acmx/wiki/Submit
+- Add description for each checker
+- Fix issue about checker not being updated properly when changed (#110)
+
 ## 0.3.5
 
 -   Fix issue with path in Window
