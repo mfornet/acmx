@@ -496,6 +496,70 @@ async function selectDebugTestCase(uriPath: vscode.Uri) {
     closeSync(launchTaskFdW);
 }
 
+async function selectMainSolution(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.mainSolution = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+async function selectBruteSolution(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.bruteSolution = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+async function selectGenerator(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.generator = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
+async function selectChecker(uriPath: vscode.Uri) {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    let path = path_.unwrap();
+
+    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    config.checker = Option.some(uriPath.path);
+    config.dump(path);
+    console.log(uriPath);
+}
+
 function assignedCopyToClipboardCommand(): Boolean {
     let generateCodeCommand:
         | string
@@ -605,7 +669,6 @@ async function submitSolution() {
             outputFile.name + getExtension(mainSolutionPath);
         renameSync(outputFile.name, nameWithExtension);
         mainSolutionPath = nameWithExtension;
-        console.log(">>>", nameWithExtension);
     }
 
     submitCommand = submitCommand
@@ -697,6 +760,22 @@ export function activate(context: vscode.ExtensionContext) {
         "acmx.selectDebugTestCase",
         selectDebugTestCase
     );
+    let selectMainSolutionCommand = vscode.commands.registerCommand(
+        "acmx.selectMainSolution",
+        selectMainSolution
+    );
+    let selectBruteSolutionCommand = vscode.commands.registerCommand(
+        "acmx.selectBruteSolution",
+        selectBruteSolution
+    );
+    let selectGeneratorCommand = vscode.commands.registerCommand(
+        "acmx.selectGenerator",
+        selectGenerator
+    );
+    let selectCheckerCommand = vscode.commands.registerCommand(
+        "acmx.selectChecker",
+        selectChecker
+    );
     let copySubmissionToClipboardCommand = vscode.commands.registerCommand(
         "acmx.copyToClipboard",
         copySubmissionToClipboard
@@ -727,6 +806,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(compileCommand);
     context.subscriptions.push(setCheckerCommand);
     context.subscriptions.push(selectDebugTestCaseCommand);
+    context.subscriptions.push(selectMainSolutionCommand);
+    context.subscriptions.push(selectBruteSolutionCommand);
+    context.subscriptions.push(selectGeneratorCommand);
+    context.subscriptions.push(selectCheckerCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
     context.subscriptions.push(editLanguageCommand);
 
