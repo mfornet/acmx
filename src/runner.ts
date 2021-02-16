@@ -4,7 +4,7 @@ import { globalLanguagePath } from "./core";
 import { join, basename } from "path";
 import { readdirSync, readFileSync, existsSync } from "fs";
 import { extension, substituteArgsWith, debug, writeToFileSync } from "./utils";
-import { onCompilationError } from "./errors";
+import { onCompilationError, showCompileError } from "./errors";
 import md5File = require("md5-file");
 
 function loadConfig(extension: string): LanguageCommand {
@@ -106,6 +106,9 @@ export function preRun(
     if (execution.failed()) {
         onCompilationError(code, path, execution);
     } else {
+        if (execution.stderr().length > 0) {
+            showCompileError(path, execution.stderr().toString("utf8"));
+        }
         dumpMD5(code, path);
     }
 

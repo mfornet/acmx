@@ -240,7 +240,13 @@ async function compile() {
         if (result.isNone()) {
             vscode.window.showInformationMessage("No compilation needed.");
         } else if (!result.unwrap().failed()) {
-            vscode.window.showInformationMessage("Compilation successful.");
+            let message = "";
+            if (result.unwrap().getCached()) {
+                message = " (cached)";
+            } else if (result.unwrap().stderr().length > 0) {
+                message = " with warnings";
+            }
+            vscode.window.showInformationMessage("Compilation successful" + message + ".");
         }
     });
 }
