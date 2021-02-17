@@ -19,10 +19,10 @@ export const editorChanged = async (e: vscode.TextEditor | undefined) => {
     // console.log('Changed editor to', e?.document.fileName);
 
     // if (e === undefined) {
-    //     getJudgeViewProvider().extensionToJudgeViewMessage({
-    //         command: 'new-problem',
-    //         problem: undefined,
-    //     });
+        getJudgeViewProvider().extensionToJudgeViewMessage({
+            command: 'new-problem',
+            problem: undefined,
+        });
     //     setOnlineJudgeEnv(false); // reset the non-debug mode set in webview.
     //     return;
     // }
@@ -36,16 +36,16 @@ export const editorChanged = async (e: vscode.TextEditor | undefined) => {
     // const problem = getProblemForDocument(e.document);
 
     // if (problem === undefined) {
-        getJudgeViewProvider().extensionToJudgeViewMessage({
-            command: 'new-problem',
-            problem: undefined,
-        });
-        return;
+        // getJudgeViewProvider().extensionToJudgeViewMessage({
+        //     command: 'new-problem',
+        //     problem: undefined,
+        // });
+        // return;
     // }
 
     // if (
     //     getAutoShowJudgePref() &&
-    //     getJudgeViewProvider().isViewUninitialized()
+        // getJudgeViewProvider().isViewUninitialized()
     // ) {
     //     vscode.commands.executeCommand('cph.judgeView.focus');
     // }

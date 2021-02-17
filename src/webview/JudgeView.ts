@@ -109,10 +109,10 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
 
     private getInitialProblem() {
         const doc = vscode.window.activeTextEditor?.document;
-        // this.extensionToJudgeViewMessage({
-        //     command: 'new-problem',
-        //     problem: getProblemForDocument(doc),
-        // });
+        this.extensionToJudgeViewMessage({
+            command: 'new-problem',
+            problem: undefined,//getProblemForDocument(doc),
+        });
 
         // also load any messages from before that were lost.
         this.messageBuffer.forEach((message) => {

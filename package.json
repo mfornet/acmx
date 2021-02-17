@@ -37,7 +37,7 @@
                 {
                     "id": "cph-judge-view-container",
                     "title": "CPH Judge",
-                    "icon": "dist/static/panel-view-icon.svg"
+                    "icon": "static/panel-view-icon.svg"
                 }
             ]
         },
@@ -365,15 +365,19 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "webpack --mode production",
-        "webpack": "webpack --mode development",
-        "webpack-dev": "webpack --mode development --watch",
-        "test-compile": "tsc -p ./",
         "compile": "tsc -p ./",
-        "lint": "eslint src/ --ext .ts",
+        "lint": "eslint src/ --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
         "pretest": "npm run compile && npm run lint",
-        "test": "node ./out/test/runTest.js"
+        "test": "node ./out/test/runTest.js",
+        "webpack-production": "webpack --mode production",
+        "webpack-frontend-production": "webpack --mode production --config ./webpack.frontend.config.js",
+        "vscode:prepublish": "npm run webpack-frontend-production && npm run webpack-production",
+        "prewebpack": "webpack --mode development --config ./webpack.frontend.config.js",
+        "webpack": "webpack --mode development",
+        "webpack-dev": "webpack --mode development --watch",
+        "webpack-frontend-dev": "webpack --mode development --watch --config ./webpack.frontend.config.js",
+        "test-compile": "tsc -p ./"
     },
     "repository": {
         "type": "git",
