@@ -1,0 +1,366 @@
+* {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome and Opera */
+    cursor: default !important;
+    box-sizing: border-box;
+}
+.selectable {
+    -webkit-touch-callout: text; /* iOS Safari */
+    -webkit-user-select: text; /* Safari */
+    -khtml-user-select: text; /* Konqueror HTML */
+    -moz-user-select: text; /* Firefox */
+    -ms-user-select: text; /* Internet Explorer/Edge */
+    user-select: text; /* Non-prefixed version, currently
+                                    supported by Chrome and Opera */
+    cursor: text !important;
+}
+body {
+    margin: 0 auto;
+    padding: 0px;
+    max-width: 800px;
+}
+
+#app {
+    margin-bottom: 100px;
+}
+.btn:hover {
+    filter: brightness(125%);
+}
+.actions {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    padding: 15px;
+    background: var(--vscode-sideBar-background);
+    box-shadow: 0px 0px 10px 0px rgba(50, 50, 50, 0.3);
+}
+.case {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    margin-bottom: 2px;
+}
+
+.exec-time {
+    background: #fbff001c;
+    color: white;
+    padding: 2px 5px 2px 5px;
+    font-size: 80%;
+    border-radius: 5px;
+}
+
+a.btn {
+    display: inline-block;
+}
+
+a,
+a:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+a[href]:hover {
+    text-decoration: underline;
+    cursor: pointer !important;
+}
+
+.first-time-message {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.1);
+}
+.first-time-message ul li {
+    margin-bottom: 10px;
+}
+.pre,
+pre,
+textarea {
+    background: var(--input-background);
+    width: 100%;
+    display: block;
+    background: rgba(0, 0, 0, 0.2);
+    outline: none !important;
+    border: 0px;
+    color: bisque;
+    max-width: 100%;
+    max-height: 250px !important;
+    overflow-y: auto;
+    resize: none;
+    border: 1px solid transparent;
+    margin-bottom: 4px;
+}
+
+.clearfix {
+    clear: both;
+    content: '';
+    width: 100%;
+    display: block;
+}
+
+::-webkit-resizer {
+    display: none;
+}
+textarea:focus,
+textarea:active {
+    background: black;
+    outline: none !important;
+    border: 1px solid #3393cc;
+}
+
+.case-number {
+    /* font-weight: bold; */
+    font-size: 1.15em;
+    color: rgb(25, 152, 211);
+}
+
+.case-metadata {
+    display: flex;
+}
+
+.help {
+    position: absolute;
+    top: 15px;
+    right: 5px;
+}
+
+.right {
+    float: right;
+}
+
+.left {
+    float: left;
+}
+
+.toggle-minimize {
+    flex-grow: 1;
+    padding: 8px;
+    margin: -8px;
+    margin-right: 0px;
+}
+
+.feedback:hover {
+    background-color: rgba(50, 50, 50, 0.3);
+}
+
+.time {
+    color: rgb(185, 185, 84);
+}
+
+.fail {
+    color: rgb(126, 38, 38);
+}
+
+.pass {
+    color: rgb(37, 87, 37);
+}
+
+.p10 {
+    padding: 10px;
+}
+
+.o50 {
+    opacity: 0.5;
+}
+
+.pad-10 {
+    padding: 10px;
+    background: #9eabec0d;
+}
+
+.btn {
+    padding: 2px 5px 2px 5px;
+    background: #3393cc91;
+    color: white;
+    outline: none;
+    margin-right: 4px;
+    margin-bottom: 5px;
+    border: 2px solid transparent;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.btn-green {
+    background: #70b92791;
+}
+.btn-red {
+    background: #b9274391;
+}
+.btn:focus {
+    border-color: var(--vscode-focusBorder);
+}
+.btn-orange {
+    background: orange;
+}
+
+.btn-submit {
+    margin: 10px;
+}
+
+.btn-w80 {
+    width: 30px;
+    text-align: center;
+}
+
+.margin-10 {
+    margin: 10px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+h4 {
+    padding: 5px;
+}
+#filepath {
+    display: none;
+}
+#running-next-box {
+    padding: 10px;
+}
+body.vscode-light * {
+    color: black !important;
+}
+body.vscode-light textarea,
+pre {
+    background: rgba(209, 209, 209, 0.2);
+    outline: none !important;
+    border: 1px solid rgb(243, 243, 243);
+}
+
+body.vscode-light .case {
+    background: rgba(235, 228, 228, 0.2);
+}
+
+body.vscode-light textarea:focus {
+    background: white;
+    outline: none !important;
+    border: 1px solid rgb(28, 145, 184);
+}
+
+button:disabled {
+    background: rgb(66, 66, 66) !important;
+    opacity: 0.1 !important;
+}
+
+#problem,
+#results {
+    display: none;
+}
+
+.result-data {
+    font-size: 1.15em;
+    margin-left: 5px;
+}
+
+.result-pass {
+    color: greenyellow;
+    padding-right: 5px;
+}
+.result-fail {
+    color: orangered;
+    padding-right: 5px;
+}
+.running-text {
+    color: yellow;
+    padding-right: 5px;
+    padding-left: 5px;
+    font-size: 1.15em;
+}
+
+.problem-name {
+    font-size: 18px;
+    margin: 5px;
+    padding: 10px;
+}
+
+.case {
+    border-left: 5px solid var(--vscode-input-background);
+    border-radius: 0px;
+}
+
+.case.running {
+    /* animation: runs 1s linear infinite; */
+    border-color: yellow;
+}
+
+.case.passed {
+    border-left-color: green;
+}
+
+.case.failed {
+    border-left-color: orangered;
+}
+
+.signal {
+    padding: 4px;
+}
+
+.loader {
+    border: 2px solid #f3f3f3; /* Light grey */
+    border-top: 2px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    animation: spin 0.5s linear infinite;
+    display: inline-block;
+    margin: 0px 10px 0px 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.clipboard {
+    filter: grayscale(100%);
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    padding: 4px;
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 80%;
+}
+
+.textarea-container {
+    position: relative;
+}
+
+.clipboard:hover {
+    opacity: 1;
+}
+
+.compiling {
+    color: orange;
+}
+
+.notification {
+    padding: 5px;
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    background: rgb(58, 57, 57);
+    color: white;
+    border: 1px solid rgb(92, 95, 97);
+}
+/* @keyframes runs {
+    50% {
+        border-color: orange;
+    }
+    100% {
+        border-color: var(--input-background);
+    }
+} */

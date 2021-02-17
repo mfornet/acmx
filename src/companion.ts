@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { newProblemFromCompanion } from "./core";
 
-import * as express from "express";
+import express from "express";
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
 

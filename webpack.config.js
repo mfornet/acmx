@@ -1,6 +1,7 @@
 "use strict";
 
 const path = require("path");
+const CopyPlugin = require('copy-webpack-plugin');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -26,7 +27,7 @@ const config = {
         rules: [
             {
                 test: /\.ts$/,
-                exclude: /node_modules/,
+                exclude: [/node_modules/, /src\/webview\/frontend/],
                 use: [
                     {
                         loader: "ts-loader",
@@ -35,6 +36,17 @@ const config = {
             },
         ],
     },
+    plugins: [
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: 'src/webview/frontend/index.html',
+                    to: 'frontend/index.html',
+                },
+                { from: 'static', to: 'static' },
+            ],
+        }),
+    ],
     node: {
         __dirname: false,
     },
