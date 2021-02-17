@@ -43,6 +43,20 @@ import { debug, getExtension, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
 import { acmxTerminal } from "./terminal";
 
+import {
+    editorChanged,
+    editorClosed,
+    checkLaunchWebview,
+} from './webview/editorChange';
+
+import JudgeViewProvider from './webview/JudgeView';
+
+let judgeViewProvider: JudgeViewProvider;
+
+export const getJudgeViewProvider = () => {
+    return judgeViewProvider;
+};
+
 const TESTCASES = "testcases";
 
 // Create a new problem
@@ -818,10 +832,41 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(selectCheckerCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
     context.subscriptions.push(editLanguageCommand);
-
     context.subscriptions.push(submitSolutionCommand);
-
     context.subscriptions.push(debugTestCommand);
+
+    judgeViewProvider = new JudgeViewProvider(context.extensionUri);
+
+    const webviewView = vscode.window.registerWebviewViewProvider(
+        JudgeViewProvider.viewType,
+        judgeViewProvider,
+        {
+            webviewOptions: {
+                retainContextWhenHidden: true, // TODO: customize
+            },
+        },
+    );
+
+    context.subscriptions.push(webviewView);
+
+    checkLaunchWebview();
+
+    vscode.workspace.onDidCloseTextDocument((e) => {
+        editorClosed(e);
+    });
+
+    vscode.window.onDidChangeActiveTextEditor((e) => {
+        editorChanged(e);
+    });
+
+    vscode.window.onDidChangeVisibleTextEditors((editors) => {
+        if (editors.length === 0) {
+            getJudgeViewProvider().extensionToJudgeViewMessage({
+                command: 'new-problem',
+                problem: undefined,
+            });
+        }
+    });
 }
 
 // this method is called when your extension is deactivated
