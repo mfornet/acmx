@@ -567,6 +567,8 @@ export function timedRun(
 
     let timeSpan = execution.timeSpan.unwrap();
 
+    writeBufferToFileSync(tcCurrent, execution.stdout());
+
     // Check if an error happened
     if (execution.failed()) {
         if (execution.isTLE()) {
@@ -577,8 +579,6 @@ export function timedRun(
     }
 
     // Check output is ok
-    writeBufferToFileSync(tcCurrent, execution.stdout());
-
     let checkerExecution = runWithArgs(
         checker.code,
         checker.getOutput(),
@@ -795,7 +795,7 @@ function getBrutePath(path: string, config: ConfigFile): Option<CompileResult> {
  *
  * If local checker is found try to compile it.
  */
-function getCheckerPath(
+export function getCheckerPath(
     path: string,
     config: ConfigFile
 ): Option<CompileResult> {

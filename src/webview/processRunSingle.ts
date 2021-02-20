@@ -1,66 +1,64 @@
-// import { Problem, RunResult } from '../types';
-// import { getLanguage } from '../utils';
-// import { getBinSaveLocation, compileFile } from '../compiler';
-// import { saveProblem } from '../parser';
-// import { runTestCase, deleteBinary } from '../executions';
-// import { isResultCorrect } from '../judge';
+import { RunResult } from './types';
+import {
+    currentProblem,
+    getMainSolutionPath,
+    getCheckerPath,
+    getTimeout,
+    timedRun
+} from '../core';
 import * as vscode from 'vscode';
 import { getJudgeViewProvider } from '../extension';
-// import sendTelemetryEvent from '../telemetery';
 
-import { Problem } from '../primitives';
+import { ConfigFile } from '../primitives';
 
 export const runSingleAndSave = async (
-    problem: Problem,
-    id: number,
-    skipCompile = false,
+    tcName: string
 ) => {
-    // console.log('Run and save started', problem, id);
-    // sendTelemetryEvent('run-single');
-    // const srcPath = problem.srcPath;
-    // const language = getLanguage(srcPath);
-    // const binPath = getBinSaveLocation(srcPath);
-    // const idx = problem.tests.findIndex((value) => value.id === id);
-    // const testCase = problem.tests[idx];
+    console.log('Run and save started', tcName);
 
-    // const textEditor = await vscode.workspace.openTextDocument(srcPath);
-    // await vscode.window.showTextDocument(textEditor, vscode.ViewColumn.One);
-    // await textEditor.save();
+    let path_ = currentProblem();
 
-    // if (!testCase) {
-    //     console.error('Invalid id', id, problem);
-    //     return;
-    // }
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
 
-    // saveProblem(srcPath, problem);
+    await vscode.window.activeTextEditor?.document.save();
 
-    // if (!skipCompile) {
-    //     if (!(await compileFile(srcPath))) {
-    //         console.error('Failed to compile', problem, id);
-    //         return;
-    //     }
-    // }
+    let path = path_.unwrap();
 
-    // const run = await runTestCase(language, binPath, testCase.input);
+    let config = ConfigFile.loadConfig(path, true).unwrap();
 
-    // if (!skipCompile) {
-    //     deleteBinary(language, binPath);
-    // }
+    // Load main solution (compile if necessary)
+    let mainSolution_ = getMainSolutionPath(path, config);
+    if (mainSolution_.isNone()) {
+        vscode.window.showErrorMessage("Main solution not found (oops)");
+        return;
+    }
+    let mainSolution = mainSolution_.unwrap();
 
-    // const didError =
-    //     (run.code !== null && run.code !== 0) ||
-    //     run.signal !== null ||
-    //     run.stderr !== '';
-    // const result: RunResult = {
-    //     ...run,
-    //     pass: didError ? false : isResultCorrect(testCase, run.stdout),
-    //     id,
-    // };
+    // Load checker (compile if necessary)
+    let checker_ = getCheckerPath(path, config);
+    if (checker_.isNone()) {
+        vscode.window.showErrorMessage("Checker not found");
+        return;
+    }
+    let checker = checker_.unwrap();
 
-    // console.log('Testcase judging complete. Result:', result);
-    // getJudgeViewProvider().extensionToJudgeViewMessage({
-    //     command: 'run-single-result',
-    //     result,
-    //     problem,
-    // });
+    // Try to find time limit from local config first, otherwise use global time limit.
+    // TODO: Add to wiki about this feature, and how to change custom time limit.
+    let timeout = config.timeLimit().unwrapOr(getTimeout());
+
+    let tcResult = timedRun(path, tcName, timeout, mainSolution, checker);    
+
+    const result: RunResult = {
+        tcResult,
+        tcName,
+    };
+
+    console.log('Testcase judging complete. Result:', result);
+    getJudgeViewProvider().extensionToJudgeViewMessage({
+        command: 'run-single-result',
+        result,
+    });
 };

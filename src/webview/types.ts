@@ -1,3 +1,5 @@
+import { TestCaseResult } from '../primitives';
+
 /** Valid name for a VS Code preference section for the extension */
 export type prefSection =
     | 'general.saveLocation'
@@ -33,7 +35,7 @@ export type LangNames = 'python' | 'c' | 'cpp' | 'rust' | 'java';
 export type TestCase = {
     input: string;
     output: string;
-    id: number;
+    tcName: string;
 };
 
 export type Problem = {
@@ -49,32 +51,32 @@ export type Problem = {
 };
 
 export type Case = {
-    id: number;
+    tcName: string;
     result: RunResult | null;
     testcase: TestCase;
 };
 
-export type Run = {
-    stdout: string;
-    stderr: string;
-    code: number | null;
-    signal: string | null;
-    time: number;
-    timeOut: boolean;
-};
+// export type Run = {
+//     stdout: string;
+//     stderr: string;
+//     code: number | null;
+//     signal: string | null;
+//     time: number;
+//     timeOut: boolean;
+// };
 
 export type RunResult = {
-    pass: boolean | null;
-    id: number;
-} & Run;
+    tcResult: TestCaseResult;
+    tcName: string;
+};
 
-export type WebviewMessageCommon = {
-    problem: Problem;
+export type WebviewMessageCommon = { // delete !!!!!!!!!!
+    // problem: Problem;
 };
 
 export type RunSingleCommand = {
     command: 'run-single-and-save';
-    id: number;
+    tcName: string;
 } & WebviewMessageCommon;
 
 export type RunAllCommand = {
@@ -128,7 +130,7 @@ export type WebviewToVSEvent =
 
 export type RunningCommand = {
     command: 'running';
-    id: number;
+    tcName: string;
 } & WebviewMessageCommon;
 
 export type ResultCommand = {
@@ -158,7 +160,7 @@ export type SubmitFinishedCommand = {
 
 export type NewProblemCommand = {
     command: 'new-problem';
-    problem: Problem | undefined;
+    // problem: Problem | undefined;
 };
 
 export type VSToWebViewMessage =

@@ -1,49 +1,40 @@
+import { join } from 'path';
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { TESTCASES } from '../../primitives';
+import { currentProblem, testCasesName } from '../../core';
 import {
-    Problem,
     WebviewToVSEvent,
     TestCase,
     Case,
     VSToWebViewMessage,
     ResultCommand,
     RunningCommand,
-} from '../../types';
+} from '../types';
 import CaseView from './CaseView';
+import { writeToFileSync } from '../../utils';
+import { readFileSync, existsSync } from 'fs';
+
+let tcCount = 0;
+
 declare const vscodeApi: {
     postMessage: (message: WebviewToVSEvent) => void;
 };
 
 function Judge(props: {
-    problem: Problem;
-    updateProblem: (problem: Problem) => void;
     cases: Case[];
     updateCases: (cases: Case[]) => void;
 }) {
-    const problem = props.problem;
     const cases = props.cases;
-    const updateProblem = props.updateProblem;
     const updateCases = props.updateCases;
 
     console.log('new cases:', cases);
 
     const [focusLast, useFocusLast] = useState<boolean>(false);
-    const [forceRunning, useForceRunning] = useState<number | false>(false);
+    const [forceRunning, useForceRunning] = useState<string | false>(false);
     const [compiling, setCompiling] = useState<boolean>(false);
     const [notification, setNotification] = useState<string | null>(null);
     const [waitingForSubmit, setWaitingForSubmit] = useState<boolean>(false);
-    const [onlineJudgeEnv, setOnlineJudgeEnv] = useState<boolean>(false);
-
-    // Update problem if cases change. The only place where `updateProblem` is
-    // allowed to ensure sync.
-    useEffect(() => {
-        const testCases: TestCase[] = cases.map((c) => c.testcase);
-        console.log(cases);
-        updateProblem({
-            ...problem,
-            tests: testCases,
-        });
-    }, [cases]);
 
     useEffect(() => {
         console.log('Adding event listeners');
@@ -52,7 +43,6 @@ function Judge(props: {
             console.log('Got event in web view', event.data);
             switch (data.command) {
                 case 'new-problem': {
-                    setOnlineJudgeEnv(false);
                     break;
                 }
 
@@ -93,46 +83,49 @@ function Judge(props: {
     }, []);
 
     const handleRunning = (data: RunningCommand) => {
-        useForceRunning(data.id);
+        useForceRunning(data.tcName);
     };
 
-    const rerun = (id: number, input: string, output: string) => {
-        const idx = problem.tests.findIndex((testCase) => testCase.id === id);
+    const rerun = (tcName: string, input: string, output: string) => {
+        let path_ = currentProblem();
+        let path = path_.unwrap();
+        let tcInput = join(path, TESTCASES, `${tcName}.in`);
+        let tcOutput = join(path, TESTCASES, `${tcName}.ans`);
 
-        if (idx === -1) {
-            console.log('No id in problem tests', problem, id);
+        if (!existsSync(tcInput)) {
+            console.log('No tcName in problem tests', tcName);
             return;
         }
 
-        problem.tests[idx].input = input;
-        problem.tests[idx].output = output;
+        writeToFileSync(tcInput, input);
+        writeToFileSync(tcOutput, output);
 
         vscodeApi.postMessage({
             command: 'run-single-and-save',
-            problem,
-            id,
+            tcName,
         });
     };
 
     // Remove a case.
-    const remove = (id: number) => {
-        const newCases = cases.filter((value) => value.id !== id);
+    const remove = (tcName: string) => {
+        const newCases = cases.filter((value) => value.tcName !== tcName);
         updateCases(newCases);
     };
 
     // Create a new Case
     const newCase = () => {
         console.log(cases);
-        const id = Date.now();
+        tcCount = tcCount + 1;
+        const tcName = 'ui' + tcCount.toString();
         const testCase: TestCase = {
-            id,
+            tcName,
             input: '',
             output: '',
         };
         updateCases([
             ...cases,
             {
-                id,
+                tcName,
                 result: null,
                 testcase: testCase,
             },
@@ -144,7 +137,6 @@ function Judge(props: {
     const stop = () => {
         vscodeApi.postMessage({
             command: 'kill-running',
-            problem,
         });
     };
 
@@ -152,31 +144,18 @@ function Judge(props: {
     const deleteTcs = () => {
         vscodeApi.postMessage({
             command: 'delete-tcs',
-            problem,
         });
     };
 
     const runAll = () => {
-        console.log(problem);
         vscodeApi.postMessage({
             command: 'run-all-and-save',
-            problem,
         });
-    };
-
-    const submitKattis = () => {
-        vscodeApi.postMessage({
-            command: 'submitKattis',
-            problem,
-        });
-
-        setWaitingForSubmit(true);
     };
 
     const submitCf = () => {
         vscodeApi.postMessage({
             command: 'submitCf',
-            problem,
         });
 
         setWaitingForSubmit(true);
@@ -195,32 +174,22 @@ function Judge(props: {
     };
 
     const getRunningProp = (value: Case) => {
-        if (forceRunning === value.id) {
+        if (forceRunning === value.tcName) {
             console.log('Forcing Running');
             debounceForceRunning();
-            return forceRunning === value.id;
+            return forceRunning === value.tcName;
         }
         return false;
     };
 
-    const toggleOnlineJudgeEnv = () => {
-        const newEnv = !onlineJudgeEnv;
-        setOnlineJudgeEnv(newEnv);
-        vscodeApi.postMessage({
-            command: 'online-judge-env',
-            value: newEnv,
-        });
-        console.log('env', newEnv);
-    };
-
-    const updateCase = (id: number, input: string, output: string) => {
+    const updateCase = (tcName: string, input: string, output: string) => {
         const newCases: Case[] = cases.map((testCase) => {
-            if (testCase.id === id) {
+            if (testCase.tcName === tcName) {
                 return {
-                    id,
+                    tcName,
                     result: testCase.result,
                     testcase: {
-                        id,
+                        tcName,
                         input,
                         output,
                     },
@@ -245,10 +214,10 @@ function Judge(props: {
             views.push(
                 <CaseView
                     notify={notify}
-                    num={index + 1}
+                    // num={index + 1}
                     case={value}
                     rerun={rerun}
-                    key={value.id.toString()}
+                    key={value.tcName.toString()}
                     remove={remove}
                     doFocus={true}
                     forceRunning={getRunningProp(value)}
@@ -260,10 +229,10 @@ function Judge(props: {
             views.push(
                 <CaseView
                     notify={notify}
-                    num={index + 1}
+                    // num={index + 1}
                     case={value}
                     rerun={rerun}
-                    key={value.id.toString()}
+                    key={value.tcName.toString()}
                     remove={remove}
                     forceRunning={getRunningProp(value)}
                     updateCase={updateCase}
@@ -273,65 +242,65 @@ function Judge(props: {
     });
 
     const renderSubmitButton = () => {
-        let url: URL;
-        try {
-            url = new URL(problem.url);
-        } catch (err) {
-            console.error(err);
-            return null;
-        }
-        if (
-            url.hostname !== 'codeforces.com' &&
-            url.hostname !== 'open.kattis.com'
-        ) {
-            return null;
-        }
+        // let url: URL;
+        // try {
+        //     url = new URL(problem.url);
+        // } catch (err) {
+        //     console.error(err);
+        //     return null;
+        // }
+        // if (
+        //     url.hostname !== 'codeforces.com' &&
+        //     url.hostname !== 'open.kattis.com'
+        // ) {
+        //     return null;
+        // }
 
-        if (url.hostname == 'codeforces.com') {
+        // if (url.hostname == 'codeforces.com') {
             return (
                 <button className="btn" onClick={submitCf}>
                     Submit to Codeforces
                 </button>
             );
-        } else if (url.hostname == 'open.kattis.com') {
-            return (
-                <div className="pad-10 submit-area">
-                    <button className="btn" onClick={submitKattis}>
-                        Submit on Kattis
-                    </button>
-                    {waitingForSubmit && (
-                        <>
-                            <span className="loader"></span> Submitting...
-                            <br />
-                            <small>
-                                To submit to Kattis, you need to have the{' '}
-                                <a href="https://github.com/Kattis/kattis-cli/blob/master/submit.py">
-                                    submission client{' '}
-                                </a>
-                                and the{' '}
-                                <a href="https://open.kattis.com/download/kattisrc">
-                                    configuration file{' '}
-                                </a>
-                                downloaded in a folder called .kattis in your
-                                home directory.
-                                <br />
-                                Submission result will open in your browser.
-                                <br />
-                                <br />
-                            </small>
-                        </>
-                    )}
-                </div>
-            );
-        }
+        // } else if (url.hostname == 'open.kattis.com') {
+        //     return (
+        //         <div className="pad-10 submit-area">
+        //             <button className="btn" onClick={submitKattis}>
+        //                 Submit on Kattis
+        //             </button>
+        //             {waitingForSubmit && (
+        //                 <>
+        //                     <span className="loader"></span> Submitting...
+        //                     <br />
+        //                     <small>
+        //                         To submit to Kattis, you need to have the{' '}
+        //                         <a href="https://github.com/Kattis/kattis-cli/blob/master/submit.py">
+        //                             submission client{' '}
+        //                         </a>
+        //                         and the{' '}
+        //                         <a href="https://open.kattis.com/download/kattisrc">
+        //                             configuration file{' '}
+        //                         </a>
+        //                         downloaded in a folder called .kattis in your
+        //                         home directory.
+        //                         <br />
+        //                         Submission result will open in your browser.
+        //                         <br />
+        //                         <br />
+        //                     </small>
+        //                 </>
+        //             )}
+        //         </div>
+        //     );
+        // }
     };
 
     const getHref = () => {
-        if (problem.local === undefined || problem.local === false) {
-            return problem.url;
-        } else {
+        // if (problem.local === undefined || problem.local === false) {
+        //     return problem.url;
+        // } else {
             return undefined;
-        }
+        // }
     };
 
     return (
@@ -339,7 +308,7 @@ function Judge(props: {
             {notification && <div className="notification">{notification}</div>}
             <div className="meta">
                 <h1 className="problem-name">
-                    <a href={getHref()}>{problem.name}</a>{' '}
+                    <a href={getHref()}>{'Find my name dummy'}</a>{' '}
                     {compiling && (
                         <b className="compiling" title="Compiling">
                             <span className="loader"></span>
@@ -356,12 +325,12 @@ function Judge(props: {
                 >
                     + New Testcase
                 </button>
-                <span onClick={toggleOnlineJudgeEnv}>
+                {/* <span onClick={toggleOnlineJudgeEnv}>
                     <input type="checkbox" checked={onlineJudgeEnv} />
                     <span>
                         Set <code>ONLINE_JUDGE</code>
                     </span>
-                </span>
+                </span> */}
                 {renderSubmitButton()}
             </div>
 
@@ -425,15 +394,24 @@ function Judge(props: {
     );
 }
 
-const getCasesFromProblem = (problem: Problem | undefined): Case[] => {
-    if (problem === undefined) {
+const getCasesFromProblem = (): Case[] => {
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
         return [];
     }
 
-    return problem.tests.map((testCase) => ({
-        id: testCase.id,
+    let path = path_.unwrap();
+    let tests = testCasesName(path);
+
+    return tests.map((tcName) => ({
+        tcName: tcName,
         result: null,
-        testcase: testCase,
+        testcase: {
+            input: readFileSync(join(path, TESTCASES, `${tcName}.in`, "utf8")).toString(),
+            output: readFileSync(join(path, TESTCASES, `${tcName}.ans`, "utf8")).toString(),
+            tcName: tcName,
+        },
     }));
 };
 
@@ -443,30 +421,30 @@ const getCasesFromProblem = (problem: Problem | undefined): Case[] => {
  * Otherwise, shows the Judge view.
  */
 function App() {
-    const [problem, setProblem] = useState<Problem | undefined>(undefined);
+    // const [problem, setProblem] = useState<Problem | undefined>(undefined);
     const [cases, setCases] = useState<Case[]>([]);
-    const [deferSaveTimer, setDeferSaveTimer] = useState<number | null>(null);
-    const [, setSaving] = useState<boolean>(false);
+    // const [deferSaveTimer, setDeferSaveTimer] = useState<number | null>(null);
+    // const [, setSaving] = useState<boolean>(false);
     const [showFallback, setShowFallback] = useState<boolean>(false);
 
     // Save the problem
-    const save = () => {
-        setSaving(true);
-        if (problem !== undefined) {
-            console.log('Saved problem');
-            vscodeApi.postMessage({
-                command: 'save',
-                problem,
-            });
-        }
-        setTimeout(() => {
-            setSaving(false);
-        }, 500);
-    };
+    // const save = () => {
+        // setSaving(true);
+        // if (problem !== undefined) {
+        //     console.log('Saved problem');
+        //     vscodeApi.postMessage({
+        //         command: 'save',
+        //         problem,
+        //     });
+        // }
+        // setTimeout(() => {
+        //     setSaving(false);
+        // }, 500);
+    // };
 
     const handleRunSingleResult = (data: ResultCommand) => {
         const idx = cases.findIndex(
-            (testCase) => testCase.id === data.result.id,
+            (testCase) => testCase.tcName === data.result.tcName,
         );
         if (idx === -1) {
             console.error('Invalid single result', cases, cases.length, data);
@@ -479,16 +457,16 @@ function App() {
     };
 
     // Save problem if it changes.
-    useEffect(() => {
-        if (deferSaveTimer !== null) {
-            clearTimeout(deferSaveTimer);
-        }
-        const timeOutId = window.setTimeout(() => {
-            setDeferSaveTimer(null);
-            save();
-        }, 500);
-        setDeferSaveTimer(timeOutId);
-    }, [problem]);
+    // useEffect(() => {
+    //     if (deferSaveTimer !== null) {
+    //         clearTimeout(deferSaveTimer);
+    //     }
+    //     const timeOutId = window.setTimeout(() => {
+    //         setDeferSaveTimer(null);
+    //         save();
+    //     }, 500);
+    //     setDeferSaveTimer(timeOutId);
+    // }, [problem]);
 
     useEffect(() => {
         console.log('Adding event listeners for App');
@@ -496,12 +474,14 @@ function App() {
             const data: VSToWebViewMessage = event.data;
             switch (data.command) {
                 case 'new-problem': {
-                    if (data.problem === undefined) {
+                    let path_ = currentProblem();
+
+                    if (path_.isNone()) {
                         setShowFallback(true);
                     }
 
-                    setProblem(data.problem);
-                    setCases(getCasesFromProblem(data.problem));
+                    // setProblem(data.problem);
+                    setCases(getCasesFromProblem());
                     break;
                 }
                 case 'run-single-result': {
@@ -523,7 +503,8 @@ function App() {
         });
     };
 
-    if (problem === undefined && showFallback) {
+    let path_ = currentProblem();
+    if (path_.isNone() && showFallback) {
         return (
             <div className="ui p10">
                 <div className="text-center">
@@ -544,11 +525,11 @@ function App() {
                 </div>
             </div>
         );
-    } else if (problem !== undefined) {
+    } else if (!path_.isNone()) {
         return (
             <Judge
-                problem={problem}
-                updateProblem={setProblem}
+                // problem={problem}
+                // updateProblem={setProblem}
                 cases={cases}
                 updateCases={setCases}
             />

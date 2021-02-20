@@ -1,11 +1,6 @@
 import * as vscode from 'vscode';
-// import { getProbSaveLocation } from '../parser';
-import { existsSync, readFileSync } from 'fs';
-// import { Problem } from '../types';
 import { getJudgeViewProvider } from '../extension';
-// import { getProblemForDocument } from '../utils';
-// import { getAutoShowJudgePref } from '../preferences';
-// import { setOnlineJudgeEnv } from '../compiler';
+import { currentProblem } from '../core'
 
 /**
  * Show the webview with the problem details if a source code with existing
@@ -16,64 +11,38 @@ import { getJudgeViewProvider } from '../extension';
  * @param context The activation context
  */
 export const editorChanged = async (e: vscode.TextEditor | undefined) => {
-    // console.log('Changed editor to', e?.document.fileName);
+    console.log('Changed editor to', e?.document.fileName);
 
-    // if (e === undefined) {
-        getJudgeViewProvider().extensionToJudgeViewMessage({
-            command: 'new-problem',
-            problem: undefined,
-        });
-    //     setOnlineJudgeEnv(false); // reset the non-debug mode set in webview.
-    //     return;
-    // }
+    let path_ = currentProblem();
 
-    // if (e.document.uri.scheme !== 'file') {
-    //     return;
-    // }
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
 
-    // setOnlineJudgeEnv(false); // reset the non-debug mode set in webview.
+    if (
+        /*getAutoShowJudgePref()*/true &&
+        getJudgeViewProvider().isViewUninitialized()
+    ) {
+        vscode.commands.executeCommand('cph.judgeView.focus');
+    }
 
-    // const problem = getProblemForDocument(e.document);
-
-    // if (problem === undefined) {
-        // getJudgeViewProvider().extensionToJudgeViewMessage({
-        //     command: 'new-problem',
-        //     problem: undefined,
-        // });
-        // return;
-    // }
-
-    // if (
-    //     getAutoShowJudgePref() &&
-        // getJudgeViewProvider().isViewUninitialized()
-    // ) {
-    //     vscode.commands.executeCommand('cph.judgeView.focus');
-    // }
-
-    // console.log('Sent problem @', Date.now());
-    // getJudgeViewProvider().extensionToJudgeViewMessage({
-    //     command: 'new-problem',
-    //     problem,
-    // });
+    console.log('Sent problem @', Date.now());
+    getJudgeViewProvider().extensionToJudgeViewMessage({
+        command: 'new-problem',
+    });
 };
 
 export const editorClosed = (e: vscode.TextDocument) => {
-    // console.log('Closed editor:', e.uri.fsPath);
-    // const srcPath = e.uri.fsPath;
-    // const probPath = getProbSaveLocation(srcPath);
+    console.log('Closed editor:', e.uri.fsPath);
+    
+    let path_ = currentProblem();
 
-    // if (!existsSync(probPath)) {
-    //     return;
-    // }
-
-    // const problem: Problem = JSON.parse(readFileSync(probPath).toString());
-
-    // if (getJudgeViewProvider().problemPath === problem.srcPath) {
-    //     getJudgeViewProvider().extensionToJudgeViewMessage({
-    //         command: 'new-problem',
-    //         problem: undefined,
-    //     });
-    // }
+    if (path_.isNone()) {
+        getJudgeViewProvider().extensionToJudgeViewMessage({
+            command: 'new-problem',
+        });
+    }
 };
 
 export const checkLaunchWebview = () => {

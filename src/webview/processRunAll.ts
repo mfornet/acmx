@@ -1,33 +1,34 @@
-// import { Problem } from '../types';
 import { runSingleAndSave } from './processRunSingle';
-// import { compileFile, getBinSaveLocation } from '../compiler';
-// import { deleteBinary } from '../executions';
-// import { getLanguage } from '../utils';
 import { getJudgeViewProvider } from '../extension';
-
-import { Problem } from '../primitives';
+import { testCasesName, currentProblem } from '../core';
+import * as vscode from 'vscode';
 
 /**
  * Run every testcase in a problem one by one. Waits for the first to complete
  * before running next. `runSingleAndSave` takes care of saving.
  **/
-export default async (problem: Problem) => {
-    // console.log('Run all started', problem);
-    // const didCompile = await compileFile(problem.srcPath);
-    // if (!didCompile) {
-    //     return;
-    // }
-    // for (const testCase of problem.tests) {
-    //     getJudgeViewProvider().extensionToJudgeViewMessage({
-    //         command: 'running',
-    //         id: testCase.id,
-    //         problem: problem,
-    //     });
-    //     await runSingleAndSave(problem, testCase.id, true);
-    // }
-    // console.log('Run all finished');
-    // deleteBinary(
-    //     getLanguage(problem.srcPath),
-    //     getBinSaveLocation(problem.srcPath),
-    // );
+export default async () => {
+    console.log('Run all started');
+
+    let path_ = currentProblem();
+
+    if (path_.isNone()) {
+        vscode.window.showErrorMessage("No active problem");
+        return;
+    }
+
+    await vscode.window.activeTextEditor?.document.save();
+
+    let path = path_.unwrap();
+
+    let tests = testCasesName(path);
+
+    for (const testCase of tests) {
+        getJudgeViewProvider().extensionToJudgeViewMessage({
+            command: 'running',
+            tcName: testCase,
+        });
+        await runSingleAndSave(testCase);
+    }
+    console.log('Run all finished');
 };

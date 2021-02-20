@@ -863,7 +863,6 @@ export function activate(context: vscode.ExtensionContext) {
         if (editors.length === 0) {
             getJudgeViewProvider().extensionToJudgeViewMessage({
                 command: 'new-problem',
-                problem: undefined,
             });
         }
     });
