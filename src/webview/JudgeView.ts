@@ -194,10 +194,6 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                                 vscodeApi.postMessage({
                                     command: 'get-initial-problem',
                                 });
-                                vscodeApi.postMessage({
-                                    command: 'online-judge-env',
-                                    value:false,
-                                });
                                 console.log("Requested initial problem");
                             },
                         );
