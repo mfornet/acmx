@@ -572,9 +572,9 @@ export function timedRun(
     // Check if an error happened
     if (execution.failed()) {
         if (execution.isTLE()) {
-            return new TestCaseResult(Verdict.TLE);
+            return new TestCaseResult(Verdict.TLE, timeSpan);
         } else {
-            return new TestCaseResult(Verdict.RTE);
+            return new TestCaseResult(Verdict.RTE, timeSpan);
         }
     }
 
@@ -589,9 +589,9 @@ export function timedRun(
     );
 
     if (checkerExecution.isTLE()) {
-        return new TestCaseResult(Verdict.FAIL);
+        return new TestCaseResult(Verdict.FAIL, timeSpan);
     } else if (checkerExecution.failed()) {
-        return new TestCaseResult(Verdict.WA);
+        return new TestCaseResult(Verdict.WA, timeSpan);
     } else {
         return new TestCaseResult(Verdict.OK, timeSpan);
     }

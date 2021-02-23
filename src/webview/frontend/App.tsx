@@ -123,7 +123,7 @@ function Judge(props: {
     // Create a new Case
     const newCase = () => {
         console.log(cases);
-        const id = Date.now();
+        const id = problem.tests.length;
         const testCase: TestCase = {
             id,
             input: '',

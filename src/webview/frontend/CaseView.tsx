@@ -111,7 +111,7 @@ export default function CaseView(props: {
     }
     const passFailText = result ? (result.pass ? 'passed' : 'failed') : '';
     const caseClassName = 'case ' + (running ? 'running' : passFailText);
-    const timeText = result?.timeOut ? 'Timed Out' : result?.time + 'ms';
+    const timeText = /*result?.timeOut ? 'Timed Out' :*/ result?.time + 'ms';
 
     return (
         <div className={caseClassName}>
@@ -138,7 +138,7 @@ export default function CaseView(props: {
                                     result.pass ? 'result-pass' : 'result-fail'
                                 }
                             >
-                                {result.pass ? 'Passed' : 'Failed'}
+                                {result.verdictname}
                             </span>
                             <span className="exec-time">{timeText}</span>
                         </span>

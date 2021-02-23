@@ -3,7 +3,7 @@ import { getJudgeViewProvider } from '../extension';
 import { saveProblem } from './core';
 import { Problem, RunResult, Run } from './types';
 import { currentProblem, getMainSolutionPath, getCheckerPath, getTimeout, timedRun } from '../core';
-import { ConfigFile, TESTCASES, Verdict } from '../primitives';
+import { ConfigFile, TESTCASES, Verdict, verdictName } from '../primitives';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 
@@ -68,7 +68,7 @@ export const runSingleAndSave = async (
     saveProblem(srcPath, problem); // ??
 
     const run: Run =  {
-        stdout: readFileSync(join(path, TESTCASES, `${tcName}.out`, "utf8")).toString(),
+        stdout: readFileSync(join(path, TESTCASES, `${tcName}.out`), "utf8").toString(),
         stderr: '',
         code: 0,
         signal: null,
@@ -79,7 +79,8 @@ export const runSingleAndSave = async (
     const result: RunResult = {
         ...run,
         pass: tcResult.status === Verdict.OK,
-        id,
+        id: id,
+        verdictname: verdictName(tcResult.status),
     };
 
     console.log('Testcase judging complete. Result:', result);

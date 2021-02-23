@@ -70,6 +70,7 @@ export type Run = {
 export type RunResult = {
     pass: boolean | null;
     id: number;
+    verdictname : string;
 } & Run;
 
 export type WebviewMessageCommon = {
