@@ -643,7 +643,7 @@ async function copySubmissionToClipboard() {
     }
 }
 
-async function submitSolution() {
+export async function submitSolution() {
     let path_ = currentProblem();
 
     if (path_.isNone()) {
@@ -863,6 +863,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (editors.length === 0) {
             getJudgeViewProvider().extensionToJudgeViewMessage({
                 command: 'new-problem',
+                problem: undefined,
             });
         }
     });

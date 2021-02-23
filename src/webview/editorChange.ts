@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { getJudgeViewProvider } from '../extension';
-import { currentProblem } from '../core'
+
+import { getAutoShowJudgePref } from './types';
+import { setOnlineJudgeEnv, getProblemForDocument } from './core'
 
 /**
  * Show the webview with the problem details if a source code with existing
@@ -13,15 +15,33 @@ import { currentProblem } from '../core'
 export const editorChanged = async (e: vscode.TextEditor | undefined) => {
     console.log('Changed editor to', e?.document.fileName);
 
-    let path_ = currentProblem();
+    if (e === undefined) {
+        getJudgeViewProvider().extensionToJudgeViewMessage({
+            command: 'new-problem',
+            problem: undefined,
+        });
+        setOnlineJudgeEnv(false); // reset the non-debug mode set in webview.
+        return;
+    }
 
-    if (path_.isNone()) {
-        vscode.window.showErrorMessage("No active problem");
+    if (e.document.uri.scheme !== 'file') {
+        return;
+    }
+
+    setOnlineJudgeEnv(false); // reset the non-debug mode set in webview.
+
+    const problem = getProblemForDocument(e.document);
+
+    if (problem === undefined) {
+        getJudgeViewProvider().extensionToJudgeViewMessage({
+            command: 'new-problem',
+            problem: undefined,
+        });
         return;
     }
 
     if (
-        /*getAutoShowJudgePref()*/true &&
+        getAutoShowJudgePref() &&
         getJudgeViewProvider().isViewUninitialized()
     ) {
         vscode.commands.executeCommand('cph.judgeView.focus');
@@ -30,17 +50,18 @@ export const editorChanged = async (e: vscode.TextEditor | undefined) => {
     console.log('Sent problem @', Date.now());
     getJudgeViewProvider().extensionToJudgeViewMessage({
         command: 'new-problem',
+        problem,
     });
 };
 
 export const editorClosed = (e: vscode.TextDocument) => {
     console.log('Closed editor:', e.uri.fsPath);
-    
-    let path_ = currentProblem();
+    const srcPath = e.uri.fsPath;
 
-    if (path_.isNone()) {
+    if (getJudgeViewProvider().problemPath === srcPath) {
         getJudgeViewProvider().extensionToJudgeViewMessage({
             command: 'new-problem',
+            problem: undefined,
         });
     }
 };

@@ -1,34 +1,23 @@
+import { Problem } from './types';
 import { runSingleAndSave } from './processRunSingle';
 import { getJudgeViewProvider } from '../extension';
-import { testCasesName, currentProblem } from '../core';
-import * as vscode from 'vscode';
 
 /**
  * Run every testcase in a problem one by one. Waits for the first to complete
  * before running next. `runSingleAndSave` takes care of saving.
  **/
-export default async () => {
-    console.log('Run all started');
-
-    let path_ = currentProblem();
-
-    if (path_.isNone()) {
-        vscode.window.showErrorMessage("No active problem");
-        return;
-    }
-
-    await vscode.window.activeTextEditor?.document.save();
-
-    let path = path_.unwrap();
-
-    let tests = testCasesName(path);
-
-    for (const testCase of tests) {
+export default async (problem: Problem) => {
+    console.log('Run all started', problem);
+    
+    for (const testCase of problem.tests) {
         getJudgeViewProvider().extensionToJudgeViewMessage({
             command: 'running',
-            tcName: testCase,
+            id: testCase.id,
+            problem: problem,
         });
-        await runSingleAndSave(testCase);
+        if (!await runSingleAndSave(problem, testCase.id)) {
+            break;
+        }
     }
     console.log('Run all finished');
 };

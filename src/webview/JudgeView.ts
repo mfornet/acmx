@@ -1,8 +1,14 @@
 import * as vscode from 'vscode';
 import { VSToWebViewMessage, WebviewToVSEvent } from './types';
-import { runSingleAndSave } from './processRunSingle';
 import runAllAndSave from './processRunAll';
+import {
+    getAutoShowJudgePref,
+    getRetainWebviewContextPref,
+} from './types';
+import { setOnlineJudgeEnv } from './core';
 
+import { getProblemForDocument, SubmitProblem, saveProblem } from './core';
+import { runSingleAndSave } from './processRunSingle';
 
 class JudgeViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'cph.judgeView';
@@ -33,18 +39,20 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                 console.log('Got from webview', message);
                 switch (message.command) {
                     case 'run-single-and-save': {
-                        const tcName = message.tcName;
-                        runSingleAndSave(tcName);
+                        const problem = message.problem;
+                        const id = message.id;
+                        runSingleAndSave(problem, id);
                         break;
                     }
 
                     case 'run-all-and-save': {
-                        runAllAndSave();
+                        const problem = message.problem;
+                        runAllAndSave(problem);
                         break;
                     }
 
                     case 'save': {
-                        // saveProblem(message.problem.srcPath, message.problem);
+                        saveProblem(message.problem.srcPath, message.problem);
                         break;
                     }
 
@@ -54,16 +62,24 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                     }
 
                     case 'delete-tcs': {
-                        // this.extensionToJudgeViewMessage({
-                        //     command: 'new-problem',
-                        //     problem: undefined,
-                        // });
-                        // deleteProblemFile(message.problem.srcPath);
+                        this.extensionToJudgeViewMessage({
+                            command: 'new-problem',
+                            problem: undefined,
+                        });
                         break;
                     }
 
                     case 'submitCf': {
-                        // storeSubmitProblem(message.problem);
+                        SubmitProblem(message.problem);
+                        break;
+                    }
+                    case 'submitKattis': {
+                        // submitKattisProblem(message.problem);
+                        break;
+                    }
+
+                    case 'online-judge-env': {
+                        setOnlineJudgeEnv(message.value);
                         break;
                     }
 
@@ -86,10 +102,10 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
     }
 
     private getInitialProblem() {
-        // const doc = vscode.window.activeTextEditor?.document;
+        const doc = vscode.window.activeTextEditor?.document;
         this.extensionToJudgeViewMessage({
             command: 'new-problem',
-            // problem: undefined,//getProblemForDocument(doc),
+            problem: getProblemForDocument(doc),
         });
 
         // also load any messages from before that were lost.
@@ -102,6 +118,8 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
 
         return;
     }
+
+    public problemPath: string | undefined;
 
     public async focus() {
         console.log('focusing');
@@ -124,8 +142,9 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
         }
 
         if (
-            message.command === 'new-problem'
-                && true//getAutoShowJudgePref()
+            message.command === 'new-problem' &&
+            message.problem !== undefined &&
+            getAutoShowJudgePref()
         ) {
             this.focus();
         }
@@ -138,13 +157,20 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
         this.focusIfNeeded(message);
         if (
             (this._view && this._view.visible) ||
-            (this._view && true)//getRetainWebviewContextPref())
+            (this._view && getRetainWebviewContextPref())
         ) {
             // Always focus on the view whenever a command is posted. Meh.
             // this._view.show?.(true); // `show` is not implemented in 1.49 but is for 1.50 insiders
             this._view.webview.postMessage(message);
             if (message.command !== 'submit-finished') {
                 console.log('View got message', message);
+            }
+            if (message.command === 'new-problem') {
+                if (message.problem === undefined) {
+                    this.problemPath = undefined;
+                } else {
+                    this.problemPath = message.problem.srcPath;
+                }
             }
         } else {
             if (message.command !== 'new-problem') {
@@ -193,6 +219,10 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                             (event) => {
                                 vscodeApi.postMessage({
                                     command: 'get-initial-problem',
+                                });
+                                vscodeApi.postMessage({
+                                    command: 'online-judge-env',
+                                    value:false,
                                 });
                                 console.log("Requested initial problem");
                             },

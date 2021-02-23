@@ -2,24 +2,21 @@ import { Case } from '../types';
 import { useState, createRef, useEffect } from 'react';
 import TextareaAutosize from 'react-autosize-textarea/lib';
 import React from 'react';
-import { join } from 'path';
-import { TESTCASES, Verdict, verdictName } from '../../primitives';
-import { currentProblem } from '../../core'
-import { readFileSync, existsSync } from 'fs';
 
 const reloadIcon = '↺';
 const deleteIcon = '⨯';
 
 export default function CaseView(props: {
+    num: number;
     case: Case;
-    rerun: (tcName: string, input: string, output: string) => void;
-    updateCase: (tcName: string, input: string, output: string) => void;
-    remove: (tcName: string) => void;
+    rerun: (id: number, input: string, output: string) => void;
+    updateCase: (id: number, input: string, output: string) => void;
+    remove: (num: number) => void;
     notify: (text: string) => void;
     doFocus?: boolean;
     forceRunning: boolean;
 }) {
-    const { tcName, result } = props.case;
+    const { id, result } = props.case;
 
     const [input, setInput] = useState<string>(
         props.case.testcase.input.trim(),
@@ -29,7 +26,7 @@ export default function CaseView(props: {
     );
     const [running, setRunning] = useState<boolean>(false);
     const [minimized, setMinimized] = useState<boolean>(
-        props.case.result?.tcResult.isOk() === true,
+        props.case.result?.pass === true,
     );
     const inputBox = createRef<HTMLTextAreaElement>();
 
@@ -41,7 +38,7 @@ export default function CaseView(props: {
     }, [props.doFocus]);
 
     useEffect(() => {
-        props.updateCase(props.case.tcName, input, output);
+        props.updateCase(props.case.id, input, output);
     }, [input, output]);
 
     useEffect(() => {
@@ -65,7 +62,7 @@ export default function CaseView(props: {
 
     const rerun = () => {
         setRunning(true);
-        props.rerun(tcName, input, output);
+        props.rerun(id, input, output);
     };
 
     const expand = () => {
@@ -87,8 +84,8 @@ export default function CaseView(props: {
     useEffect(() => {
         if (props.case.result !== null) {
             setRunning(false);
-            props.case.result.tcResult.isOk() ? setMinimized(true) : setMinimized(false);
-            console.log('minimizing', props.case.tcName, props.case.result);
+            props.case.result.pass ? setMinimized(true) : setMinimized(false);
+            console.log('minimizing', props.case.id, props.case.result);
         }
     }, [props.case.result]);
 
@@ -98,22 +95,23 @@ export default function CaseView(props: {
         }
     }, [running]);
 
-
-    let path_ = currentProblem();
-    let path = path_.unwrap();
-
-    let tcCurrent = join(path, TESTCASES, `${tcName}.out`);
-    let resultText = 'Run to show output';
-    if (result && existsSync(tcCurrent)) {
-        resultText = readFileSync(tcCurrent, "utf8");
+    let resultText = '';
+    const stderror = result?.stderr;
+    // Handle several cases for result text
+    if (result?.signal) {
+        resultText = result?.signal;
+    } else if (result?.stdout) {
+        resultText = result.stdout.trim() || ' ';
     }
-
+    if (!result) {
+        resultText = 'Run to show output';
+    }
     if (running) {
-        resultText = 'running...';
+        resultText = '...';
     }
-    const passFailText = result ? (result.tcResult.isOk() ? 'passed' : verdictName(result.tcResult.status)) : '';
+    const passFailText = result ? (result.pass ? 'passed' : 'failed') : '';
     const caseClassName = 'case ' + (running ? 'running' : passFailText);
-    const timeText = result?.tcResult.status === Verdict.TLE ? 'Timed Out' : result?.tcResult.spanTime + 'ms';
+    const timeText = result?.timeOut ? 'Timed Out' : result?.time + 'ms';
 
     return (
         <div className={caseClassName}>
@@ -130,17 +128,17 @@ export default function CaseView(props: {
                                 [-]
                             </span>
                         )}
-                        &nbsp;Testcase {props.case.tcName}
+                        &nbsp;Testcase {props.num}
                     </span>
                     {running && <span className="running-text">Running</span>}
                     {result && !running && (
                         <span className="result-data">
                             <span
                                 className={
-                                    result.tcResult.isOk() ? 'result-pass' : 'result-fail'
+                                    result.pass ? 'result-pass' : 'result-fail'
                                 }
                             >
-                                {result.tcResult.isOk() ? 'Passed' : 'Failed'}
+                                {result.pass ? 'Passed' : 'Failed'}
                             </span>
                             <span className="exec-time">{timeText}</span>
                         </span>
@@ -159,7 +157,7 @@ export default function CaseView(props: {
                         className="btn btn-red"
                         title="Delete Testcase"
                         onClick={() => {
-                            props.remove(props.case.tcName);
+                            props.remove(id);
                         }}
                     >
                         {deleteIcon}
@@ -225,7 +223,7 @@ export default function CaseView(props: {
                             </>
                         </div>
                     )}
-                    {/* {stderror && stderror.length > 0 && (
+                    {stderror && stderror.length > 0 && (
                         <>
                             Standard Error:
                             <TextareaAutosize
@@ -234,7 +232,7 @@ export default function CaseView(props: {
                                 readOnly
                             />
                         </>
-                    )} */}
+                    )}
                 </>
             )}
         </div>

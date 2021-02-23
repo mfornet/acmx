@@ -1,5 +1,3 @@
-import { TestCaseResult } from '../primitives';
-
 /** Valid name for a VS Code preference section for the extension */
 export type prefSection =
     | 'general.saveLocation'
@@ -23,6 +21,10 @@ export type prefSection =
     | 'general.autoShowJudge'
     | 'general.defaultLanguageTemplateFileLocation';
 
+export function getAutoShowJudgePref(): boolean { return true; }
+
+export function getRetainWebviewContextPref(): boolean { return true; }
+
 export type Language = {
     name: LangNames;
     compiler: string;
@@ -35,7 +37,7 @@ export type LangNames = 'python' | 'c' | 'cpp' | 'rust' | 'java';
 export type TestCase = {
     input: string;
     output: string;
-    tcName: string;
+    id: number;
 };
 
 export type Problem = {
@@ -51,32 +53,32 @@ export type Problem = {
 };
 
 export type Case = {
-    tcName: string;
+    id: number;
     result: RunResult | null;
     testcase: TestCase;
 };
 
-// export type Run = {
-//     stdout: string;
-//     stderr: string;
-//     code: number | null;
-//     signal: string | null;
-//     time: number;
-//     timeOut: boolean;
-// };
-
-export type RunResult = {
-    tcResult: TestCaseResult;
-    tcName: string;
+export type Run = {
+    stdout: string;
+    stderr: string;
+    code: number | null;
+    signal: string | null;
+    time: number;
+    timeOut: boolean;
 };
 
-export type WebviewMessageCommon = { // delete !!!!!!!!!!
-    // problem: Problem;
+export type RunResult = {
+    pass: boolean | null;
+    id: number;
+} & Run;
+
+export type WebviewMessageCommon = {
+    problem: Problem;
 };
 
 export type RunSingleCommand = {
     command: 'run-single-and-save';
-    tcName: string;
+    id: number;
 } & WebviewMessageCommon;
 
 export type RunAllCommand = {
@@ -130,7 +132,7 @@ export type WebviewToVSEvent =
 
 export type RunningCommand = {
     command: 'running';
-    tcName: string;
+    id: number;
 } & WebviewMessageCommon;
 
 export type ResultCommand = {
@@ -160,7 +162,7 @@ export type SubmitFinishedCommand = {
 
 export type NewProblemCommand = {
     command: 'new-problem';
-    // problem: Problem | undefined;
+    problem: Problem | undefined;
 };
 
 export type VSToWebViewMessage =

@@ -74,7 +74,7 @@ export function getTimeout(): number {
     return timeout;
 }
 
-function isProblemFolder(path: string) {
+export function isProblemFolder(path: string) {
     return existsSync(join(path, "attic"));
 }
 
