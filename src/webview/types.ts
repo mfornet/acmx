@@ -101,6 +101,7 @@ export type SaveCommand = {
 
 export type DeleteTcsCommand = {
     command: 'delete-tcs';
+    id: number | undefined;
 } & WebviewMessageCommon;
 
 export type SubmitCf = {

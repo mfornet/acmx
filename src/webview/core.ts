@@ -25,7 +25,7 @@ export const getProblemForDocument = (
     // Try to find the problem using current open file
     let path = document.uri.fsPath;
 
-    const MAX_DEPTH = 3;
+    const MAX_DEPTH = 1;
 
     for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
         path = dirname(path);
@@ -82,12 +82,6 @@ export const saveProblem = (srcPath: string, problem: Problem) => {
     }
 
     path = join(path, TESTCASES);
-    console.log(readdirSync(path));
-    readdirSync(path).filter(file =>
-        problem.tests.find(test => test.id.toString() === removeExtension(file)) === undefined)
-            .forEach(file => {
-                unlinkSync(join(path, file));
-    });
     
     problem.tests.forEach((test) => {
         writeFileSync(join(path, `${test.id}.in`), test.input);
@@ -109,6 +103,27 @@ export const deleteProblemFile = (srcPath: string) => {
     }
 
     recursiveRemoveDirectory(path);
+};
+
+export const deleteProblemCase = (srcPath: string, id: number) => {
+    let path = srcPath;
+    const MAX_DEPTH = 3;
+
+    for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
+        path = dirname(path);
+    }
+    
+    if (!isProblemFolder(path)) {
+        console.error('Invalid delete path', srcPath);
+        return;
+    }
+
+    path = join(path, TESTCASES);
+    readdirSync(path).filter(file =>
+        (removeExtension(file)) === id.toString())
+            .forEach(file => {
+                unlinkSync(join(path, file));
+    });
 };
 
 export const SubmitProblem = (problem: Problem) => {

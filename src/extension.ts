@@ -49,6 +49,8 @@ import {
     checkLaunchWebview,
 } from './webview/editorChange';
 
+import { getRetainWebviewContextPref } from './webview/types'
+
 import JudgeViewProvider from './webview/JudgeView';
 
 let judgeViewProvider: JudgeViewProvider;
@@ -842,7 +844,7 @@ export function activate(context: vscode.ExtensionContext) {
         judgeViewProvider,
         {
             webviewOptions: {
-                retainContextWhenHidden: true, // TODO: customize
+                retainContextWhenHidden: getRetainWebviewContextPref(),
             },
         },
     );

@@ -1,11 +1,35 @@
 import * as vscode from 'vscode';
 import { getJudgeViewProvider } from '../extension';
-import { saveProblem } from './core';
 import { Problem, RunResult, Run } from './types';
-import { currentProblem, getMainSolutionPath, getCheckerPath, getTimeout, timedRun } from '../core';
+import { isProblemFolder, getMainSolutionPath, getCheckerPath, getTimeout, timedRun } from '../core';
 import { ConfigFile, TESTCASES, Verdict, verdictName } from '../primitives';
-import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { existsSync } from 'fs';
+
+export const emit_fail = (problem: Problem, id: number) : void => {
+    const run: Run =  {
+        stdout: '',
+        stderr: '',
+        code: 0,
+        signal: null,
+        time: 0,
+        timeOut: false,
+    };
+    
+    const result: RunResult = {
+        ...run,
+        pass: false,
+        id: id,
+        verdictname: verdictName(Verdict.FAIL),
+    };
+
+    console.log('Testcase judging complete. Result:', result);
+    getJudgeViewProvider().extensionToJudgeViewMessage({
+        command: 'run-single-result',
+        result,
+        problem,
+    });
+}
 
 export const runSingleAndSave = async (
     problem: Problem,
@@ -19,21 +43,26 @@ export const runSingleAndSave = async (
     await vscode.window.showTextDocument(textEditor, vscode.ViewColumn.One);
     await textEditor.save();
 
-    let path_ = currentProblem();
+    let path = srcPath;
 
-    if (path_.isNone()) {
-        vscode.window.showErrorMessage("No active problem (oops)");
-        return false;
+    const MAX_DEPTH = 3;
+
+    for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
+        path = dirname(path);
     }
 
-    let path = path_.unwrap();
+    if (!isProblemFolder(path)) {
+        vscode.window.showErrorMessage("No active problem");
+        emit_fail(problem, id);
+        return false;
+    }
 
     let config = ConfigFile.loadConfig(path, true).unwrap();
 
     // Load main solution (compile if necessary)
     let mainSolution_ = getMainSolutionPath(path, config);
     if (mainSolution_.isNone()) {
-        vscode.window.showErrorMessage("Main solution not found (oops)");
+        emit_fail(problem, id);
         return false;
     }
     let mainSolution = mainSolution_.unwrap();
@@ -41,7 +70,8 @@ export const runSingleAndSave = async (
     // Load checker (compile if necessary)
     let checker_ = getCheckerPath(path, config);
     if (checker_.isNone()) {
-        vscode.window.showErrorMessage("Checker not found (oops)");
+        vscode.window.showErrorMessage("Checker not found");
+        emit_fail(problem, id);
         return false;
     }
     let checker = checker_.unwrap();
@@ -55,21 +85,15 @@ export const runSingleAndSave = async (
 
     if (!existsSync(tcInputPath)) {
         console.error('Invalid id', id, problem);
+        emit_fail(problem, id);
         return false;
     }
 
-    let tcResult = timedRun(path, tcName, timeout, mainSolution, checker); 
-    
-    if (tcResult.status === Verdict.CE) {
-        console.error('Failed to compile', problem, id);
-        return false;
-    }
-
-    saveProblem(srcPath, problem); // ??
+    let tcResult = timedRun(path, tcName, timeout, mainSolution, checker);
 
     const run: Run =  {
-        stdout: readFileSync(join(path, TESTCASES, `${tcName}.out`), "utf8").toString(),
-        stderr: '',
+        stdout: tcResult.stdout ?? '',
+        stderr: tcResult.stderr ?? '',
         code: 0,
         signal: null,
         time: tcResult.spanTime ?? 0,
@@ -90,5 +114,8 @@ export const runSingleAndSave = async (
         problem,
     });
 
+    if (tcResult.status === Verdict.CE) {
+        return false;
+    }
     return true;
 };

@@ -1,5 +1,5 @@
 import { Problem } from './types';
-import { runSingleAndSave } from './processRunSingle';
+import { runSingleAndSave, emit_fail } from './processRunSingle';
 import { getJudgeViewProvider } from '../extension';
 
 /**
@@ -9,14 +9,19 @@ import { getJudgeViewProvider } from '../extension';
 export default async (problem: Problem) => {
     console.log('Run all started', problem);
     
+    let ok = true;
     for (const testCase of problem.tests) {
+        if (!ok) {
+            emit_fail(problem, testCase.id);
+            continue;
+        }
         getJudgeViewProvider().extensionToJudgeViewMessage({
             command: 'running',
             id: testCase.id,
             problem: problem,
         });
         if (!await runSingleAndSave(problem, testCase.id)) {
-            break;
+            ok = false;
         }
     }
     console.log('Run all finished');

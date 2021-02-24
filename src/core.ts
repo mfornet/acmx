@@ -566,15 +566,17 @@ export function timedRun(
     );
 
     let timeSpan = execution.timeSpan.unwrap();
-
+    let stdout = execution.stdout().toString();
+    let stderr = execution.stderr().toString();
+    
     writeBufferToFileSync(tcCurrent, execution.stdout());
 
     // Check if an error happened
     if (execution.failed()) {
         if (execution.isTLE()) {
-            return new TestCaseResult(Verdict.TLE, timeSpan);
+            return new TestCaseResult(Verdict.TLE, timeSpan, stdout, stderr);
         } else {
-            return new TestCaseResult(Verdict.RTE, timeSpan);
+            return new TestCaseResult(Verdict.RTE, timeSpan, stdout, stderr);
         }
     }
 
@@ -589,11 +591,11 @@ export function timedRun(
     );
 
     if (checkerExecution.isTLE()) {
-        return new TestCaseResult(Verdict.FAIL, timeSpan);
+        return new TestCaseResult(Verdict.FAIL, timeSpan, stdout, stderr);
     } else if (checkerExecution.failed()) {
-        return new TestCaseResult(Verdict.WA, timeSpan);
+        return new TestCaseResult(Verdict.WA, timeSpan, stdout, stderr);
     } else {
-        return new TestCaseResult(Verdict.OK, timeSpan);
+        return new TestCaseResult(Verdict.OK, timeSpan, stdout, stderr);
     }
 }
 

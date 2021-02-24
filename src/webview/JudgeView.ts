@@ -12,6 +12,7 @@ import {
     saveProblem,
     AddProblem,
     deleteProblemFile,
+    deleteProblemCase,
     setOnlineJudgeEnv
 } from './core';
 import { runSingleAndSave } from './processRunSingle';
@@ -68,6 +69,10 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                     }
 
                     case 'delete-tcs': {
+                        if (message.id) {
+                            deleteProblemCase(message.problem.srcPath, message.id);    
+                            break;
+                        }
                         this.extensionToJudgeViewMessage({
                             command: 'new-problem',
                             problem: undefined,

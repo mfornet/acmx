@@ -118,6 +118,12 @@ function Judge(props: {
     const remove = (id: number) => {
         const newCases = cases.filter((value) => value.id !== id);
         updateCases(newCases);
+        
+        vscodeApi.postMessage({
+            command: 'delete-tcs',
+            problem,
+            id,
+        });
     };
 
     // Create a new Case
@@ -153,6 +159,7 @@ function Judge(props: {
         vscodeApi.postMessage({
             command: 'delete-tcs',
             problem,
+            id: undefined,
         });
     };
 
