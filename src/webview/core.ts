@@ -4,7 +4,9 @@ import { isProblemFolder, testCasesName } from '../core';
 import { dirname, join } from 'path';
 import { ConfigFile, TESTCASES } from '../primitives';
 import { readFileSync, writeFileSync } from 'fs';
-import { submitSolution } from '../extension';
+import { emptyDirSync } from 'fs-extra';
+import { submitSolution, addProblem } from '../extension';
+import { recursiveRemoveDirectory } from '../test/testUtils';
 
 let onlineJudgeEnv = false;
 
@@ -78,6 +80,8 @@ export const saveProblem = (srcPath: string, problem: Problem) => {
         console.error('Invalid save path', srcPath, problem);
         return;
     }
+
+    emptyDirSync(join(path, TESTCASES));
     
     problem.tests.forEach((test) => {
         writeFileSync(join(path, TESTCASES, `${test.id}.in`), test.input);
@@ -85,7 +89,27 @@ export const saveProblem = (srcPath: string, problem: Problem) => {
     });
 };
 
+export const deleteProblemFile = (srcPath: string) => {
+    let path = srcPath;
+    const MAX_DEPTH = 3;
+
+    for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
+        path = dirname(path);
+    }
+    
+    if (!isProblemFolder(path)) {
+        console.error('Invalid delete path', srcPath);
+        return;
+    }
+
+    recursiveRemoveDirectory(path);
+};
+
 export const SubmitProblem = (problem: Problem) => {
     console.log('submitted ' + problem.srcPath);
     submitSolution();
+};
+
+export const AddProblem = () => {    
+    addProblem();
 };

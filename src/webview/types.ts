@@ -23,7 +23,7 @@ export type prefSection =
 
 export function getAutoShowJudgePref(): boolean { return true; }
 
-export function getRetainWebviewContextPref(): boolean { return true; }
+export function getRetainWebviewContextPref(): boolean { return false; } // may case rendering issues
 
 export type Language = {
     name: LangNames;

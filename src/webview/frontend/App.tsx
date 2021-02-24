@@ -123,7 +123,7 @@ function Judge(props: {
     // Create a new Case
     const newCase = () => {
         console.log(cases);
-        const id = problem.tests.length;
+        const id = problem.tests.map(test => test.id).reduce((i1, i2) => Math.max(i1, i2)) + 1;
         const testCase: TestCase = {
             id,
             input: '',
@@ -164,14 +164,14 @@ function Judge(props: {
         });
     };
 
-    const submitKattis = () => {
-        vscodeApi.postMessage({
-            command: 'submitKattis',
-            problem,
-        });
+    // const submitKattis = () => {
+    //     vscodeApi.postMessage({
+    //         command: 'submitKattis',
+    //         problem,
+    //     });
 
-        setWaitingForSubmit(true);
-    };
+    //     setWaitingForSubmit(true);
+    // };
 
     const submitCf = () => {
         vscodeApi.postMessage({
@@ -273,57 +273,57 @@ function Judge(props: {
     });
 
     const renderSubmitButton = () => {
-        let url: URL;
-        try {
-            url = new URL(problem.url);
-        } catch (err) {
-            console.error(err);
-            return null;
-        }
-        if (
-            url.hostname !== 'codeforces.com' &&
-            url.hostname !== 'open.kattis.com'
-        ) {
-            return null;
-        }
+        // let url: URL;
+        // try {
+        //     url = new URL(problem.url);
+        // } catch (err) {
+        //     console.error(err);
+        //     return null;
+        // }
+        // if (
+        //     url.hostname !== 'codeforces.com' &&
+        //     url.hostname !== 'open.kattis.com'
+        // ) {
+        //     return null;
+        // }
 
-        if (url.hostname == 'codeforces.com') {
+        // if (url.hostname == 'codeforces.com') {
             return (
                 <button className="btn" onClick={submitCf}>
-                    Submit to Codeforces
+                    Submit
                 </button>
             );
-        } else if (url.hostname == 'open.kattis.com') {
-            return (
-                <div className="pad-10 submit-area">
-                    <button className="btn" onClick={submitKattis}>
-                        Submit on Kattis
-                    </button>
-                    {waitingForSubmit && (
-                        <>
-                            <span className="loader"></span> Submitting...
-                            <br />
-                            <small>
-                                To submit to Kattis, you need to have the{' '}
-                                <a href="https://github.com/Kattis/kattis-cli/blob/master/submit.py">
-                                    submission client{' '}
-                                </a>
-                                and the{' '}
-                                <a href="https://open.kattis.com/download/kattisrc">
-                                    configuration file{' '}
-                                </a>
-                                downloaded in a folder called .kattis in your
-                                home directory.
-                                <br />
-                                Submission result will open in your browser.
-                                <br />
-                                <br />
-                            </small>
-                        </>
-                    )}
-                </div>
-            );
-        }
+        // } else if (url.hostname == 'open.kattis.com') {
+        //     return (
+        //         <div className="pad-10 submit-area">
+        //             <button className="btn" onClick={submitKattis}>
+        //                 Submit on Kattis
+        //             </button>
+        //             {waitingForSubmit && (
+        //                 <>
+        //                     <span className="loader"></span> Submitting...
+        //                     <br />
+        //                     <small>
+        //                         To submit to Kattis, you need to have the{' '}
+        //                         <a href="https://github.com/Kattis/kattis-cli/blob/master/submit.py">
+        //                             submission client{' '}
+        //                         </a>
+        //                         and the{' '}
+        //                         <a href="https://open.kattis.com/download/kattisrc">
+        //                             configuration file{' '}
+        //                         </a>
+        //                         downloaded in a folder called .kattis in your
+        //                         home directory.
+        //                         <br />
+        //                         Submission result will open in your browser.
+        //                         <br />
+        //                         <br />
+        //                     </small>
+        //                 </>
+        //             )}
+        //         </div>
+        //     );
+        // }
     };
 
     const getHref = () => {
@@ -403,7 +403,7 @@ function Judge(props: {
                 </button>
             </div>
 
-            {waitingForSubmit && (
+            {waitingForSubmit /*&& (
                 <div className="margin-10">
                     <span className="loader"></span> Waiting for extension ...
                     <br />
@@ -420,7 +420,7 @@ function Judge(props: {
                         submit.
                     </small>
                 </div>
-            )}
+            )*/}
         </div>
     );
 }

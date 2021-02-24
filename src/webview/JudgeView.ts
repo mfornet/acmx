@@ -5,9 +5,15 @@ import {
     getAutoShowJudgePref,
     getRetainWebviewContextPref,
 } from './types';
-import { setOnlineJudgeEnv } from './core';
 
-import { getProblemForDocument, SubmitProblem, saveProblem } from './core';
+import {
+    getProblemForDocument,
+    SubmitProblem,
+    saveProblem,
+    AddProblem,
+    deleteProblemFile,
+    setOnlineJudgeEnv
+} from './core';
 import { runSingleAndSave } from './processRunSingle';
 
 class JudgeViewProvider implements vscode.WebviewViewProvider {
@@ -66,6 +72,7 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                             command: 'new-problem',
                             problem: undefined,
                         });
+                        deleteProblemFile(message.problem.srcPath);
                         break;
                     }
 
@@ -89,7 +96,7 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                     }
 
                     case 'create-local-problem': {
-                        // runTestCases();
+                        AddProblem();
                         break;
                     }
 

@@ -60,7 +60,7 @@ export const getJudgeViewProvider = () => {
 const TESTCASES = "testcases";
 
 // Create a new problem
-async function addProblem() {
+export async function addProblem() {
     // Use default site when creating a problem from the vscode.
     let site: SiteDescription = EMPTY;
 
