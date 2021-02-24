@@ -3,10 +3,10 @@ import { Problem, TestCase } from './types';
 import { isProblemFolder, testCasesName } from '../core';
 import { dirname, join } from 'path';
 import { ConfigFile, TESTCASES } from '../primitives';
-import { readFileSync, writeFileSync } from 'fs';
-import { emptyDirSync } from 'fs-extra';
+import { readdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { submitSolution, addProblem } from '../extension';
 import { recursiveRemoveDirectory } from '../test/testUtils';
+import { removeExtension } from '../utils';
 
 let onlineJudgeEnv = false;
 
@@ -81,11 +81,17 @@ export const saveProblem = (srcPath: string, problem: Problem) => {
         return;
     }
 
-    emptyDirSync(join(path, TESTCASES));
+    path = join(path, TESTCASES);
+    console.log(readdirSync(path));
+    readdirSync(path).filter(file =>
+        problem.tests.find(test => test.id.toString() === removeExtension(file)) === undefined)
+            .forEach(file => {
+                unlinkSync(join(path, file));
+    });
     
     problem.tests.forEach((test) => {
-        writeFileSync(join(path, TESTCASES, `${test.id}.in`), test.input);
-        writeFileSync(join(path, TESTCASES, `${test.id}.ans`), test.output);
+        writeFileSync(join(path, `${test.id}.in`), test.input);
+        writeFileSync(join(path, `${test.id}.ans`), test.output);
     });
 };
 
