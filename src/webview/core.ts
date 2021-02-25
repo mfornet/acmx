@@ -4,9 +4,10 @@ import { isProblemFolder, testCasesName } from '../core';
 import { dirname, join } from 'path';
 import { ConfigFile, TESTCASES } from '../primitives';
 import { readdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
-import { submitSolution, addProblem } from '../extension';
+import { submitSolution, addProblem, getJudgeViewProvider } from '../extension';
 import { recursiveRemoveDirectory } from '../test/testUtils';
 import { removeExtension } from '../utils';
+import runAllAndSave from './processRunAll';
 
 let onlineJudgeEnv = false;
 
@@ -133,4 +134,27 @@ export const SubmitProblem = (problem: Problem) => {
 
 export const AddProblem = () => {    
     addProblem();
+};
+
+export async function RunTestCases() {
+    console.log('Running command "runTestCases"');
+    const editor = vscode.window.activeTextEditor;
+    
+    if (!editor){
+        return;
+    }
+
+    let problem = getProblemForDocument(editor.document);
+    if (!problem) {
+        return;
+    }
+
+    await editor.document.save();
+    getJudgeViewProvider().focus();
+    getJudgeViewProvider().extensionToJudgeViewMessage({
+        command: 'new-problem',
+        problem: problem,
+    });
+    runAllAndSave(problem);
+    vscode.window.showTextDocument(editor.document, vscode.ViewColumn.One);
 };

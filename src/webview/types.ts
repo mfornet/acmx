@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 /** Valid name for a VS Code preference section for the extension */
 export type prefSection =
     | 'general.saveLocation'
@@ -21,9 +23,23 @@ export type prefSection =
     | 'general.autoShowJudge'
     | 'general.defaultLanguageTemplateFileLocation';
 
-export function getAutoShowJudgePref(): boolean { return true; }
+export function getAutoShowJudgePref(): boolean {
+    let x:
+        | boolean
+        | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("autoShowJudge");
+    return x ?? true;
+}
 
-export function getRetainWebviewContextPref(): boolean { return false; } // may case rendering issues
+export function getRetainWebviewContextPref(): boolean { 
+    let x:
+        | boolean
+        | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("retainWebviewContext");
+    return x ?? false;
+}
 
 export type Language = {
     name: LangNames;

@@ -161,6 +161,18 @@
                         "default": 10042,
                         "description": "Point competitive-companion service to this port.",
                         "scope": "resource"
+                    },
+                    "acmx.configuration.autoShowJudge": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to show automatically the webview.",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.retainWebviewContext": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to retain webview context (may case rendering issues).",
+                        "scope": "resource"
                     }
                 }
             }
@@ -257,6 +269,10 @@
                     "light": "./images/submit-light.svg",
                     "dark": "./images/submit-dark.svg"
                 }
+            },
+            {
+                "command": "acmx.runTestCases",
+                "title": "ACMX: Run TestCases"
             }
         ],
         "keybindings": [
@@ -287,6 +303,10 @@
             {
                 "command": "acmx.submitSolution",
                 "key": "ctrl+alt+i"
+            },
+            {
+                "command": "acmx.runTestCases",
+                "key": "ctrl+alt+r"
             }
         ],
         "menus": {

@@ -52,6 +52,7 @@ import {
 import { getRetainWebviewContextPref } from './webview/types'
 
 import JudgeViewProvider from './webview/JudgeView';
+import { RunTestCases } from "./webview/core";
 
 let judgeViewProvider: JudgeViewProvider;
 
@@ -817,6 +818,11 @@ export function activate(context: vscode.ExtensionContext) {
         debugTest
     );
 
+    let runTestCasesCommand = vscode.commands.registerCommand(
+        "acmx.runTestCases",
+        RunTestCases
+    );
+
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
     context.subscriptions.push(runSolutionCommand);
@@ -836,6 +842,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(editLanguageCommand);
     context.subscriptions.push(submitSolutionCommand);
     context.subscriptions.push(debugTestCommand);
+    context.subscriptions.push(runTestCasesCommand);
 
     judgeViewProvider = new JudgeViewProvider(context.extensionUri);
 
