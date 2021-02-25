@@ -39,6 +39,7 @@ import {
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 import { CompanionConfig, TestCase } from "./companion";
+import { acmxTerminal } from "./terminal";
 
 /**
  * Path to static folder.
@@ -386,6 +387,32 @@ export function upgradeArena(path: string) {
     config.dump(path);
 }
 
+
+function runWorkspaceStartUpCommand(path: string){
+    
+    let workspaceStartUpCommand: string | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("workspaceStartUpCommand");
+
+    if (workspaceStartUpCommand === undefined || workspaceStartUpCommand === "") {
+        vscode.window.showErrorMessage(
+            "acmx.configuration.workspaceStartUpCommand not set"
+        );
+        return;
+    }
+    workspaceStartUpCommand = workspaceStartUpCommand
+        .replace("$PATH", path);
+
+    debug("workspaceStartUpCommand", `${workspaceStartUpCommand}`);
+
+    vscode.window.activeTextEditor?.document.save().then(() => {
+        let ter = acmxTerminal();
+        ter.show();
+        ter.sendText(workspaceStartUpCommand!);
+    });
+}
+
+
 function copyDefaultFilesToWorkspace(path: string) {
     let vscodeFolder = join(path, ".vscode");
     createFolder(vscodeFolder);
@@ -415,6 +442,8 @@ function copyDefaultFilesToWorkspace(path: string) {
             copyFileSync(launchPath, join(vscodeFolder, "launch.json"));
         }
     }
+
+    runWorkspaceStartUpCommand(path);
 }
 
 function newProblem(

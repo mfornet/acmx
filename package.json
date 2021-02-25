@@ -108,6 +108,12 @@
                         "description": "Command to run on submit. Refer to the path to code as $CODE and to the problem url as $URL.",
                         "scope": "resource"
                     },
+                    "acmx.configuration.workspaceStartUpCommand": {
+                        "type": "string",
+                        "default": "echo\"$PATH\"",
+                        "description": "Command to run when a new workspace is created. Refer to the path to workspace as $PATH.",
+                        "scope": "resource"
+                    },
                     "acmx.configuration.tasks": {
                         "type": "string",
                         "default": "",
