@@ -307,6 +307,10 @@
             {
                 "command": "acmx.runTestCases",
                 "key": "ctrl+alt+r"
+            },
+            {
+                "key": "ctrl+alt+d",
+                "command": "cph.judgeView.focus"
             }
         ],
         "menus": {

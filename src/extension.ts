@@ -36,6 +36,7 @@ import {
     verdictName,
     ConfigFile,
     Option,
+    TESTCASES,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
 import * as tmp from "tmp";
@@ -59,8 +60,6 @@ let judgeViewProvider: JudgeViewProvider;
 export const getJudgeViewProvider = () => {
     return judgeViewProvider;
 };
-
-const TESTCASES = "testcases";
 
 // Create a new problem
 export async function addProblem() {
