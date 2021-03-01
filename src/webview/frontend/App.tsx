@@ -129,7 +129,8 @@ function Judge(props: {
     // Create a new Case
     const newCase = () => {
         console.log(cases);
-        const id = problem.tests.map(test => test.id).reduce((i1, i2) => Math.max(i1, i2)) + 1;
+        const id = problem.tests.length
+            ? problem.tests.map(test => test.id).reduce((i1, i2) => Math.max(i1, i2)) + 1 : 1;
         const testCase: TestCase = {
             id,
             input: '',
