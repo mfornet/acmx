@@ -46,12 +46,14 @@ export const getProblemForDocument = (
     let testcases : TestCase[] = [];
     testcases.sort();
     testcasesname.forEach((id) => {
-        const c: TestCase = {
-            input: readFileSync(join(path, TESTCASES, `${id}.in`), "utf8"),
-            output: readFileSync(join(path, TESTCASES, `${id}.ans`), "utf8"),
-            id: parseInt(id),
+        if (id.search("gen") === -1) { // exclude stress testcases
+            const c: TestCase = {
+                input: readFileSync(join(path, TESTCASES, `${id}.in`), "utf8"),
+                output: readFileSync(join(path, TESTCASES, `${id}.ans`), "utf8"),
+                id: parseInt(id),
+            }
+            testcases.push(c);
         }
-        testcases.push(c);
     });
     
     const problem: Problem = {

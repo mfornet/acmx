@@ -402,26 +402,8 @@ async function stress() {
         stressTimes = _stressTimes;
     }
 
-    await vscode.window.activeTextEditor?.document.save().then(() => {
-        let result_ = stressSolution(path, stressTimes);
-
-        if (result_.isNone()) {
-            return;
-        }
-
-        let result = result_.unwrap();
-
-        if (result.isOk()) {
-            vscode.window.showInformationMessage(
-                `OK. Time ${result.getMaxTime()}ms`
-            );
-        } else {
-            let failTestCaseId = result.getFailTestCaseId();
-            vscode.window.showErrorMessage(
-                `${verdictName(result.status)} on test ${failTestCaseId}`
-            );
-            debugTestCase(path, failTestCaseId);
-        }
+    await vscode.window.activeTextEditor?.document.save().then(async () => {
+        await stressSolution(path, stressTimes);
     });
 }
 

@@ -1,7 +1,7 @@
 import { Problem } from './types';
 import { runSingleAndSave, emit_fail } from './processRunSingle';
 import { getJudgeViewProvider } from '../extension';
-
+import { sleep } from '../utils';
 /**
  * Run every testcase in a problem one by one. Waits for the first to complete
  * before running next. `runSingleAndSave` takes care of saving.
@@ -12,7 +12,7 @@ export default async (problem: Problem) => {
     let wait = getJudgeViewProvider().isViewVisible();
     await getJudgeViewProvider().focus();
     if (wait !== true) { // give enough time to load, otherwise result of first testcase may be lost
-        await new Promise(resolve => setTimeout(() => resolve(0), 1000));
+        await sleep(1000);
     }
     
     let ok = true;
