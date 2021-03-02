@@ -33,10 +33,10 @@
     "main": "./dist/extension",
     "contributes": {
         "viewsContainers": {
-            "activitybar": [
+            "panel": [
                 {
                     "id": "cph-judge-view-container",
-                    "title": "CPH Judge",
+                    "title": "acmX",
                     "icon": "static/panel-view-icon.svg"
                 }
             ]
@@ -46,7 +46,7 @@
                 {
                     "type": "webview",
                     "id": "cph.judgeView",
-                    "name": "Results"
+                    "name": "Judge"
                 }
             ]
         },

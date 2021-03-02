@@ -8,6 +8,12 @@ import { getJudgeViewProvider } from '../extension';
  **/
 export default async (problem: Problem) => {
     console.log('Run all started', problem);
+
+    let wait = getJudgeViewProvider().isViewVisible();
+    await getJudgeViewProvider().focus();
+    if (wait !== true) { // give enough time to load, otherwise result of first testcase may be lost
+        await new Promise(resolve => setTimeout(() => resolve(0), 1000));
+    }
     
     let ok = true;
     for (const testCase of problem.tests) {
