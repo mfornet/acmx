@@ -13,7 +13,8 @@ import {
     AddProblem,
     deleteProblemFile,
     deleteProblemCase,
-    setOnlineJudgeEnv
+    setOnlineJudgeEnv,
+    selectProblemCase
 } from './core';
 import { runSingleAndSave } from './processRunSingle';
 
@@ -72,9 +73,14 @@ class JudgeViewProvider implements vscode.WebviewViewProvider {
                         break;
                     }
 
+                    case 'select-case': {
+                        selectProblemCase(message.problem.srcPath, message.id);
+                        break;
+                    }
+
                     case 'delete-tcs': {
                         if (message.id) {
-                            deleteProblemCase(message.problem.srcPath, message.id);    
+                            deleteProblemCase(message.problem.srcPath, message.id);
                             break;
                         }
                         this.extensionToJudgeViewMessage({

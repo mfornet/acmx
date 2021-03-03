@@ -196,7 +196,7 @@ textarea:active {
     border-color: var(--vscode-focusBorder);
 }
 .btn-orange {
-    background: orange;
+    background: #ce8e17;
 }
 
 .btn-submit {

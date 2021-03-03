@@ -136,6 +136,11 @@ export type CreateLocalProblem = {
     command: 'create-local-problem';
 };
 
+export type SelectCase = {
+    command: 'select-case';
+    id: number;
+} & WebviewMessageCommon;
+
 export type WebviewToVSEvent =
     | RunAllCommand
     | GetInitialProblem
@@ -146,7 +151,8 @@ export type WebviewToVSEvent =
     | DeleteTcsCommand
     | SubmitCf
     | OnlineJudgeEnv
-    | SubmitKattis;
+    | SubmitKattis
+    | SelectCase;
 
 export type RunningCommand = {
     command: 'running';

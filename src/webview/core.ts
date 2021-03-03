@@ -4,7 +4,7 @@ import { isProblemFolder, testCasesName } from '../core';
 import { dirname, join } from 'path';
 import { ConfigFile, TESTCASES } from '../primitives';
 import { readdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
-import { submitSolution, addProblem, getJudgeViewProvider } from '../extension';
+import { submitSolution, addProblem, getJudgeViewProvider, selectDebugTestCase } from '../extension';
 import { recursiveRemoveDirectory } from '../test/testUtils';
 import { removeExtension } from '../utils';
 import runAllAndSave from './processRunAll';
@@ -127,6 +127,23 @@ export const deleteProblemCase = (srcPath: string, id: number) => {
             .forEach(file => {
                 unlinkSync(join(path, file));
     });
+};
+
+export const selectProblemCase = (srcPath: string, id: number) => {
+    let path = srcPath;
+    const MAX_DEPTH = 3;
+
+    for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
+        path = dirname(path);
+    }
+    
+    if (!isProblemFolder(path)) {
+        console.error('Invalid select path', srcPath);
+        return;
+    }
+
+    path = join(path, TESTCASES, `${id}.in`);
+    selectDebugTestCase(vscode.Uri.file(path));
 };
 
 export const SubmitProblem = (problem: Problem) => {

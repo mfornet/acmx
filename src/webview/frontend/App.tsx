@@ -124,6 +124,15 @@ function Judge(props: {
         });
     };
 
+    // Select a case to debug.
+    const selectCase = (id: number) => {
+        vscodeApi.postMessage({
+            command: 'select-case',
+            problem,
+            id,
+        });
+    };
+
     // Create a new Case
     const newCase = () => {
         console.log(cases);
@@ -246,6 +255,7 @@ function Judge(props: {
                     rerun={rerun}
                     key={value.id.toString()}
                     remove={remove}
+                    selectCase={selectCase}
                     doFocus={true}
                     forceRunning={getRunningProp(value)}
                     updateCase={updateCase}
@@ -261,6 +271,7 @@ function Judge(props: {
                     rerun={rerun}
                     key={value.id.toString()}
                     remove={remove}
+                    selectCase={selectCase}
                     forceRunning={getRunningProp(value)}
                     updateCase={updateCase}
                 ></CaseView>,

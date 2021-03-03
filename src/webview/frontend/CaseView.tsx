@@ -5,6 +5,7 @@ import React from 'react';
 
 const reloadIcon = '↺';
 const deleteIcon = '⨯';
+const selectIcon = '⚑';
 
 export default function CaseView(props: {
     num: number;
@@ -12,6 +13,7 @@ export default function CaseView(props: {
     rerun: (id: number, input: string, output: string) => void;
     updateCase: (id: number, input: string, output: string) => void;
     remove: (num: number) => void;
+    selectCase: (num: number) => void;
     notify: (text: string) => void;
     doFocus?: boolean;
     forceRunning: boolean;
@@ -64,6 +66,10 @@ export default function CaseView(props: {
         setRunning(true);
         props.rerun(id, input, output);
     };
+
+    const selectCase = () => {
+        props.selectCase(id);
+    }
 
     const expand = () => {
         setMinimized(false);
@@ -152,6 +158,13 @@ export default function CaseView(props: {
                         disabled={running}
                     >
                         {reloadIcon}
+                    </button>
+                    <button
+                        className="btn btn-orange"
+                        title="Select Testcase"
+                        onClick={selectCase}
+                    >
+                        {selectIcon}
                     </button>
                     <button
                         className="btn btn-red"
