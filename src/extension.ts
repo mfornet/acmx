@@ -473,7 +473,7 @@ async function setChecker() {
     config.dump(path);
 }
 
-async function selectDebugTestCase(uriPath: vscode.Uri) {
+export async function selectDebugTestCase(uriPath: vscode.Uri) {
     let testCaseName = basename(uriPath.path);
     let path = dirname(uriPath.path);
 
