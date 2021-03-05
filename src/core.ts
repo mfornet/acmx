@@ -959,8 +959,9 @@ export async function stressSolution(
             if (!result.isOk()) {
                 // now save the test case
                 let index = 0;
-                while (existsSync(join(path, TESTCASES, `${index}.in`))) {
-                    index += 1;
+                let testcases = testCasesName(path).filter(test => (test.search("gen") === -1));
+                if (testcases.length) {
+                    index = testcases.map(test => parseInt(test)).reduce((i1, i2) => Math.max(i1, i2)) + 1;
                 }
                 renameSync(
                     join(path, TESTCASES, `gen.in`),
@@ -992,6 +993,8 @@ export async function stressSolution(
             }
         }
 
-        vscode.window.showInformationMessage(`Stress passed ${times} testcases :(`);
+        if (!cancelled) {
+            vscode.window.showInformationMessage(`Stress passed ${times} testcases :(`);
+        }
     });
 }
