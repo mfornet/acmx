@@ -28,6 +28,7 @@ import {
     CHECKER_BINARY,
     GENERATED_TEST_CASE,
     ProblemInContest,
+    verdictName,
 } from "./primitives";
 import {
     substituteArgWith,
@@ -39,6 +40,8 @@ import {
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 import { CompanionConfig, TestCase } from "./companion";
+import { sleep } from './utils';
+import { checkLaunchWebview } from "./webview/editorChange";
 
 /**
  * Path to static folder.
@@ -74,7 +77,7 @@ export function getTimeout(): number {
     return timeout;
 }
 
-function isProblemFolder(path: string) {
+export function isProblemFolder(path: string) {
     return existsSync(join(path, "attic"));
 }
 
@@ -566,19 +569,21 @@ export function timedRun(
     );
 
     let timeSpan = execution.timeSpan.unwrap();
+    let stdout = execution.stdout().toString();
+    let stderr = execution.stderr().toString();
+    
+    writeBufferToFileSync(tcCurrent, execution.stdout());
 
     // Check if an error happened
     if (execution.failed()) {
         if (execution.isTLE()) {
-            return new TestCaseResult(Verdict.TLE);
+            return new TestCaseResult(Verdict.TLE, timeSpan, stdout, stderr);
         } else {
-            return new TestCaseResult(Verdict.RTE);
+            return new TestCaseResult(Verdict.RTE, timeSpan, stdout, stderr);
         }
     }
 
     // Check output is ok
-    writeBufferToFileSync(tcCurrent, execution.stdout());
-
     let checkerExecution = runWithArgs(
         checker.code,
         checker.getOutput(),
@@ -589,11 +594,11 @@ export function timedRun(
     );
 
     if (checkerExecution.isTLE()) {
-        return new TestCaseResult(Verdict.FAIL);
+        return new TestCaseResult(Verdict.FAIL, timeSpan, stdout, stderr);
     } else if (checkerExecution.failed()) {
-        return new TestCaseResult(Verdict.WA);
+        return new TestCaseResult(Verdict.WA, timeSpan, stdout, stderr);
     } else {
-        return new TestCaseResult(Verdict.OK, timeSpan);
+        return new TestCaseResult(Verdict.OK, timeSpan, stdout, stderr);
     }
 }
 
@@ -795,7 +800,7 @@ function getBrutePath(path: string, config: ConfigFile): Option<CompileResult> {
  *
  * If local checker is found try to compile it.
  */
-function getCheckerPath(
+export function getCheckerPath(
     path: string,
     config: ConfigFile
 ): Option<CompileResult> {
@@ -851,119 +856,145 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 }
 
-export function stressSolution(
+export async function stressSolution(
     path: string,
     times: number
-): Option<SolutionResult> {
-    let config = ConfigFile.loadConfig(path, true).unwrap();
+) {
+    return vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        cancellable: true,
+        title: 'Stressing'
+    }, async (progress, token) => {
 
-    // Load main solution (compile if necessary)
-    let mainSolution_ = getMainSolutionPath(path, config);
-    if (mainSolution_.isNone()) {
-        return Option.none();
-    }
-    let mainSolution = mainSolution_.unwrap();
+        let cancelled = false;
+        token.onCancellationRequested(() => {
+            cancelled = true;
+        });
 
-    // Load brute solution (compile if necessary)
-    let bruteSolution_ = getBrutePath(path, config);
-    if (bruteSolution_.isNone()) {
-        return Option.none();
-    }
-    let bruteSolution = bruteSolution_.unwrap();
-
-    // Load generator solution (compile if necessary)
-    let generator_ = getGeneratorPath(path, config);
-    if (generator_.isNone()) {
-        return Option.none();
-    }
-    let generator = generator_.unwrap();
-
-    // Load checker solution (compile if necessary)
-    let checker_ = getCheckerPath(path, config);
-    if (checker_.isNone()) {
-        return Option.none();
-    }
-    let checker = checker_.unwrap();
-
-    let results = [];
-
-    let timeout = config.timeLimit().unwrapOr(getTimeout());
-
-    for (let index = 0; index < times; index++) {
-        // Generate input test case
-        generateTestCase(path, generator);
-
-        // Generate output test case from brute.cpp
-        let tcData = readFileSync(
-            join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
-            "utf8"
-        );
-
-        let bruteExecution = run(
-            bruteSolution.code,
-            bruteSolution.getOutput(),
-            path,
-            tcData,
-            FRIEND_TIMEOUT
-        );
-
-        if (bruteExecution.failed()) {
-            return Option.some(
-                new SolutionResult(Verdict.FAIL, GENERATED_TEST_CASE)
-            );
+        async function reportProgress(inc : number, msg? : string) {
+            progress.report({ increment: inc, message: msg });
+            await sleep(0);
         }
+        
+        let config = ConfigFile.loadConfig(path, true).unwrap();
+        
+        await reportProgress(0, "loading main solution.");
+        // Load main solution (compile if necessary)
+        let mainSolution_ = getMainSolutionPath(path, config);
+        if (mainSolution_.isNone()) {
+            return;
+        }
+        let mainSolution = mainSolution_.unwrap();
 
-        // Finally write .ans
-        writeBufferToFileSync(
-            join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
-            bruteExecution.stdout()
-        );
+        await reportProgress(0, "loading brute solution.");
+        // Load brute solution (compile if necessary)
+        let bruteSolution_ = getBrutePath(path, config);
+        if (bruteSolution_.isNone()) {
+            return;
+        }
+        let bruteSolution = bruteSolution_.unwrap();
 
-        // Check sol report same result than brute
-        let result = timedRun(
-            path,
-            GENERATED_TEST_CASE,
-            timeout,
-            mainSolution,
-            checker
-        );
+        await reportProgress(0, "loading generator.");
+        // Load generator solution (compile if necessary)
+        let generator_ = getGeneratorPath(path, config);
+        if (generator_.isNone()) {
+            return;
+        }
+        let generator = generator_.unwrap();
+    
+        await reportProgress(0, "loading checker.");
+        // Load checker solution (compile if necessary)
+        let checker_ = getCheckerPath(path, config);
+        if (checker_.isNone()) {
+            return;
+        }
+        let checker = checker_.unwrap();
 
-        if (!result.isOk()) {
-            // now save the test case
-            let index = 0;
-            while (existsSync(join(path, TESTCASES, `gen.${index}.in`))) {
-                index += 1;
-            }
-            renameSync(
-                join(path, TESTCASES, `gen.in`),
-                join(path, TESTCASES, `gen.${index}.in`)
+        let timeout = config.timeLimit().unwrapOr(getTimeout());
+
+        await reportProgress(0, "0%");
+        let percent = 0;
+        for (let index = 0; index < times && !cancelled; index++) {
+            // Generate input test case
+            generateTestCase(path, generator);
+
+            // Generate output test case from brute.cpp
+            let tcData = readFileSync(
+                join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
+                "utf8"
             );
-            if (existsSync(join(path, TESTCASES, `gen.ans`))) {
+
+            if (cancelled) return;
+
+            let bruteExecution = run(
+                bruteSolution.code,
+                bruteSolution.getOutput(),
+                path,
+                tcData,
+                FRIEND_TIMEOUT
+            );
+
+            if (bruteExecution.failed()) {
+                vscode.window.showErrorMessage("Brute solution failed: " + bruteExecution.stderr.toString());
+                return;
+            }
+
+            if (cancelled) return;
+
+            // Finally write .ans
+            writeBufferToFileSync(
+                join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
+                bruteExecution.stdout()
+            );
+
+            // Check sol report same result than brute
+            let result = timedRun(
+                path,
+                GENERATED_TEST_CASE,
+                timeout,
+                mainSolution,
+                checker
+            );
+
+            if (!result.isOk()) {
+                // now save the test case
+                let index = 0;
+                let testcases = testCasesName(path).filter(test => (test.search("gen") === -1));
+                if (testcases.length) {
+                    index = testcases.map(test => parseInt(test)).reduce((i1, i2) => Math.max(i1, i2)) + 1;
+                }
                 renameSync(
-                    join(path, TESTCASES, `gen.ans`),
-                    join(path, TESTCASES, `gen.${index}.ans`)
+                    join(path, TESTCASES, `gen.in`),
+                    join(path, TESTCASES, `${index}.in`)
                 );
+                if (existsSync(join(path, TESTCASES, `gen.ans`))) {
+                    renameSync(
+                        join(path, TESTCASES, `gen.ans`),
+                        join(path, TESTCASES, `${index}.ans`)
+                    );
+                }
+                if (existsSync(join(path, TESTCASES, `gen.out`))) {
+                    renameSync(
+                        join(path, TESTCASES, `gen.out`),
+                        join(path, TESTCASES, `${index}.out`)
+                    );
+                }
+                vscode.window.showInformationMessage(`${verdictName(result.status)} on testcase ${index}.in`);
+                checkLaunchWebview(); // reload webview to show the new testcase
+                //selectDebugTestCase() automatically select it to debug ??
+                return;
             }
-            if (existsSync(join(path, TESTCASES, `gen.out`))) {
-                renameSync(
-                    join(path, TESTCASES, `gen.out`),
-                    join(path, TESTCASES, `gen.${index}.out`)
-                );
+
+            let newPercent = (index + 1) * 100 / times;
+            if (newPercent !== percent)
+            {
+                await reportProgress(newPercent - percent, newPercent.toString() + "%");
+                percent = newPercent;
             }
-            return Option.some(
-                new SolutionResult(result.status, `gen.${index}`)
-            );
         }
 
-        results.push(result);
-    }
-
-    let maxTime = 0;
-    for (let i = 0; i < results.length; i++) {
-        if (results[i]!.spanTime! > maxTime) {
-            maxTime = results[i]!.spanTime!;
+        if (!cancelled) {
+            vscode.window.showInformationMessage(`Stress passed ${times} testcases :(`);
         }
-    }
-
-    return Option.some(new SolutionResult(Verdict.OK, undefined, maxTime));
+    });
 }

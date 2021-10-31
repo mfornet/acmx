@@ -36,6 +36,7 @@ import {
     verdictName,
     ConfigFile,
     Option,
+    TESTCASES,
 } from "./primitives";
 import * as clipboardy from "clipboardy";
 import * as tmp from "tmp";
@@ -43,10 +44,25 @@ import { debug, getExtension, removeExtension } from "./utils";
 import { preRun, runSingle } from "./runner";
 import { acmxTerminal } from "./terminal";
 
-const TESTCASES = "testcases";
+import {
+    editorChanged,
+    editorClosed,
+    checkLaunchWebview,
+} from './webview/editorChange';
+
+import { getRetainWebviewContextPref } from './webview/types'
+
+import JudgeViewProvider from './webview/JudgeView';
+import { RunTestCases } from "./webview/core";
+
+let judgeViewProvider: JudgeViewProvider;
+
+export const getJudgeViewProvider = () => {
+    return judgeViewProvider;
+};
 
 // Create a new problem
-async function addProblem() {
+export async function addProblem() {
     // Use default site when creating a problem from the vscode.
     let site: SiteDescription = EMPTY;
 
@@ -240,7 +256,13 @@ async function compile() {
         if (result.isNone()) {
             vscode.window.showInformationMessage("No compilation needed.");
         } else if (!result.unwrap().failed()) {
-            vscode.window.showInformationMessage("Compilation successful.");
+            let message = "";
+            if (result.unwrap().getCached()) {
+                message = " (cached)";
+            } else if (result.unwrap().stderr().length > 0) {
+                message = " with warnings";
+            }
+            vscode.window.showInformationMessage("Compilation successful" + message + ".");
         }
     });
 }
@@ -380,26 +402,8 @@ async function stress() {
         stressTimes = _stressTimes;
     }
 
-    await vscode.window.activeTextEditor?.document.save().then(() => {
-        let result_ = stressSolution(path, stressTimes);
-
-        if (result_.isNone()) {
-            return;
-        }
-
-        let result = result_.unwrap();
-
-        if (result.isOk()) {
-            vscode.window.showInformationMessage(
-                `OK. Time ${result.getMaxTime()}ms`
-            );
-        } else {
-            let failTestCaseId = result.getFailTestCaseId();
-            vscode.window.showErrorMessage(
-                `${verdictName(result.status)} on test ${failTestCaseId}`
-            );
-            debugTestCase(path, failTestCaseId);
-        }
+    await vscode.window.activeTextEditor?.document.save().then(async () => {
+        await stressSolution(path, stressTimes);
     });
 }
 
@@ -469,7 +473,7 @@ async function setChecker() {
     config.dump(path);
 }
 
-async function selectDebugTestCase(uriPath: vscode.Uri) {
+export async function selectDebugTestCase(uriPath: vscode.Uri) {
     let testCaseName = basename(uriPath.path);
     let path = dirname(uriPath.path);
 
@@ -488,8 +492,8 @@ async function selectDebugTestCase(uriPath: vscode.Uri) {
     let launchTaskData = readFileSync(launchTaskPath, "utf8");
     // TODO(#20): Don't use regular expression to replace this. Use JSON parser instead.
     let newTaskData = launchTaskData.replace(
-        /\"stdio\"\:.+/,
-        `"stdio": ["\${fileDirname}/testcases/${testCaseName}"],`
+        /\"args\"\:.+/,
+        `"args": ["<", "\${fileDirname}/testcases/${testCaseName}"],`
     );
     let launchTaskFdW = openSync(launchTaskPath, "w");
     writeSync(launchTaskFdW, newTaskData);
@@ -623,7 +627,7 @@ async function copySubmissionToClipboard() {
     }
 }
 
-async function submitSolution() {
+export async function submitSolution() {
     let path_ = currentProblem();
 
     if (path_.isNone()) {
@@ -795,6 +799,11 @@ export function activate(context: vscode.ExtensionContext) {
         debugTest
     );
 
+    let runTestCasesCommand = vscode.commands.registerCommand(
+        "acmx.runTestCases",
+        RunTestCases
+    );
+
     context.subscriptions.push(addProblemCommand);
     context.subscriptions.push(addContestCommand);
     context.subscriptions.push(runSolutionCommand);
@@ -812,10 +821,42 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(selectCheckerCommand);
     context.subscriptions.push(copySubmissionToClipboardCommand);
     context.subscriptions.push(editLanguageCommand);
-
     context.subscriptions.push(submitSolutionCommand);
-
     context.subscriptions.push(debugTestCommand);
+    context.subscriptions.push(runTestCasesCommand);
+
+    judgeViewProvider = new JudgeViewProvider(context.extensionUri);
+
+    const webviewView = vscode.window.registerWebviewViewProvider(
+        JudgeViewProvider.viewType,
+        judgeViewProvider,
+        {
+            webviewOptions: {
+                retainContextWhenHidden: getRetainWebviewContextPref(),
+            },
+        },
+    );
+
+    context.subscriptions.push(webviewView);
+
+    checkLaunchWebview();
+
+    vscode.workspace.onDidCloseTextDocument((e) => {
+        editorClosed(e);
+    });
+
+    vscode.window.onDidChangeActiveTextEditor((e) => {
+        editorChanged(e);
+    });
+
+    vscode.window.onDidChangeVisibleTextEditors((editors) => {
+        if (editors.length === 0) {
+            getJudgeViewProvider().extensionToJudgeViewMessage({
+                command: 'new-problem',
+                problem: undefined,
+            });
+        }
+    });
 }
 
 // this method is called when your extension is deactivated

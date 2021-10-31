@@ -12,12 +12,17 @@ Happy linting! 💖
 */
 module.exports = {
     env: {
+        browser: true,
         es6: true,
         node: true,
     },
     extends: [
         "eslint-config-prettier",
         "eslint-config-prettier/@typescript-eslint",
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:prettier/recommended',
+        'plugin:react/recommended',
     ],
     parser: "@typescript-eslint/parser",
     parserOptions: {
@@ -47,5 +52,15 @@ module.exports = {
         "no-redeclare": "warn",
         "no-throw-literal": "warn",
         "no-unused-expressions": "warn",
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/ban-ts-comment': 'off',
+        '@typescript-eslint/prefer-namespace-keyword': 'off',
+        '@typescript-eslint/no-namespace': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+    },
+    settings: {
+        react: {
+            version: 'detect',
+        },
     },
 };

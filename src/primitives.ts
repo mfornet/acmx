@@ -28,10 +28,14 @@ export enum Verdict {
 export class TestCaseResult {
     status: Verdict;
     spanTime?: number;
+    stdout?: string;
+    stderr?: string;
 
-    constructor(status: Verdict, spanTime?: number) {
+    constructor(status: Verdict, spanTime?: number, stdout?: string, stderr?: string) {
         this.status = status;
         this.spanTime = spanTime;
+        this.stdout = stdout;
+        this.stderr = stderr;
     }
 
     isOk() {
