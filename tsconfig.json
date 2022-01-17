@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "types" : ["node"],
+        "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
             "*": ["types/*"]
