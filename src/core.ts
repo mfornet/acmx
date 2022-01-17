@@ -226,7 +226,13 @@ export function initAcmX(testPath?: string) {
     createFolder(atticFolder);
 
     // Compile checker
-    let compiledName = "wcmp";
+    let compiledName = "";
+    if (os.platform() === "win32") {
+        compiledName = "wcmp.exe";
+    } else {
+        compiledName = "wcmp";
+    }
+
     if (!existsSync(join(checkerFolder, compiledName))) {
         let checkerPath = join(checkerFolder, checkerName);
         let compiledPath = join(checkerFolder, compiledName);
