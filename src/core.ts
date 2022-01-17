@@ -11,6 +11,7 @@ import {
 } from "fs";
 import { basename, dirname, extname, join, isAbsolute } from "path";
 import * as vscode from "vscode";
+import os = require("os");
 import {
     Contest,
     Problem,
@@ -40,7 +41,7 @@ import {
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 import { CompanionConfig, TestCase } from "./companion";
-import { sleep } from './utils';
+import { sleep } from "./utils";
 import { checkLaunchWebview } from "./webview/editorChange";
 
 /**
@@ -571,7 +572,7 @@ export function timedRun(
     let timeSpan = execution.timeSpan.unwrap();
     let stdout = execution.stdout().toString();
     let stderr = execution.stderr().toString();
-    
+
     writeBufferToFileSync(tcCurrent, execution.stdout());
 
     // Check if an error happened
@@ -725,7 +726,12 @@ export function getMainSolutionPath(
     }
 
     let mainSolution = config.mainSolution.unwrap();
-    let mainSolutionOutput = join(path, ATTIC, "sol");
+    let mainSolutionOutput = "";
+    if (os.platform() === "win32") {
+        mainSolutionOutput = join(path, ATTIC, "sol.exe");
+    } else {
+        mainSolutionOutput = join(path, ATTIC, "sol");
+    }
 
     if (!existsSync(mainSolution)) {
         vscode.window.showErrorMessage(
@@ -755,7 +761,13 @@ function getGeneratorPath(
     }
 
     let generatorCode = config.generator.unwrap();
-    let generatorOutput = join(path, ATTIC, "generator");
+    let generatorOutput = "";
+
+    if (os.platform() === "win32") {
+        generatorOutput = join(path, ATTIC, "generator.exe");
+    } else {
+        generatorOutput = join(path, ATTIC, "generator");
+    }
 
     if (!existsSync(generatorCode)) {
         vscode.window.showErrorMessage(
@@ -782,7 +794,12 @@ function getBrutePath(path: string, config: ConfigFile): Option<CompileResult> {
     }
 
     let bruteCode = config.bruteSolution.unwrap();
-    let bruteOutput = join(path, ATTIC, "brute");
+    let bruteOutput = "";
+    if (os.platform() === "win32") {
+        bruteOutput = join(path, ATTIC, "brute.exe");
+    } else {
+        bruteOutput = join(path, ATTIC, "brute");
+    }
 
     if (!existsSync(bruteCode)) {
         vscode.window.showErrorMessage(
@@ -806,8 +823,13 @@ export function getCheckerPath(
 ): Option<CompileResult> {
     let globalHome = globalHomePath();
     let globalCheckerCode = join(globalHome, "checkers", "wcmp.cpp");
-    let globalCheckerOutput = join(globalHome, "checkers", "wcmp");
+    let globalCheckerOutput = "";
 
+    if (os.platform() === "win32") {
+        globalCheckerOutput = join(globalHome, "checkers", "wcmp.exe");
+    } else {
+        globalCheckerOutput = join(globalHome, "checkers", "wcmp");
+    }
     let globalChecker = preRun(
         globalCheckerCode,
         globalCheckerOutput,
@@ -826,7 +848,12 @@ export function getCheckerPath(
     }
 
     let checkerCode = config.checker.unwrap();
-    let checkerOutput = join(path, ATTIC, CHECKER_BINARY);
+    let checkerOutput = "";
+    if (os.platform() === "win32") {
+        checkerOutput = join(path, ATTIC, CHECKER_BINARY + ".exe");
+    } else {
+        checkerOutput = join(path, ATTIC, CHECKER_BINARY);
+    }
 
     if (!existsSync(checkerCode)) {
         return Option.some(
@@ -856,145 +883,158 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 }
 
-export async function stressSolution(
-    path: string,
-    times: number
-) {
-    return vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        cancellable: true,
-        title: 'Stressing'
-    }, async (progress, token) => {
+export async function stressSolution(path: string, times: number) {
+    return vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            cancellable: true,
+            title: "Stressing",
+        },
+        async (progress, token) => {
+            let cancelled = false;
+            token.onCancellationRequested(() => {
+                cancelled = true;
+            });
 
-        let cancelled = false;
-        token.onCancellationRequested(() => {
-            cancelled = true;
-        });
-
-        async function reportProgress(inc : number, msg? : string) {
-            progress.report({ increment: inc, message: msg });
-            await sleep(0);
-        }
-        
-        let config = ConfigFile.loadConfig(path, true).unwrap();
-        
-        await reportProgress(0, "loading main solution.");
-        // Load main solution (compile if necessary)
-        let mainSolution_ = getMainSolutionPath(path, config);
-        if (mainSolution_.isNone()) {
-            return;
-        }
-        let mainSolution = mainSolution_.unwrap();
-
-        await reportProgress(0, "loading brute solution.");
-        // Load brute solution (compile if necessary)
-        let bruteSolution_ = getBrutePath(path, config);
-        if (bruteSolution_.isNone()) {
-            return;
-        }
-        let bruteSolution = bruteSolution_.unwrap();
-
-        await reportProgress(0, "loading generator.");
-        // Load generator solution (compile if necessary)
-        let generator_ = getGeneratorPath(path, config);
-        if (generator_.isNone()) {
-            return;
-        }
-        let generator = generator_.unwrap();
-    
-        await reportProgress(0, "loading checker.");
-        // Load checker solution (compile if necessary)
-        let checker_ = getCheckerPath(path, config);
-        if (checker_.isNone()) {
-            return;
-        }
-        let checker = checker_.unwrap();
-
-        let timeout = config.timeLimit().unwrapOr(getTimeout());
-
-        await reportProgress(0, "0%");
-        let percent = 0;
-        for (let index = 0; index < times && !cancelled; index++) {
-            // Generate input test case
-            generateTestCase(path, generator);
-
-            // Generate output test case from brute.cpp
-            let tcData = readFileSync(
-                join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
-                "utf8"
-            );
-
-            if (cancelled) return;
-
-            let bruteExecution = run(
-                bruteSolution.code,
-                bruteSolution.getOutput(),
-                path,
-                tcData,
-                FRIEND_TIMEOUT
-            );
-
-            if (bruteExecution.failed()) {
-                vscode.window.showErrorMessage("Brute solution failed: " + bruteExecution.stderr.toString());
-                return;
+            async function reportProgress(inc: number, msg?: string) {
+                progress.report({ increment: inc, message: msg });
+                await sleep(0);
             }
 
-            if (cancelled) return;
+            let config = ConfigFile.loadConfig(path, true).unwrap();
 
-            // Finally write .ans
-            writeBufferToFileSync(
-                join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
-                bruteExecution.stdout()
-            );
+            await reportProgress(0, "loading main solution.");
+            // Load main solution (compile if necessary)
+            let mainSolution_ = getMainSolutionPath(path, config);
+            if (mainSolution_.isNone()) {
+                return;
+            }
+            let mainSolution = mainSolution_.unwrap();
 
-            // Check sol report same result than brute
-            let result = timedRun(
-                path,
-                GENERATED_TEST_CASE,
-                timeout,
-                mainSolution,
-                checker
-            );
+            await reportProgress(0, "loading brute solution.");
+            // Load brute solution (compile if necessary)
+            let bruteSolution_ = getBrutePath(path, config);
+            if (bruteSolution_.isNone()) {
+                return;
+            }
+            let bruteSolution = bruteSolution_.unwrap();
 
-            if (!result.isOk()) {
-                // now save the test case
-                let index = 0;
-                let testcases = testCasesName(path).filter(test => (test.search("gen") === -1));
-                if (testcases.length) {
-                    index = testcases.map(test => parseInt(test)).reduce((i1, i2) => Math.max(i1, i2)) + 1;
-                }
-                renameSync(
-                    join(path, TESTCASES, `gen.in`),
-                    join(path, TESTCASES, `${index}.in`)
+            await reportProgress(0, "loading generator.");
+            // Load generator solution (compile if necessary)
+            let generator_ = getGeneratorPath(path, config);
+            if (generator_.isNone()) {
+                return;
+            }
+            let generator = generator_.unwrap();
+
+            await reportProgress(0, "loading checker.");
+            // Load checker solution (compile if necessary)
+            let checker_ = getCheckerPath(path, config);
+            if (checker_.isNone()) {
+                return;
+            }
+            let checker = checker_.unwrap();
+
+            let timeout = config.timeLimit().unwrapOr(getTimeout());
+
+            await reportProgress(0, "0%");
+            let percent = 0;
+            for (let index = 0; index < times && !cancelled; index++) {
+                // Generate input test case
+                generateTestCase(path, generator);
+
+                // Generate output test case from brute.cpp
+                let tcData = readFileSync(
+                    join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
+                    "utf8"
                 );
-                if (existsSync(join(path, TESTCASES, `gen.ans`))) {
-                    renameSync(
-                        join(path, TESTCASES, `gen.ans`),
-                        join(path, TESTCASES, `${index}.ans`)
+
+                if (cancelled) return;
+
+                let bruteExecution = run(
+                    bruteSolution.code,
+                    bruteSolution.getOutput(),
+                    path,
+                    tcData,
+                    FRIEND_TIMEOUT
+                );
+
+                if (bruteExecution.failed()) {
+                    vscode.window.showErrorMessage(
+                        "Brute solution failed: " +
+                            bruteExecution.stderr.toString()
                     );
+                    return;
                 }
-                if (existsSync(join(path, TESTCASES, `gen.out`))) {
-                    renameSync(
-                        join(path, TESTCASES, `gen.out`),
-                        join(path, TESTCASES, `${index}.out`)
+
+                if (cancelled) return;
+
+                // Finally write .ans
+                writeBufferToFileSync(
+                    join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
+                    bruteExecution.stdout()
+                );
+
+                // Check sol report same result than brute
+                let result = timedRun(
+                    path,
+                    GENERATED_TEST_CASE,
+                    timeout,
+                    mainSolution,
+                    checker
+                );
+
+                if (!result.isOk()) {
+                    // now save the test case
+                    let index = 0;
+                    let testcases = testCasesName(path).filter(
+                        (test) => test.search("gen") === -1
                     );
+                    if (testcases.length) {
+                        index =
+                            testcases
+                                .map((test) => parseInt(test))
+                                .reduce((i1, i2) => Math.max(i1, i2)) + 1;
+                    }
+                    renameSync(
+                        join(path, TESTCASES, `gen.in`),
+                        join(path, TESTCASES, `${index}.in`)
+                    );
+                    if (existsSync(join(path, TESTCASES, `gen.ans`))) {
+                        renameSync(
+                            join(path, TESTCASES, `gen.ans`),
+                            join(path, TESTCASES, `${index}.ans`)
+                        );
+                    }
+                    if (existsSync(join(path, TESTCASES, `gen.out`))) {
+                        renameSync(
+                            join(path, TESTCASES, `gen.out`),
+                            join(path, TESTCASES, `${index}.out`)
+                        );
+                    }
+                    vscode.window.showInformationMessage(
+                        `${verdictName(result.status)} on testcase ${index}.in`
+                    );
+                    checkLaunchWebview(); // reload webview to show the new testcase
+                    //selectDebugTestCase() automatically select it to debug ??
+                    return;
                 }
-                vscode.window.showInformationMessage(`${verdictName(result.status)} on testcase ${index}.in`);
-                checkLaunchWebview(); // reload webview to show the new testcase
-                //selectDebugTestCase() automatically select it to debug ??
-                return;
+
+                let newPercent = ((index + 1) * 100) / times;
+                if (newPercent !== percent) {
+                    await reportProgress(
+                        newPercent - percent,
+                        newPercent.toString() + "%"
+                    );
+                    percent = newPercent;
+                }
             }
 
-            let newPercent = (index + 1) * 100 / times;
-            if (newPercent !== percent)
-            {
-                await reportProgress(newPercent - percent, newPercent.toString() + "%");
-                percent = newPercent;
+            if (!cancelled) {
+                vscode.window.showInformationMessage(
+                    `Stress passed ${times} testcases :(`
+                );
             }
         }
-
-        if (!cancelled) {
-            vscode.window.showInformationMessage(`Stress passed ${times} testcases :(`);
-        }
-    });
+    );
 }
