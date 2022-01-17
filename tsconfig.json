@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "types" : ["node"],
         "baseUrl": ".",
         "paths": {
             "*": ["types/*"]
@@ -22,6 +23,5 @@
         "esModuleInterop": true,
         "resolveJsonModule": true
     },
-    "exclude": ["node_modules", ".vscode-test"],
-    "types" : ["node"] //
+    "exclude": ["node_modules", ".vscode-test"]
 }
