@@ -13,18 +13,13 @@ import { Execution } from "./primitives";
  * @param path Path of the problem
  * @param execution Execution result
  */
-export function onCompilationError(
-    code: string,
-    execution: Execution
-)
-{
+export function onCompilationError(code: string, execution: Execution) {
     debug("compile-error", `Compilation error ${code}`);
     vscode.window.showErrorMessage(`Compilation Error. ${code}`);
     showCompileError(execution.stderr().toString("utf8"));
 }
 
-export function showCompileError(compileError: string)
-{
+export function showCompileError(compileError: string) {
     // let errorPath = join(path, ATTIC, "stderr");
     // let errorFile = openSync(errorPath, "w");
     // writeSync(errorFile, compileError);
@@ -35,14 +30,15 @@ export function showCompileError(compileError: string)
         open: () => writeEmitter.fire(`${compileError.replace(/\n/g, "\n\r")}`),
     };
 
-    vscode.window.terminals.forEach((value) =>
-    {
-        if (value.name === "CompileError")
-        {
+    vscode.window.terminals.forEach((value) => {
+        if (value.name === "CompileError") {
             value.dispose();
         }
     });
-    let target = (<any>vscode.window).createTerminal({ name: "CompileError", pty });
+    let target = (<any>vscode.window).createTerminal({
+        name: "CompileError",
+        pty,
+    });
 
     target.show();
 }
