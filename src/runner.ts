@@ -104,10 +104,10 @@ export function preRun(
     let execution = runSingle(command, timeout, "");
 
     if (execution.failed()) {
-        onCompilationError(code, path, execution);
+        onCompilationError(code, execution);
     } else {
         if (execution.stderr().length > 0) {
-            showCompileError(path, execution.stderr().toString("utf8"));
+            showCompileError(execution.stderr().toString("utf8"));
         }
         dumpMD5(code, path);
     }

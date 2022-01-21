@@ -1,13 +1,19 @@
 {
     "compilerOptions": {
+        "skipLibCheck": true, /*mocha and jedi have same declarations*/
         "baseUrl": ".",
         "paths": {
-            "*": ["types/*"]
+            "*": [
+                "types/*"
+            ]
         },
         "module": "commonjs",
         "target": "es2017",
         "outDir": "out",
-        "lib": ["es2017", "DOM"],
+        "lib": [
+            "es2017",
+            "DOM"
+        ],
         "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
@@ -18,9 +24,12 @@
         "noUnusedLocals": true, /* Report errors on unused locals. */
         // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
         // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-        "noUnusedParameters": true,  /* Report errors on unused parameters. */
+        "noUnusedParameters": true, /* Report errors on unused parameters. */
         "esModuleInterop": true,
         "resolveJsonModule": true
     },
-    "exclude": ["node_modules", ".vscode-test"]
+    "exclude": [
+        "node_modules",
+        ".vscode-test"
+    ]
 }
