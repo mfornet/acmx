@@ -1,23 +1,28 @@
-import * as vscode from 'vscode';
-import { Problem, TestCase } from './types';
-import { isProblemFolder, testCasesName } from '../core';
-import { dirname, join } from 'path';
-import { ConfigFile, TESTCASES } from '../primitives';
-import { readdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
-import { submitSolution, addProblem, getJudgeViewProvider, selectDebugTestCase } from '../extension';
-import { recursiveRemoveDirectory } from '../test/testUtils';
-import { removeExtension } from '../utils';
-import runAllAndSave from './processRunAll';
+import * as vscode from "vscode";
+import { Problem, TestCase } from "./types";
+import { isProblemFolder, testCasesName } from "../core";
+import { dirname, join } from "path";
+import { ConfigFile, TESTCASES } from "../primitives";
+import { readdirSync, readFileSync, writeFileSync, unlinkSync } from "fs";
+import {
+    submitSolution,
+    addProblem,
+    getJudgeViewProvider,
+    selectDebugTestCase,
+} from "../extension";
+import { recursiveRemoveDirectory } from "../test/testUtils";
+import { removeExtension } from "../utils";
+import runAllAndSave from "./processRunAll";
 
 let onlineJudgeEnv = false;
 
 export const setOnlineJudgeEnv = (value: boolean) => {
     onlineJudgeEnv = value;
-    console.log('online judge env:', onlineJudgeEnv);
+    console.log("online judge env:", onlineJudgeEnv);
 };
 
 export const getProblemForDocument = (
-    document: vscode.TextDocument | undefined,
+    document: vscode.TextDocument | undefined
 ): Problem | undefined => {
     if (document === undefined) {
         return undefined;
@@ -36,37 +41,42 @@ export const getProblemForDocument = (
         return undefined;
     }
 
-    let config = ConfigFile.loadConfig(path, true).unwrap();
-    
-    let companionConfig = null;
-    if (config.companionConfig.isSome())
-        companionConfig = config.companionConfig.unwrap();
+    const config = ConfigFile.loadConfig(path, true).unwrap();
 
-    let testcasesname = testCasesName(path);
-    let testcases : TestCase[] = [];
+    let companionConfig = null;
+    if (config.companionConfig.isSome()) {
+        companionConfig = config.companionConfig.unwrap();
+    }
+
+    const testcasesname = testCasesName(path);
+    const testcases: TestCase[] = [];
     testcases.sort();
     testcasesname.forEach((id) => {
-        if (id.search("gen") === -1) { // exclude stress testcases
+        if (id.search("gen") === -1) {
+            // exclude stress testcases
             const c: TestCase = {
                 input: readFileSync(join(path, TESTCASES, `${id}.in`), "utf8"),
-                output: readFileSync(join(path, TESTCASES, `${id}.ans`), "utf8"),
+                output: readFileSync(
+                    join(path, TESTCASES, `${id}.ans`),
+                    "utf8"
+                ),
                 id: parseInt(id),
-            }
+            };
             testcases.push(c);
         }
     });
-    
+
     const problem: Problem = {
-        name: companionConfig?.name ?? '',
-        url: companionConfig?.url ?? '',
+        name: companionConfig?.name ?? "",
+        url: companionConfig?.url ?? "",
         interactive: false,
         memoryLimit: companionConfig?.memoryLimit ?? 0,
         timeLimit: companionConfig?.timeLimit ?? 0,
-        group: companionConfig?.group ?? '',
+        group: companionConfig?.group ?? "",
         tests: testcases,
-        srcPath: config.mainSolution.unwrapOr(''),
+        srcPath: config.mainSolution.unwrapOr(""),
         local: false,
-    }
+    };
 
     return problem;
 };
@@ -78,14 +88,14 @@ export const saveProblem = (srcPath: string, problem: Problem) => {
     for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
         path = dirname(path);
     }
-    
+
     if (!isProblemFolder(path)) {
-        console.error('Invalid save path', srcPath, problem);
+        console.error("Invalid save path", srcPath, problem);
         return;
     }
 
     path = join(path, TESTCASES);
-    
+
     problem.tests.forEach((test) => {
         writeFileSync(join(path, `${test.id}.in`), test.input);
         writeFileSync(join(path, `${test.id}.ans`), test.output);
@@ -99,9 +109,9 @@ export const deleteProblemFile = (srcPath: string) => {
     for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
         path = dirname(path);
     }
-    
+
     if (!isProblemFolder(path)) {
-        console.error('Invalid delete path', srcPath);
+        console.error("Invalid delete path", srcPath);
         return;
     }
 
@@ -115,18 +125,18 @@ export const deleteProblemCase = (srcPath: string, id: number) => {
     for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
         path = dirname(path);
     }
-    
+
     if (!isProblemFolder(path)) {
-        console.error('Invalid delete path', srcPath);
+        console.error("Invalid delete path", srcPath);
         return;
     }
 
     path = join(path, TESTCASES);
-    readdirSync(path).filter(file =>
-        (removeExtension(file)) === id.toString())
-            .forEach(file => {
-                unlinkSync(join(path, file));
-    });
+    readdirSync(path)
+        .filter((file) => removeExtension(file) === id.toString())
+        .forEach((file) => {
+            unlinkSync(join(path, file));
+        });
 };
 
 export const selectProblemCase = (srcPath: string, id: number) => {
@@ -136,9 +146,9 @@ export const selectProblemCase = (srcPath: string, id: number) => {
     for (let i = 0; i < MAX_DEPTH && !isProblemFolder(path); i++) {
         path = dirname(path);
     }
-    
+
     if (!isProblemFolder(path)) {
-        console.error('Invalid select path', srcPath);
+        console.error("Invalid select path", srcPath);
         return;
     }
 
@@ -147,23 +157,23 @@ export const selectProblemCase = (srcPath: string, id: number) => {
 };
 
 export const SubmitProblem = (problem: Problem) => {
-    console.log('submitted ' + problem.srcPath);
+    console.log("submitted " + problem.srcPath);
     submitSolution();
 };
 
-export const AddProblem = () => {    
+export const AddProblem = () => {
     addProblem();
 };
 
 export async function RunTestCases() {
     console.log('Running command "runTestCases"');
     const editor = vscode.window.activeTextEditor;
-    
-    if (!editor){
+
+    if (!editor) {
         return;
     }
 
-    let problem = getProblemForDocument(editor.document);
+    const problem = getProblemForDocument(editor.document);
     if (!problem) {
         return;
     }
@@ -171,9 +181,9 @@ export async function RunTestCases() {
     await editor.document.save();
     getJudgeViewProvider().focus();
     getJudgeViewProvider().extensionToJudgeViewMessage({
-        command: 'new-problem',
+        command: "new-problem",
         problem: problem,
     });
     runAllAndSave(problem);
     vscode.window.showTextDocument(editor.document, vscode.ViewColumn.One);
-};
+}

@@ -31,7 +31,12 @@ export class TestCaseResult {
     stdout?: string;
     stderr?: string;
 
-    constructor(status: Verdict, spanTime?: number, stdout?: string, stderr?: string) {
+    constructor(
+        status: Verdict,
+        spanTime?: number,
+        stdout?: string,
+        stderr?: string
+    ) {
         this.status = status;
         this.spanTime = spanTime;
         this.stdout = stdout;
@@ -301,8 +306,8 @@ export class ConfigFile {
      */
     static checkExist(path: string) {
         if (!existsSync(join(path, ATTIC, "config.json"))) {
-            let config = ConfigFile.empty();
-            let mainSolution = join(path, "sol.cpp");
+            const config = ConfigFile.empty();
+            const mainSolution = join(path, "sol.cpp");
             if (existsSync(mainSolution)) {
                 config.mainSolution = Option.some(mainSolution);
             }
@@ -311,7 +316,7 @@ export class ConfigFile {
     }
 
     dump(path: string) {
-        let configFile = JSON.stringify(this, null, 2);
+        const configFile = JSON.stringify(this, null, 2);
         writeToFileSync(join(path, ATTIC, "config.json"), configFile);
     }
 
@@ -344,24 +349,21 @@ export class ConfigFile {
         return changed;
     }
 
-    static loadConfig(
-        path: string,
-        checkExist: boolean = false
-    ): Option<ConfigFile> {
+    static loadConfig(path: string, checkExist = false): Option<ConfigFile> {
         if (checkExist) {
             ConfigFile.checkExist(path);
         }
 
-        let configPath = join(path, ATTIC, "config.json");
+        const configPath = join(path, ATTIC, "config.json");
 
         if (existsSync(configPath)) {
-            let configData = readFileSync(
+            const configData = readFileSync(
                 join(path, ATTIC, "config.json"),
                 "utf8"
             );
-            let parsed = JSON.parse(configData);
+            const parsed = JSON.parse(configData);
 
-            let config = new ConfigFile(
+            const config = new ConfigFile(
                 parsed.mainSolution?.value,
                 parsed.bruteSolution?.value,
                 parsed.generator?.value,

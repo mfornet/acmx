@@ -57,6 +57,7 @@ module.exports = {
         '@typescript-eslint/prefer-namespace-keyword': 'off',
         '@typescript-eslint/no-namespace': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/class-name-casing': 'off'
     },
     settings: {
         react: {

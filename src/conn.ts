@@ -13,15 +13,15 @@ export const EMPTY = new SiteDescription(
     (problemId) => {
         // Parse problemId. It is of the form problem-name-10
         // Where `problem-name` is current name and `10` is number of problems
-        let args = problemId.split("-");
+        const args = problemId.split("-");
 
-        let numProblems = args[args.length - 1];
-        let total = Number.parseInt(numProblems);
+        const numProblems = args[args.length - 1];
+        const total = Number.parseInt(numProblems);
 
         args.pop();
-        let name = args.join("-");
+        const name = args.join("-");
 
-        let problems = [];
+        const problems = [];
 
         for (let i = 0; i < total; i++) {
             let name = `Z${i - 25}`;

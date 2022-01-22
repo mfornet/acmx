@@ -8,13 +8,13 @@ import { onCompilationError, showCompileError } from "./errors";
 import md5File = require("md5-file");
 
 function loadConfig(extension: string): LanguageCommand {
-    let languagesPath = globalLanguagePath();
-    let candidates: string[] = [];
+    const languagesPath = globalLanguagePath();
+    const candidates: string[] = [];
 
-    let filtered = readdirSync(languagesPath).filter((file) => {
+    const filtered = readdirSync(languagesPath).filter((file) => {
         try {
-            let content = readFileSync(join(languagesPath, file), "utf8");
-            let language = JSON.parse(content);
+            const content = readFileSync(join(languagesPath, file), "utf8");
+            const language = JSON.parse(content);
 
             if (language.ext === extension) {
                 return true;
@@ -35,9 +35,9 @@ function loadConfig(extension: string): LanguageCommand {
         );
     }
 
-    let languagePath = join(languagesPath, filtered[0]);
-    let content = readFileSync(languagePath, "utf8");
-    let language = JSON.parse(content);
+    const languagePath = join(languagesPath, filtered[0]);
+    const content = readFileSync(languagePath, "utf8");
+    const language = JSON.parse(content);
     return new LanguageCommand(language.run || [], language.preRun || []);
 }
 
@@ -45,12 +45,12 @@ function loadConfig(extension: string): LanguageCommand {
  * Check if code was already compiled
  */
 function checkMD5(code: string, path: string): boolean {
-    let pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
+    const pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
     let storedMD5 = "";
     if (existsSync(pathMD5)) {
         storedMD5 = readFileSync(pathMD5, "utf8");
     }
-    let currentMD5 = md5File.sync(code);
+    const currentMD5 = md5File.sync(code);
     return currentMD5 === storedMD5;
 }
 
@@ -58,8 +58,8 @@ function checkMD5(code: string, path: string): boolean {
  * Copy MD5 from current file into a folder to avoid compiling again.
  */
 function dumpMD5(code: string, path: string) {
-    let pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
-    let currentMD5 = md5File.sync(code);
+    const pathMD5 = join(path, ATTIC, basename(code)) + ".md5";
+    const currentMD5 = md5File.sync(code);
     writeToFileSync(pathMD5, currentMD5);
 }
 
@@ -85,8 +85,8 @@ export function preRun(
         return Option.some(Execution.cached());
     }
 
-    let codeExt = extension(code);
-    let language = loadConfig(codeExt);
+    const codeExt = extension(code);
+    const language = loadConfig(codeExt);
 
     if (language.preRun.length === 0) {
         // No preRun command, so nothing to run.
@@ -94,14 +94,14 @@ export function preRun(
         return Option.none();
     }
 
-    let command = substituteArgsWith(
+    const command = substituteArgsWith(
         language.preRun,
         code,
         output,
         join(path, ATTIC)
     );
 
-    let execution = runSingle(command, timeout, "");
+    const execution = runSingle(command, timeout, "");
 
     if (execution.failed()) {
         onCompilationError(code, execution);
@@ -134,8 +134,8 @@ export function runWithArgs(
     args: string[]
 ): Execution {
     debug("run", code);
-    let codeExt = extension(code);
-    let language = loadConfig(codeExt);
+    const codeExt = extension(code);
+    const language = loadConfig(codeExt);
 
     if (language.run === undefined || language.run.length === 0) {
         // No run command, so nothing to execute.
@@ -166,16 +166,16 @@ export function runSingle(
         `${command} timeout: ${timeout} input-length: ${input.length}`
     );
 
-    let main = command[0];
-    let args = command.slice(1);
+    const main = command[0];
+    const args = command.slice(1);
 
-    let startTime = new Date().getTime();
-    let result = spawnSync(main, args, {
+    const startTime = new Date().getTime();
+    const result = spawnSync(main, args, {
         input: input,
         timeout: timeout,
         killSignal: "SIGTERM",
     });
-    let timeSpan = new Date().getTime() - startTime;
+    const timeSpan = new Date().getTime() - startTime;
 
     return new Execution(result, timeSpan, timeout);
 }

@@ -1,8 +1,8 @@
-import * as vscode from 'vscode';
-import { getJudgeViewProvider } from '../extension';
+import * as vscode from "vscode";
+import { getJudgeViewProvider } from "../extension";
 
-import { getAutoShowJudgePref } from './types';
-import { setOnlineJudgeEnv, getProblemForDocument } from './core'
+import { getAutoShowJudgePref } from "./types";
+import { setOnlineJudgeEnv, getProblemForDocument } from "./core";
 
 /**
  * Show the webview with the problem details if a source code with existing
@@ -13,18 +13,18 @@ import { setOnlineJudgeEnv, getProblemForDocument } from './core'
  * @param context The activation context
  */
 export const editorChanged = async (e: vscode.TextEditor | undefined) => {
-    console.log('Changed editor to', e?.document.fileName);
+    console.log("Changed editor to", e?.document.fileName);
 
     if (e === undefined) {
         getJudgeViewProvider().extensionToJudgeViewMessage({
-            command: 'new-problem',
+            command: "new-problem",
             problem: undefined,
         });
         setOnlineJudgeEnv(false); // reset the non-debug mode set in webview.
         return;
     }
 
-    if (e.document.uri.scheme !== 'file') {
+    if (e.document.uri.scheme !== "file") {
         return;
     }
 
@@ -34,7 +34,7 @@ export const editorChanged = async (e: vscode.TextEditor | undefined) => {
 
     if (problem === undefined) {
         getJudgeViewProvider().extensionToJudgeViewMessage({
-            command: 'new-problem',
+            command: "new-problem",
             problem: undefined,
         });
         return;
@@ -44,23 +44,23 @@ export const editorChanged = async (e: vscode.TextEditor | undefined) => {
         getAutoShowJudgePref() &&
         getJudgeViewProvider().isViewUninitialized()
     ) {
-        vscode.commands.executeCommand('cph.judgeView.focus');
+        vscode.commands.executeCommand("cph.judgeView.focus");
     }
 
-    console.log('Sent problem @', Date.now());
+    console.log("Sent problem @", Date.now());
     getJudgeViewProvider().extensionToJudgeViewMessage({
-        command: 'new-problem',
+        command: "new-problem",
         problem,
     });
 };
 
 export const editorClosed = (e: vscode.TextDocument) => {
-    console.log('Closed editor:', e.uri.fsPath);
+    console.log("Closed editor:", e.uri.fsPath);
     const srcPath = e.uri.fsPath;
 
     if (getJudgeViewProvider().problemPath === srcPath) {
         getJudgeViewProvider().extensionToJudgeViewMessage({
-            command: 'new-problem',
+            command: "new-problem",
             problem: undefined,
         });
     }

@@ -35,7 +35,7 @@ export function showCompileError(compileError: string) {
             value.dispose();
         }
     });
-    let target = (<any>vscode.window).createTerminal({
+    const target = (<any>vscode.window).createTerminal({
         name: "CompileError",
         pty,
     });

@@ -61,13 +61,13 @@ export function substituteArgsWith(
 }
 
 export function writeToFileSync(path: string, content: string) {
-    let currentFd = openSync(path, "w");
+    const currentFd = openSync(path, "w");
     writeSync(currentFd, content);
     closeSync(currentFd);
 }
 
 export function writeBufferToFileSync(path: string, content: Buffer) {
-    let currentFd = openSync(path, "w");
+    const currentFd = openSync(path, "w");
     writeSync(currentFd, content);
     closeSync(currentFd);
 }
@@ -92,7 +92,7 @@ export function debug(target: string, ...optionalParams: any[]) {
 }
 
 export function removeExtension(name: string) {
-    let split = name.split(".");
+    const split = name.split(".");
     if (split.length === 0) {
         return name;
     } else {
@@ -102,7 +102,7 @@ export function removeExtension(name: string) {
 }
 
 export function getExtension(name: string) {
-    let split = name.split(".");
+    const split = name.split(".");
     if (split.length <= 1) {
         return "";
     } else {
@@ -117,6 +117,6 @@ export function createFolder(path: string) {
     }
 }
 
-export function sleep(ms : number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+export function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
