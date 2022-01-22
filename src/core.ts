@@ -11,7 +11,7 @@ import {
 } from "fs";
 import { basename, dirname, extname, join, isAbsolute } from "path";
 import * as vscode from "vscode";
-var sanitize = require("sanitize-filename");
+import sanitize from "sanitize-filename";
 import os = require("os");
 import {
     Contest,

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { newProblemFromCompanion } from "./core";
-var sanitize = require("sanitize-filename");
+import sanitize from "sanitize-filename";
 import express from "express";
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
