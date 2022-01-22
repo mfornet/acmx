@@ -456,6 +456,7 @@
         "react-autosize-textarea": "^7.1.0",
         "react-dom": "^16.14.0",
         "rimraf": "^3.0.2",
+        "sanitize-filename": "^1.6.3",
         "tmp": "^0.1.0"
     }
 }

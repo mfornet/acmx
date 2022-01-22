@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { newProblemFromCompanion } from "./core";
-
+var sanitize = require("sanitize-filename");
 import express from "express";
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
@@ -13,8 +13,8 @@ export class CompanionConfig {
     timeLimit: number;
 
     constructor(data: any) {
-        this.name = data.name;
-        this.group = data.group;
+        this.name = sanitize(data.name);
+        this.group = sanitize(data.group);
         this.url = data.url;
         this.memoryLimit = data.memoryLimit;
         this.timeLimit = data.timeLimit;

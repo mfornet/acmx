@@ -11,6 +11,7 @@ import {
 } from "fs";
 import { basename, dirname, extname, join, isAbsolute } from "path";
 import * as vscode from "vscode";
+var sanitize = require("sanitize-filename");
 import os = require("os");
 import {
     Contest,
@@ -496,7 +497,7 @@ export function getSolutionPath() {
         path = join(cwd, path);
     }
 
-    return path;
+    return sanitize(path);
 }
 
 /**
