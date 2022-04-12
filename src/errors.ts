@@ -2,8 +2,6 @@ import * as vscode from "vscode";
 
 import { debug } from "./utils";
 import { Execution } from "./primitives";
-// import os = require("os");
-// import { compileErrorTerminal } from "./terminal";
 
 /**
  * Check if the execution failed and show relevant error.
@@ -20,10 +18,6 @@ export function onCompilationError(code: string, execution: Execution) {
 }
 
 export function showCompileError(compileError: string) {
-    // let errorPath = join(path, ATTIC, "stderr");
-    // let errorFile = openSync(errorPath, "w");
-    // writeSync(errorFile, compileError);
-
     const writeEmitter = new vscode.EventEmitter<string>();
     const pty = {
         onDidWrite: writeEmitter.event,
