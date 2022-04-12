@@ -40,9 +40,9 @@ suite("Extension Test Suite", () => {
     });
 
     test("Parse Test Cases", function () {
-        let path = join(CONTEST, "A");
-        let result = testCasesName(path);
-        let target = ["0", "1", "2"];
+        const path = join(CONTEST, "A");
+        const result = testCasesName(path);
+        const target = ["0", "1", "2"];
 
         assert.equal(result.length, target.length);
         result.sort();
@@ -54,9 +54,9 @@ suite("Extension Test Suite", () => {
 
     test("Create new problem from id", function () {
         runWithTemporaryPath((path: string) => {
-            let problemId = "mockProblem";
+            const problemId = "mockProblem";
             newProblemFromId(path, MOCK_SITE, problemId);
-            let problemPath = join(path, problemId);
+            const problemPath = join(path, problemId);
             assert.ok(existsSync(problemPath));
             assert.ok(existsSync(join(problemPath, "sol.cpp")));
             assert.ok(existsSync(join(problemPath, ATTIC)));

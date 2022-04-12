@@ -1,21 +1,27 @@
-import * as vscode from 'vscode';
-import { getJudgeViewProvider } from '../extension';
-import { Problem, RunResult, Run } from './types';
-import { isProblemFolder, getMainSolutionPath, getCheckerPath, getTimeout, timedRun } from '../core';
-import { ConfigFile, TESTCASES, Verdict, verdictName } from '../primitives';
-import { join, dirname } from 'path';
-import { existsSync } from 'fs';
+import * as vscode from "vscode";
+import { getJudgeViewProvider } from "../extension";
+import { Problem, RunResult, Run } from "./types";
+import {
+    isProblemFolder,
+    getMainSolutionPath,
+    getCheckerPath,
+    getTimeout,
+    timedRun,
+} from "../core";
+import { ConfigFile, TESTCASES, Verdict, verdictName } from "../primitives";
+import { join, dirname } from "path";
+import { existsSync } from "fs";
 
-export const emit_fail = (problem: Problem, id: number) : void => {
-    const run: Run =  {
-        stdout: '',
-        stderr: '',
+export const emit_fail = (problem: Problem, id: number): void => {
+    const run: Run = {
+        stdout: "",
+        stderr: "",
         code: 0,
         signal: null,
         time: 0,
         timeOut: false,
     };
-    
+
     const result: RunResult = {
         ...run,
         pass: false,
@@ -23,19 +29,19 @@ export const emit_fail = (problem: Problem, id: number) : void => {
         verdictname: verdictName(Verdict.FAIL),
     };
 
-    console.log('Testcase judging complete. Result:', result);
+    console.log("Testcase judging complete. Result:", result);
     getJudgeViewProvider().extensionToJudgeViewMessage({
-        command: 'run-single-result',
+        command: "run-single-result",
         result,
         problem,
     });
-}
+};
 
 export const runSingleAndSave = async (
     problem: Problem,
-    id: number,
-) : Promise<boolean> => {
-    console.log('Run and save started', problem, id);
+    id: number
+): Promise<boolean> => {
+    console.log("Run and save started", problem, id);
 
     const srcPath = problem.srcPath;
 
@@ -57,43 +63,43 @@ export const runSingleAndSave = async (
         return false;
     }
 
-    let config = ConfigFile.loadConfig(path, true).unwrap();
+    const config = ConfigFile.loadConfig(path, true).unwrap();
 
     // Load main solution (compile if necessary)
-    let mainSolution_ = getMainSolutionPath(path, config);
+    const mainSolution_ = getMainSolutionPath(path, config);
     if (mainSolution_.isNone()) {
         emit_fail(problem, id);
         return false;
     }
-    let mainSolution = mainSolution_.unwrap();
+    const mainSolution = mainSolution_.unwrap();
 
     // Load checker (compile if necessary)
-    let checker_ = getCheckerPath(path, config);
+    const checker_ = getCheckerPath(path, config);
     if (checker_.isNone()) {
         vscode.window.showErrorMessage("Checker not found");
         emit_fail(problem, id);
         return false;
     }
-    let checker = checker_.unwrap();
+    const checker = checker_.unwrap();
 
     // Try to find time limit from local config first, otherwise use global time limit.
     // TODO: Add to wiki about this feature, and how to change custom time limit.
-    let timeout = config.timeLimit().unwrapOr(getTimeout());
+    const timeout = config.timeLimit().unwrapOr(getTimeout());
 
-    let tcName = id.toString();
-    let tcInputPath = join(path, TESTCASES, `${tcName}.in`);
+    const tcName = id.toString();
+    const tcInputPath = join(path, TESTCASES, `${tcName}.in`);
 
     if (!existsSync(tcInputPath)) {
-        console.error('Invalid id', id, problem);
+        console.error("Invalid id", id, problem);
         emit_fail(problem, id);
         return false;
     }
 
-    let tcResult = timedRun(path, tcName, timeout, mainSolution, checker);
+    const tcResult = timedRun(path, tcName, timeout, mainSolution, checker);
 
-    const run: Run =  {
-        stdout: tcResult.stdout ?? '',
-        stderr: tcResult.stderr ?? '',
+    const run: Run = {
+        stdout: tcResult.stdout ?? "",
+        stderr: tcResult.stderr ?? "",
         code: 0,
         signal: null,
         time: tcResult.spanTime ?? 0,
@@ -107,9 +113,9 @@ export const runSingleAndSave = async (
         verdictname: verdictName(tcResult.status),
     };
 
-    console.log('Testcase judging complete. Result:', result);
+    console.log("Testcase judging complete. Result:", result);
     getJudgeViewProvider().extensionToJudgeViewMessage({
-        command: 'run-single-result',
+        command: "run-single-result",
         result,
         problem,
     });

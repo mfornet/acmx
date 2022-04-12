@@ -1,11 +1,11 @@
-import { Case } from '../types';
-import { useState, createRef, useEffect } from 'react';
-import TextareaAutosize from 'react-autosize-textarea/lib';
-import React from 'react';
+import { Case } from "../types";
+import { useState, createRef, useEffect } from "react";
+import TextareaAutosize from "react-autosize-textarea/lib";
+import React from "react";
 
-const reloadIcon = '↺';
-const deleteIcon = '⨯';
-const selectIcon = '⚑';
+const reloadIcon = "↺";
+const deleteIcon = "⨯";
+const selectIcon = "⚑";
 
 export default function CaseView(props: {
     num: number;
@@ -21,21 +21,21 @@ export default function CaseView(props: {
     const { id, result } = props.case;
 
     const [input, setInput] = useState<string>(
-        props.case.testcase.input.trim(),
+        props.case.testcase.input.trim()
     );
     const [output, setOutput] = useState<string>(
-        props.case.testcase.output.trim(),
+        props.case.testcase.output.trim()
     );
     const [running, setRunning] = useState<boolean>(false);
     const [minimized, setMinimized] = useState<boolean>(
-        props.case.result?.pass === true,
+        props.case.result?.pass === true
     );
     const inputBox = createRef<HTMLTextAreaElement>();
 
     useEffect(() => {
         if (props.doFocus) {
-            console.log('Scrolling', inputBox.current);
-            inputBox.current?.scrollIntoView({ behavior: 'smooth' });
+            console.log("Scrolling", inputBox.current);
+            inputBox.current?.scrollIntoView({ behavior: "smooth" });
         }
     }, [props.doFocus]);
 
@@ -45,19 +45,19 @@ export default function CaseView(props: {
 
     useEffect(() => {
         if (props.forceRunning) {
-            console.log('Case was forced to run!');
+            console.log("Case was forced to run!");
             setRunning(true);
         }
     }, [props.forceRunning]);
 
     const handleInputChange = (
-        event: React.ChangeEvent<HTMLTextAreaElement>,
+        event: React.ChangeEvent<HTMLTextAreaElement>
     ) => {
         setInput(event.target.value);
     };
 
     const handleOutputChange = (
-        event: React.ChangeEvent<HTMLTextAreaElement>,
+        event: React.ChangeEvent<HTMLTextAreaElement>
     ) => {
         setOutput(event.target.value);
     };
@@ -69,7 +69,7 @@ export default function CaseView(props: {
 
     const selectCase = () => {
         props.selectCase(id);
-    }
+    };
 
     const expand = () => {
         setMinimized(false);
@@ -83,15 +83,15 @@ export default function CaseView(props: {
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        console.log('Copied', text);
-        props.notify('✅ Copied to clipboard');
+        console.log("Copied", text);
+        props.notify("✅ Copied to clipboard");
     };
 
     useEffect(() => {
         if (props.case.result !== null) {
             setRunning(false);
             props.case.result.pass ? setMinimized(true) : setMinimized(false);
-            console.log('minimizing', props.case.id, props.case.result);
+            console.log("minimizing", props.case.id, props.case.result);
         }
     }, [props.case.result]);
 
@@ -101,23 +101,23 @@ export default function CaseView(props: {
         }
     }, [running]);
 
-    let resultText = '';
+    let resultText = "";
     const stderror = result?.stderr;
     // Handle several cases for result text
     if (result?.signal) {
         resultText = result?.signal;
     } else if (result?.stdout) {
-        resultText = result.stdout.trim() || ' ';
+        resultText = result.stdout.trim() || " ";
     }
     if (!result) {
-        resultText = 'Run to show output';
+        resultText = "Run to show output";
     }
     if (running) {
-        resultText = '...';
+        resultText = "...";
     }
-    const passFailText = result ? (result.pass ? 'passed' : 'failed') : '';
-    const caseClassName = 'case ' + (running ? 'running' : passFailText);
-    const timeText = /*result?.timeOut ? 'Timed Out' :*/ result?.time + 'ms';
+    const passFailText = result ? (result.pass ? "passed" : "failed") : "";
+    const caseClassName = "case " + (running ? "running" : passFailText);
+    const timeText = /*result?.timeOut ? 'Timed Out' :*/ result?.time + "ms";
 
     return (
         <div className={caseClassName}>
@@ -141,7 +141,7 @@ export default function CaseView(props: {
                         <span className="result-data">
                             <span
                                 className={
-                                    result.pass ? 'result-pass' : 'result-fail'
+                                    result.pass ? "result-pass" : "result-fail"
                                 }
                             >
                                 {result.verdictname}
@@ -255,7 +255,7 @@ export default function CaseView(props: {
 /** Limit string length to 100,000. */
 const trunctateStdout = (stdout: string): string => {
     if (stdout.length > 100000) {
-        stdout = '[Truncated]\n' + stdout.substr(0, 100000);
+        stdout = "[Truncated]\n" + stdout.substr(0, 100000);
     }
     return stdout;
 };

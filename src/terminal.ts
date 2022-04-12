@@ -20,13 +20,3 @@ function getTerminal(name: string) {
 export function acmxTerminal() {
     return getTerminal("acmx");
 }
-
-export function compileErrorTerminal() {
-    return getTerminal("CompileError");
-}
-
-export function hideTerminals() {
-    vscode.window.terminals.forEach((ter) => {
-        ter.hide();
-    });
-}

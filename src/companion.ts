@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { newProblemFromCompanion } from "./core";
-
+import sanitize from "sanitize-filename";
 import express from "express";
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
@@ -13,8 +13,8 @@ export class CompanionConfig {
     timeLimit: number;
 
     constructor(data: any) {
-        this.name = data.name;
-        this.group = data.group;
+        this.name = sanitize(data.name);
+        this.group = sanitize(data.group);
         this.url = data.url;
         this.memoryLimit = data.memoryLimit;
         this.timeLimit = data.timeLimit;
@@ -33,12 +33,12 @@ export class TestCase {
 
 export function startCompetitiveCompanionService() {
     let port = 0;
-    let app = express();
+    const app = express();
 
     if (process.env.ACMX_TESTING === "1") {
         port = 10041; // Use this port for testing.
     } else {
-        let port_: number | undefined = vscode.workspace
+        const port_: number | undefined = vscode.workspace
             .getConfiguration("acmx.companion", null)
             .get("port");
         port = port_!;
@@ -48,17 +48,20 @@ export function startCompetitiveCompanionService() {
 
     app.post("/", async (req: any, res: any) => {
         const data = req.body;
-        let companionConfig = new CompanionConfig(data);
+        const companionConfig = new CompanionConfig(data);
 
-        let tests: TestCase[] = data.tests.map((value: any) => {
+        const tests: TestCase[] = data.tests.map((value: any) => {
             return new TestCase(value);
         });
 
         res.sendStatus(200);
-        let problemInContest = newProblemFromCompanion(companionConfig, tests);
+        const problemInContest = newProblemFromCompanion(
+            companionConfig,
+            tests
+        );
 
-        let contestPath = problemInContest.contestPath;
-        let mainSolution = problemInContest.problemConfig.mainSolution.unwrapOr(
+        const contestPath = problemInContest.contestPath;
+        const mainSolution = problemInContest.problemConfig.mainSolution.unwrapOr(
             ""
         );
 

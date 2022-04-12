@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import {
     Problem,
     WebviewToVSEvent,
@@ -8,8 +8,8 @@ import {
     VSToWebViewMessage,
     ResultCommand,
     RunningCommand,
-} from '../types';
-import CaseView from './CaseView';
+} from "../types";
+import CaseView from "./CaseView";
 declare const vscodeApi: {
     postMessage: (message: WebviewToVSEvent) => void;
 };
@@ -25,7 +25,7 @@ function Judge(props: {
     const updateProblem = props.updateProblem;
     const updateCases = props.updateCases;
 
-    console.log('new cases:', cases);
+    console.log("new cases:", cases);
 
     const [focusLast, useFocusLast] = useState<boolean>(false);
     const [forceRunning, useForceRunning] = useState<number | false>(false);
@@ -45,48 +45,48 @@ function Judge(props: {
     }, [cases]);
 
     useEffect(() => {
-        console.log('Adding event listeners');
+        console.log("Adding event listeners");
         const fn = (event: any) => {
             const data: VSToWebViewMessage = event.data;
-            console.log('Got event in web view', event.data);
+            console.log("Got event in web view", event.data);
             switch (data.command) {
-                case 'new-problem': {
+                case "new-problem": {
                     break;
                 }
 
-                case 'running': {
+                case "running": {
                     handleRunning(data);
                     break;
                 }
-                case 'run-all': {
+                case "run-all": {
                     runAll();
                     break;
                 }
-                case 'compiling-start': {
+                case "compiling-start": {
                     setCompiling(true);
                     break;
                 }
-                case 'compiling-stop': {
+                case "compiling-stop": {
                     setCompiling(false);
                     break;
                 }
-                case 'submit-finished': {
+                case "submit-finished": {
                     setWaitingForSubmit(false);
                     break;
                 }
-                case 'waiting-for-submit': {
+                case "waiting-for-submit": {
                     setWaitingForSubmit(true);
                     break;
                 }
                 default: {
-                    console.log('Invalid event', event.data);
+                    console.log("Invalid event", event.data);
                 }
             }
         };
-        window.addEventListener('message', fn);
+        window.addEventListener("message", fn);
         return () => {
-            console.log('Cleaned up event listeners');
-            window.removeEventListener('message', fn);
+            console.log("Cleaned up event listeners");
+            window.removeEventListener("message", fn);
         };
     }, []);
 
@@ -98,7 +98,7 @@ function Judge(props: {
         const idx = problem.tests.findIndex((testCase) => testCase.id === id);
 
         if (idx === -1) {
-            console.log('No id in problem tests', problem, id);
+            console.log("No id in problem tests", problem, id);
             return;
         }
 
@@ -106,7 +106,7 @@ function Judge(props: {
         problem.tests[idx].output = output;
 
         vscodeApi.postMessage({
-            command: 'run-single-and-save',
+            command: "run-single-and-save",
             problem,
             id,
         });
@@ -116,9 +116,9 @@ function Judge(props: {
     const remove = (id: number) => {
         const newCases = cases.filter((value) => value.id !== id);
         updateCases(newCases);
-        
+
         vscodeApi.postMessage({
-            command: 'delete-tcs',
+            command: "delete-tcs",
             problem,
             id,
         });
@@ -127,7 +127,7 @@ function Judge(props: {
     // Select a case to debug.
     const selectCase = (id: number) => {
         vscodeApi.postMessage({
-            command: 'select-case',
+            command: "select-case",
             problem,
             id,
         });
@@ -137,11 +137,14 @@ function Judge(props: {
     const newCase = () => {
         console.log(cases);
         const id = problem.tests.length
-            ? problem.tests.map(test => test.id).reduce((i1, i2) => Math.max(i1, i2)) + 1 : 1;
+            ? problem.tests
+                  .map((test) => test.id)
+                  .reduce((i1, i2) => Math.max(i1, i2)) + 1
+            : 1;
         const testCase: TestCase = {
             id,
-            input: '',
-            output: '',
+            input: "",
+            output: "",
         };
         updateCases([
             ...cases,
@@ -157,7 +160,7 @@ function Judge(props: {
     // Stop running executions.
     const stop = () => {
         vscodeApi.postMessage({
-            command: 'kill-running',
+            command: "kill-running",
             problem,
         });
     };
@@ -165,7 +168,7 @@ function Judge(props: {
     // Deletes the .prob file and closes webview
     const deleteTcs = () => {
         vscodeApi.postMessage({
-            command: 'delete-tcs',
+            command: "delete-tcs",
             problem,
             id: undefined,
         });
@@ -174,7 +177,7 @@ function Judge(props: {
     const runAll = () => {
         console.log(problem);
         vscodeApi.postMessage({
-            command: 'run-all-and-save',
+            command: "run-all-and-save",
             problem,
         });
     };
@@ -190,7 +193,7 @@ function Judge(props: {
 
     const submitCf = () => {
         vscodeApi.postMessage({
-            command: 'submitCf',
+            command: "submitCf",
             problem,
         });
 
@@ -211,7 +214,7 @@ function Judge(props: {
 
     const getRunningProp = (value: Case) => {
         if (forceRunning === value.id) {
-            console.log('Forcing Running');
+            console.log("Forcing Running");
             debounceForceRunning();
             return forceRunning === value.id;
         }
@@ -259,7 +262,7 @@ function Judge(props: {
                     doFocus={true}
                     forceRunning={getRunningProp(value)}
                     updateCase={updateCase}
-                ></CaseView>,
+                ></CaseView>
             );
             debounceFocusLast();
         } else {
@@ -274,7 +277,7 @@ function Judge(props: {
                     selectCase={selectCase}
                     forceRunning={getRunningProp(value)}
                     updateCase={updateCase}
-                ></CaseView>,
+                ></CaseView>
             );
         }
     });
@@ -295,11 +298,11 @@ function Judge(props: {
         // }
 
         // if (url.hostname == 'codeforces.com') {
-            return (
-                <button className="btn" onClick={submitCf}>
-                    Submit
-                </button>
-            );
+        return (
+            <button className="btn" onClick={submitCf}>
+                Submit
+            </button>
+        );
         // } else if (url.hostname == 'open.kattis.com') {
         //     return (
         //         <div className="pad-10 submit-area">
@@ -346,7 +349,7 @@ function Judge(props: {
             {notification && <div className="notification">{notification}</div>}
             <div className="meta">
                 <h1 className="problem-name">
-                    <a href={getHref()}>{problem.name}</a>{' '}
+                    <a href={getHref()}>{problem.name}</a>{" "}
                     {compiling && (
                         <b className="compiling" title="Compiling">
                             <span className="loader"></span>
@@ -404,7 +407,8 @@ function Judge(props: {
                 </button>
             </div>
 
-            {waitingForSubmit /*&& (
+            {
+                waitingForSubmit /*&& (
                 <div className="margin-10">
                     <span className="loader"></span> Waiting for extension ...
                     <br />
@@ -421,7 +425,8 @@ function Judge(props: {
                         submit.
                     </small>
                 </div>
-            )*/}
+            )*/
+            }
         </div>
     );
 }
@@ -454,9 +459,9 @@ function App() {
     const save = () => {
         setSaving(true);
         if (problem !== undefined) {
-            console.log('Saved problem');
+            console.log("Saved problem");
             vscodeApi.postMessage({
-                command: 'save',
+                command: "save",
                 problem,
             });
         }
@@ -467,15 +472,15 @@ function App() {
 
     const handleRunSingleResult = (data: ResultCommand) => {
         const idx = cases.findIndex(
-            (testCase) => testCase.id === data.result.id,
+            (testCase) => testCase.id === data.result.id
         );
         if (idx === -1) {
-            console.error('Invalid single result', cases, cases.length, data);
+            console.error("Invalid single result", cases, cases.length, data);
             return;
         }
         const newCases = cases.slice();
         newCases[idx].result = data.result;
-        console.log('single result', data);
+        console.log("single result", data);
         setCases(newCases);
     };
 
@@ -492,11 +497,11 @@ function App() {
     }, [problem]);
 
     useEffect(() => {
-        console.log('Adding event listeners for App');
+        console.log("Adding event listeners for App");
         const fn = (event: any) => {
             const data: VSToWebViewMessage = event.data;
             switch (data.command) {
-                case 'new-problem': {
+                case "new-problem": {
                     if (data.problem === undefined) {
                         setShowFallback(true);
                     }
@@ -505,22 +510,22 @@ function App() {
                     setCases(getCasesFromProblem(data.problem));
                     break;
                 }
-                case 'run-single-result': {
+                case "run-single-result": {
                     handleRunSingleResult(data);
                     break;
                 }
             }
         };
-        window.addEventListener('message', fn);
+        window.addEventListener("message", fn);
         return () => {
-            console.log('Cleaned up event listeners for App');
-            window.removeEventListener('message', fn);
+            console.log("Cleaned up event listeners for App");
+            window.removeEventListener("message", fn);
         };
     }, [cases]);
 
     const createProblem = () => {
         vscodeApi.postMessage({
-            command: 'create-local-problem',
+            command: "create-local-problem",
         });
     };
 
@@ -563,4 +568,4 @@ function App() {
     }
 }
 
-ReactDOM.render(<App />, document.getElementById('app'));
+ReactDOM.render(<App />, document.getElementById("app"));

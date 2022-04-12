@@ -11,6 +11,7 @@ import {
 } from "fs";
 import { basename, dirname, extname, join, isAbsolute } from "path";
 import * as vscode from "vscode";
+import os = require("os");
 import {
     Contest,
     Problem,
@@ -40,7 +41,7 @@ import {
 import { preRun, run, runWithArgs } from "./runner";
 import { copySync } from "fs-extra";
 import { CompanionConfig, TestCase } from "./companion";
-import { sleep } from './utils';
+import { sleep } from "./utils";
 import { checkLaunchWebview } from "./webview/editorChange";
 
 /**
@@ -57,11 +58,11 @@ export function pathToStatic() {
  * @param path Problem path
  */
 export function mainSolution(path: string): string {
-    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    const config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
     if (config.mainSolution.isNone()) {
         config.mainSolution = Option.some(populateMainSolution(path, false));
     }
-    let mainSolution = config.mainSolution.unwrap();
+    const mainSolution = config.mainSolution.unwrap();
     debug("mainSolution", `${mainSolution}`);
     return mainSolution;
 }
@@ -82,7 +83,7 @@ export function isProblemFolder(path: string) {
 }
 
 function isTestCase(path: string) {
-    let ext = extname(path);
+    const ext = extname(path);
     return ext === ".in" || ext === ".ans" || ext === ".out";
 }
 
@@ -91,7 +92,7 @@ export function currentTestCase(): Option<string> {
 
     // Try to find an open test case
     if (vscode.window.activeTextEditor) {
-        let path = vscode.window.activeTextEditor.document.uri.fsPath;
+        const path = vscode.window.activeTextEditor.document.uri.fsPath;
 
         if (isTestCase(path)) {
             answer = removeExtension(basename(path));
@@ -156,7 +157,7 @@ export function globalHomePath(testPath?: string): string {
         return testPath;
     }
 
-    let path_: string | undefined = vscode.workspace
+    const path_: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("homePath");
 
@@ -180,12 +181,12 @@ export function globalLanguagePath() {
  */
 export function initAcmX(testPath?: string) {
     // Create global attic.
-    let globalHome = globalHomePath(testPath)!;
+    const globalHome = globalHomePath(testPath)!;
     createFolder(globalHome);
 
     // Copy default languages config
-    let languagesFolder = globalLanguagePath();
-    let languageStaticFolder = join(pathToStatic(), LANGUAGES);
+    const languagesFolder = globalLanguagePath();
+    const languageStaticFolder = join(pathToStatic(), LANGUAGES);
     if (!existsSync(languagesFolder)) {
         copySync(languageStaticFolder, languagesFolder);
     } else {
@@ -200,11 +201,11 @@ export function initAcmX(testPath?: string) {
     }
 
     // Create checker folder
-    let checkerFolder = join(globalHome, "checkers");
+    const checkerFolder = join(globalHome, "checkers");
     createFolder(checkerFolder);
 
     // Copy testlib
-    let testlib = "testlib.h";
+    const testlib = "testlib.h";
     if (!existsSync(join(checkerFolder, testlib))) {
         copyFileSync(
             join(pathToStatic(), "checkers", testlib),
@@ -213,7 +214,7 @@ export function initAcmX(testPath?: string) {
     }
 
     // Create wcmp checker
-    let checkerName = "wcmp.cpp";
+    const checkerName = "wcmp.cpp";
     if (!existsSync(join(checkerFolder, checkerName))) {
         copyFileSync(
             join(pathToStatic(), "checkers", checkerName),
@@ -221,14 +222,20 @@ export function initAcmX(testPath?: string) {
         );
     }
 
-    let atticFolder = join(globalHome, ATTIC);
+    const atticFolder = join(globalHome, ATTIC);
     createFolder(atticFolder);
 
     // Compile checker
-    let compiledName = "wcmp";
+    let compiledName = "";
+    if (os.platform() === "win32") {
+        compiledName = "wcmp.exe";
+    } else {
+        compiledName = "wcmp";
+    }
+
     if (!existsSync(join(checkerFolder, compiledName))) {
-        let checkerPath = join(checkerFolder, checkerName);
-        let compiledPath = join(checkerFolder, compiledName);
+        const checkerPath = join(checkerFolder, checkerName);
+        const compiledPath = join(checkerFolder, compiledName);
         preRun(checkerPath, compiledPath, globalHome, FRIEND_TIMEOUT);
     }
 }
@@ -245,11 +252,11 @@ function copyFromTemplate(
     template: string,
     override: boolean
 ): string {
-    let parts = template.split("@");
+    const parts = template.split("@");
 
     if (parts.length === 1) {
-        let fileName = basename(template);
-        let target = join(path, fileName);
+        const fileName = basename(template);
+        const target = join(path, fileName);
 
         if (override || !existsSync(target)) {
             copyFileSync(template, target);
@@ -262,7 +269,7 @@ function copyFromTemplate(
                 `Invalid template path ${template}. Target not found.`
             );
         }
-        let folderPath = parts[0];
+        const folderPath = parts[0];
         copySync(folderPath, path);
         return join(path, parts[1]);
     }
@@ -288,13 +295,15 @@ export function newArena(path: string): ConfigFile {
     debug("newArena", `path: ${path}`);
     createFolder(path);
 
-    let testcases = join(path, TESTCASES);
+    const testcases = join(path, TESTCASES);
     createFolder(testcases);
 
-    let attic = join(path, ATTIC);
+    const attic = join(path, ATTIC);
     createFolder(attic);
 
-    let config = ConfigFile.loadConfig(path, true).unwrapOr(ConfigFile.empty());
+    const config = ConfigFile.loadConfig(path, true).unwrapOr(
+        ConfigFile.empty()
+    );
 
     if (config.mainSolution.isNone()) {
         config.mainSolution = Option.some(populateMainSolution(path, true));
@@ -343,7 +352,7 @@ function addGenerator(path: string, config: ConfigFile) {
 }
 
 function addChecker(path: string, config: ConfigFile) {
-    let templatePath: string | undefined = vscode.workspace
+    const templatePath: string | undefined = vscode.workspace
         .getConfiguration("acmx.template", null)
         .get("checkerTemplate");
 
@@ -357,7 +366,7 @@ function addChecker(path: string, config: ConfigFile) {
 }
 
 export function upgradeArena(path: string) {
-    let config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
+    const config = ConfigFile.loadConfig(path).unwrapOr(ConfigFile.empty());
 
     // Load brute force solution
     if (
@@ -390,10 +399,10 @@ export function upgradeArena(path: string) {
 }
 
 function copyDefaultFilesToWorkspace(path: string) {
-    let vscodeFolder = join(path, ".vscode");
+    const vscodeFolder = join(path, ".vscode");
     createFolder(vscodeFolder);
 
-    let tasksPath: string | undefined = vscode.workspace
+    const tasksPath: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("tasks");
 
@@ -405,7 +414,7 @@ function copyDefaultFilesToWorkspace(path: string) {
         }
     }
 
-    let launchPath: string | undefined = vscode.workspace
+    const launchPath: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("launch");
 
@@ -425,20 +434,20 @@ function newProblem(
     problem: Problem,
     isWorkspace: boolean
 ): ConfigFile {
-    let config = newArena(path);
+    const config = newArena(path);
 
     if (isWorkspace) {
         copyDefaultFilesToWorkspace(path);
     }
 
     problem.inputs!.forEach((value, index) => {
-        let fd = openSync(join(path, TESTCASES, `${index}.in`), "w");
+        const fd = openSync(join(path, TESTCASES, `${index}.in`), "w");
         writeSync(fd, value);
         closeSync(fd);
     });
 
     problem.outputs!.forEach((value, index) => {
-        let fd = openSync(join(path, TESTCASES, `${index}.ans`), "w");
+        const fd = openSync(join(path, TESTCASES, `${index}.ans`), "w");
         writeSync(fd, value);
         closeSync(fd);
     });
@@ -451,7 +460,7 @@ export function newProblemFromId(
     site: SiteDescription,
     problemId: string
 ) {
-    let problem = site.problemParser(problemId);
+    const problem = site.problemParser(problemId);
 
     path = join(path, problem.identifier!);
 
@@ -467,7 +476,7 @@ function newContest(path: string, contest: Contest) {
 }
 
 export function getSolutionPath() {
-    let path_: string | undefined = vscode.workspace
+    const path_: string | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("library");
 
@@ -478,7 +487,7 @@ export function getSolutionPath() {
     let path = substituteArgWith(path_);
 
     if (!isAbsolute(path)) {
-        let cwd = vscode.workspace.rootPath;
+        const cwd = vscode.workspace.rootPath;
 
         if (cwd === undefined) {
             return undefined;
@@ -499,14 +508,14 @@ export function newProblemFromCompanion(
     config: CompanionConfig,
     tests: TestCase[]
 ) {
-    let path = getSolutionPath();
+    const path = getSolutionPath();
 
-    let contestPath = join(path!, config.group);
+    const contestPath = join(path!, config.group);
     createFolder(contestPath);
 
-    let problemPath = join(contestPath, config.name);
-    let inputs: string[] = [];
-    let outputs: string[] = [];
+    const problemPath = join(contestPath, config.name);
+    const inputs: string[] = [];
+    const outputs: string[] = [];
 
     tests.forEach(function (testCase: TestCase) {
         inputs.push(testCase.input);
@@ -515,7 +524,7 @@ export function newProblemFromCompanion(
 
     copyDefaultFilesToWorkspace(contestPath);
 
-    let problemConfig = newProblem(
+    const problemConfig = newProblem(
         problemPath,
         new Problem(config.name, config.name, inputs, outputs),
         false
@@ -537,8 +546,8 @@ export async function newContestFromId(
     site: SiteDescription,
     contestId: string
 ) {
-    let contest = site.contestParser(contestId);
-    let contestPath = join(path, site.name, contest.name);
+    const contest = site.contestParser(contestId);
+    const contestPath = join(path, site.name, contest.name);
 
     createFolder(contestPath);
     copyDefaultFilesToWorkspace(contestPath);
@@ -554,13 +563,13 @@ export function timedRun(
     solution: CompileResult,
     checker: CompileResult
 ): TestCaseResult {
-    let tcInput = join(path, TESTCASES, `${tcName}.in`);
-    let tcOutput = join(path, TESTCASES, `${tcName}.ans`);
-    let tcCurrent = join(path, TESTCASES, `${tcName}.out`);
+    const tcInput = join(path, TESTCASES, `${tcName}.in`);
+    const tcOutput = join(path, TESTCASES, `${tcName}.ans`);
+    const tcCurrent = join(path, TESTCASES, `${tcName}.out`);
 
-    let tcData = readFileSync(tcInput, "utf8");
+    const tcData = readFileSync(tcInput, "utf8");
 
-    let execution = run(
+    const execution = run(
         solution.code,
         solution.getOutput(),
         path,
@@ -568,10 +577,10 @@ export function timedRun(
         timeout
     );
 
-    let timeSpan = execution.timeSpan.unwrap();
-    let stdout = execution.stdout().toString();
-    let stderr = execution.stderr().toString();
-    
+    const timeSpan = execution.timeSpan.unwrap();
+    const stdout = execution.stdout().toString();
+    const stderr = execution.stderr().toString();
+
     writeBufferToFileSync(tcCurrent, execution.stdout());
 
     // Check if an error happened
@@ -584,7 +593,7 @@ export function timedRun(
     }
 
     // Check output is ok
-    let checkerExecution = runWithArgs(
+    const checkerExecution = runWithArgs(
         checker.code,
         checker.getOutput(),
         join(path, ATTIC),
@@ -609,21 +618,21 @@ export function timedRun(
  * @param path
  */
 export function testSolution(path: string): Option<SolutionResult> {
-    let config = ConfigFile.loadConfig(path, true).unwrap();
+    const config = ConfigFile.loadConfig(path, true).unwrap();
 
     // Load main solution (compile if necessary)
-    let mainSolution_ = getMainSolutionPath(path, config);
+    const mainSolution_ = getMainSolutionPath(path, config);
     if (mainSolution_.isNone()) {
         return Option.none();
     }
-    let mainSolution = mainSolution_.unwrap();
+    const mainSolution = mainSolution_.unwrap();
 
     // Load checker (compile if necessary)
-    let checker_ = getCheckerPath(path, config);
+    const checker_ = getCheckerPath(path, config);
     if (checker_.isNone()) {
         return Option.none();
     }
-    let checker = checker_.unwrap();
+    const checker = checker_.unwrap();
 
     let testcasesId = testCasesName(path);
 
@@ -635,10 +644,10 @@ export function testSolution(path: string): Option<SolutionResult> {
     testcasesId.sort();
 
     // Run current test case first (if it exists)
-    let startTestCase_ = currentTestCase();
+    const startTestCase_ = currentTestCase();
 
     if (startTestCase_.isSome()) {
-        let startTestCase = startTestCase_.unwrap();
+        const startTestCase = startTestCase_.unwrap();
         testcasesId = testcasesId
             .reverse()
             .filter((name) => name !== startTestCase);
@@ -646,17 +655,23 @@ export function testSolution(path: string): Option<SolutionResult> {
         testcasesId = testcasesId.reverse();
     }
 
-    let results: TestCaseResult[] = [];
+    const results: TestCaseResult[] = [];
     let fail = Option.none<SolutionResult>();
 
     // Try to find time limit from local config first, otherwise use global time limit.
     // TODO: Add to wiki about this feature, and how to change custom time limit.
-    let timeout = config.timeLimit().unwrapOr(getTimeout());
+    const timeout = config.timeLimit().unwrapOr(getTimeout());
 
     testcasesId.forEach((tcId) => {
         // Run on each test case and break on first failing case.
         if (fail.isNone()) {
-            let tcResult = timedRun(path, tcId, timeout, mainSolution, checker);
+            const tcResult = timedRun(
+                path,
+                tcId,
+                timeout,
+                mainSolution,
+                checker
+            );
 
             if (!tcResult.isOk()) {
                 fail = Option.some(new SolutionResult(tcResult.status, tcId));
@@ -693,7 +708,7 @@ function getCompileResult(
     output: string,
     path: string
 ): Option<CompileResult> {
-    let execution = preRun(code, output, path, FRIEND_TIMEOUT);
+    const execution = preRun(code, output, path, FRIEND_TIMEOUT);
 
     if (execution.isNone()) {
         // If there is no code to compile. Return current code as expected output.
@@ -724,8 +739,13 @@ export function getMainSolutionPath(
         return Option.none();
     }
 
-    let mainSolution = config.mainSolution.unwrap();
-    let mainSolutionOutput = join(path, ATTIC, "sol");
+    const mainSolution = config.mainSolution.unwrap();
+    let mainSolutionOutput = "";
+    if (os.platform() === "win32") {
+        mainSolutionOutput = join(path, ATTIC, "sol.exe");
+    } else {
+        mainSolutionOutput = join(path, ATTIC, "sol");
+    }
 
     if (!existsSync(mainSolution)) {
         vscode.window.showErrorMessage(
@@ -754,8 +774,14 @@ function getGeneratorPath(
         return Option.none();
     }
 
-    let generatorCode = config.generator.unwrap();
-    let generatorOutput = join(path, ATTIC, "generator");
+    const generatorCode = config.generator.unwrap();
+    let generatorOutput = "";
+
+    if (os.platform() === "win32") {
+        generatorOutput = join(path, ATTIC, "generator.exe");
+    } else {
+        generatorOutput = join(path, ATTIC, "generator");
+    }
 
     if (!existsSync(generatorCode)) {
         vscode.window.showErrorMessage(
@@ -781,8 +807,13 @@ function getBrutePath(path: string, config: ConfigFile): Option<CompileResult> {
         return Option.none();
     }
 
-    let bruteCode = config.bruteSolution.unwrap();
-    let bruteOutput = join(path, ATTIC, "brute");
+    const bruteCode = config.bruteSolution.unwrap();
+    let bruteOutput = "";
+    if (os.platform() === "win32") {
+        bruteOutput = join(path, ATTIC, "brute.exe");
+    } else {
+        bruteOutput = join(path, ATTIC, "brute");
+    }
 
     if (!existsSync(bruteCode)) {
         vscode.window.showErrorMessage(
@@ -804,11 +835,16 @@ export function getCheckerPath(
     path: string,
     config: ConfigFile
 ): Option<CompileResult> {
-    let globalHome = globalHomePath();
-    let globalCheckerCode = join(globalHome, "checkers", "wcmp.cpp");
-    let globalCheckerOutput = join(globalHome, "checkers", "wcmp");
+    const globalHome = globalHomePath();
+    const globalCheckerCode = join(globalHome, "checkers", "wcmp.cpp");
+    let globalCheckerOutput = "";
 
-    let globalChecker = preRun(
+    if (os.platform() === "win32") {
+        globalCheckerOutput = join(globalHome, "checkers", "wcmp.exe");
+    } else {
+        globalCheckerOutput = join(globalHome, "checkers", "wcmp");
+    }
+    const globalChecker = preRun(
         globalCheckerCode,
         globalCheckerOutput,
         globalHome,
@@ -825,8 +861,13 @@ export function getCheckerPath(
         );
     }
 
-    let checkerCode = config.checker.unwrap();
-    let checkerOutput = join(path, ATTIC, CHECKER_BINARY);
+    const checkerCode = config.checker.unwrap();
+    let checkerOutput = "";
+    if (os.platform() === "win32") {
+        checkerOutput = join(path, ATTIC, CHECKER_BINARY + ".exe");
+    } else {
+        checkerOutput = join(path, ATTIC, CHECKER_BINARY);
+    }
 
     if (!existsSync(checkerCode)) {
         return Option.some(
@@ -838,7 +879,7 @@ export function getCheckerPath(
 }
 
 function generateTestCase(path: string, generator: CompileResult) {
-    let genExecution = run(
+    const genExecution = run(
         generator.code,
         generator.getOutput(),
         path,
@@ -856,145 +897,162 @@ function generateTestCase(path: string, generator: CompileResult) {
     );
 }
 
-export async function stressSolution(
-    path: string,
-    times: number
-) {
-    return vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        cancellable: true,
-        title: 'Stressing'
-    }, async (progress, token) => {
+export async function stressSolution(path: string, times: number) {
+    return vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            cancellable: true,
+            title: "Stressing",
+        },
+        async (progress, token) => {
+            let cancelled = false;
+            token.onCancellationRequested(() => {
+                cancelled = true;
+            });
 
-        let cancelled = false;
-        token.onCancellationRequested(() => {
-            cancelled = true;
-        });
-
-        async function reportProgress(inc : number, msg? : string) {
-            progress.report({ increment: inc, message: msg });
-            await sleep(0);
-        }
-        
-        let config = ConfigFile.loadConfig(path, true).unwrap();
-        
-        await reportProgress(0, "loading main solution.");
-        // Load main solution (compile if necessary)
-        let mainSolution_ = getMainSolutionPath(path, config);
-        if (mainSolution_.isNone()) {
-            return;
-        }
-        let mainSolution = mainSolution_.unwrap();
-
-        await reportProgress(0, "loading brute solution.");
-        // Load brute solution (compile if necessary)
-        let bruteSolution_ = getBrutePath(path, config);
-        if (bruteSolution_.isNone()) {
-            return;
-        }
-        let bruteSolution = bruteSolution_.unwrap();
-
-        await reportProgress(0, "loading generator.");
-        // Load generator solution (compile if necessary)
-        let generator_ = getGeneratorPath(path, config);
-        if (generator_.isNone()) {
-            return;
-        }
-        let generator = generator_.unwrap();
-    
-        await reportProgress(0, "loading checker.");
-        // Load checker solution (compile if necessary)
-        let checker_ = getCheckerPath(path, config);
-        if (checker_.isNone()) {
-            return;
-        }
-        let checker = checker_.unwrap();
-
-        let timeout = config.timeLimit().unwrapOr(getTimeout());
-
-        await reportProgress(0, "0%");
-        let percent = 0;
-        for (let index = 0; index < times && !cancelled; index++) {
-            // Generate input test case
-            generateTestCase(path, generator);
-
-            // Generate output test case from brute.cpp
-            let tcData = readFileSync(
-                join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
-                "utf8"
-            );
-
-            if (cancelled) return;
-
-            let bruteExecution = run(
-                bruteSolution.code,
-                bruteSolution.getOutput(),
-                path,
-                tcData,
-                FRIEND_TIMEOUT
-            );
-
-            if (bruteExecution.failed()) {
-                vscode.window.showErrorMessage("Brute solution failed: " + bruteExecution.stderr.toString());
-                return;
+            async function reportProgress(inc: number, msg?: string) {
+                progress.report({ increment: inc, message: msg });
+                await sleep(0);
             }
 
-            if (cancelled) return;
+            const config = ConfigFile.loadConfig(path, true).unwrap();
 
-            // Finally write .ans
-            writeBufferToFileSync(
-                join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
-                bruteExecution.stdout()
-            );
+            await reportProgress(0, "loading main solution.");
+            // Load main solution (compile if necessary)
+            const mainSolution_ = getMainSolutionPath(path, config);
+            if (mainSolution_.isNone()) {
+                return;
+            }
+            const mainSolution = mainSolution_.unwrap();
 
-            // Check sol report same result than brute
-            let result = timedRun(
-                path,
-                GENERATED_TEST_CASE,
-                timeout,
-                mainSolution,
-                checker
-            );
+            await reportProgress(0, "loading brute solution.");
+            // Load brute solution (compile if necessary)
+            const bruteSolution_ = getBrutePath(path, config);
+            if (bruteSolution_.isNone()) {
+                return;
+            }
+            const bruteSolution = bruteSolution_.unwrap();
 
-            if (!result.isOk()) {
-                // now save the test case
-                let index = 0;
-                let testcases = testCasesName(path).filter(test => (test.search("gen") === -1));
-                if (testcases.length) {
-                    index = testcases.map(test => parseInt(test)).reduce((i1, i2) => Math.max(i1, i2)) + 1;
-                }
-                renameSync(
-                    join(path, TESTCASES, `gen.in`),
-                    join(path, TESTCASES, `${index}.in`)
+            await reportProgress(0, "loading generator.");
+            // Load generator solution (compile if necessary)
+            const generator_ = getGeneratorPath(path, config);
+            if (generator_.isNone()) {
+                return;
+            }
+            const generator = generator_.unwrap();
+
+            await reportProgress(0, "loading checker.");
+            // Load checker solution (compile if necessary)
+            const checker_ = getCheckerPath(path, config);
+            if (checker_.isNone()) {
+                return;
+            }
+            const checker = checker_.unwrap();
+
+            const timeout = config.timeLimit().unwrapOr(getTimeout());
+
+            await reportProgress(0, "0%");
+            let percent = 0;
+            for (let index = 0; index < times && !cancelled; index++) {
+                // Generate input test case
+                generateTestCase(path, generator);
+
+                // Generate output test case from brute.cpp
+                const tcData = readFileSync(
+                    join(path, TESTCASES, GENERATED_TEST_CASE + ".in"),
+                    "utf8"
                 );
-                if (existsSync(join(path, TESTCASES, `gen.ans`))) {
-                    renameSync(
-                        join(path, TESTCASES, `gen.ans`),
-                        join(path, TESTCASES, `${index}.ans`)
-                    );
+
+                if (cancelled) {
+                    return;
                 }
-                if (existsSync(join(path, TESTCASES, `gen.out`))) {
-                    renameSync(
-                        join(path, TESTCASES, `gen.out`),
-                        join(path, TESTCASES, `${index}.out`)
+
+                const bruteExecution = run(
+                    bruteSolution.code,
+                    bruteSolution.getOutput(),
+                    path,
+                    tcData,
+                    FRIEND_TIMEOUT
+                );
+
+                if (bruteExecution.failed()) {
+                    vscode.window.showErrorMessage(
+                        "Brute solution failed: " +
+                            bruteExecution.stderr.toString()
                     );
+                    return;
                 }
-                vscode.window.showInformationMessage(`${verdictName(result.status)} on testcase ${index}.in`);
-                checkLaunchWebview(); // reload webview to show the new testcase
-                //selectDebugTestCase() automatically select it to debug ??
-                return;
+
+                if (cancelled) {
+                    return;
+                }
+
+                // Finally write .ans
+                writeBufferToFileSync(
+                    join(path, TESTCASES, GENERATED_TEST_CASE + ".ans"),
+                    bruteExecution.stdout()
+                );
+
+                // Check sol report same result than brute
+                const result = timedRun(
+                    path,
+                    GENERATED_TEST_CASE,
+                    timeout,
+                    mainSolution,
+                    checker
+                );
+
+                if (!result.isOk()) {
+                    // now save the test case
+                    let index = 0;
+                    const testcases = testCasesName(path).filter(
+                        (test) => test.search("gen") === -1
+                    );
+                    if (testcases.length) {
+                        index =
+                            testcases
+                                .map((test) => parseInt(test))
+                                .reduce((i1, i2) => Math.max(i1, i2)) + 1;
+                    }
+                    renameSync(
+                        join(path, TESTCASES, `gen.in`),
+                        join(path, TESTCASES, `${index}.in`)
+                    );
+                    if (existsSync(join(path, TESTCASES, `gen.ans`))) {
+                        renameSync(
+                            join(path, TESTCASES, `gen.ans`),
+                            join(path, TESTCASES, `${index}.ans`)
+                        );
+                    }
+                    if (existsSync(join(path, TESTCASES, `gen.out`))) {
+                        renameSync(
+                            join(path, TESTCASES, `gen.out`),
+                            join(path, TESTCASES, `${index}.out`)
+                        );
+                    }
+                    vscode.window.showInformationMessage(
+                        `${verdictName(result.status)} on testcase ${index}.in`
+                    );
+                    checkLaunchWebview(); // reload webview to show the new testcase
+                    //selectDebugTestCase() automatically select it to debug ??
+                    return;
+                }
+
+                const newPercent = ((index + 1) * 100) / times;
+                if (newPercent !== percent) {
+                    await reportProgress(
+                        newPercent - percent,
+                        newPercent.toString() + "%"
+                    );
+                    percent = newPercent;
+                }
             }
 
-            let newPercent = (index + 1) * 100 / times;
-            if (newPercent !== percent)
-            {
-                await reportProgress(newPercent - percent, newPercent.toString() + "%");
-                percent = newPercent;
+            if (!cancelled) {
+                vscode.window.showInformationMessage(
+                    `Stress passed ${times} testcases :(`
+                );
             }
         }
-
-        if (!cancelled) {
-            vscode.window.showInformationMessage(`Stress passed ${times} testcases :(`);
-        }
-    });
+    );
 }

@@ -14,13 +14,13 @@ export function recursiveRemoveDirectory(path: string) {
 }
 
 export function writeFile(path: string, content: string) {
-    let currentFd = openSync(path, "w");
+    const currentFd = openSync(path, "w");
     writeSync(currentFd, content);
     closeSync(currentFd);
 }
 
 export function runWithTemporaryPath(callback: (path: string) => void) {
-    let path = tmp.dirSync();
+    const path = tmp.dirSync();
     callback(path.name);
     try {
         recursiveRemoveDirectory(path.name);
@@ -46,9 +46,9 @@ export const MOCK_SITE = new SiteDescription(
     "Contest name",
     "Problem name",
     (numProblems) => {
-        let total = Number.parseInt(numProblems);
+        const total = Number.parseInt(numProblems);
 
-        let problems = [];
+        const problems = [];
 
         for (let i = 0; i < total; i++) {
             problems.push(

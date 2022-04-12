@@ -1,41 +1,37 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 /** Valid name for a VS Code preference section for the extension */
 export type prefSection =
-    | 'general.saveLocation'
-    | 'general.defaultLanguage'
-    | 'general.timeOut'
-    | 'general.firstTime'
-    | 'general.useShortCodeForcesName'
-    | 'general.menuChoices'
-    | 'language.c.Args'
-    | 'language.c.SubmissionCompiler'
-    | 'language.cpp.Args'
-    | 'language.cpp.SubmissionCompiler'
-    | 'language.rust.Args'
-    | 'language.rust.SubmissionCompiler'
-    | 'language.java.Args'
-    | 'language.java.SubmissionCompiler'
-    | 'language.python.Args'
-    | 'language.python.SubmissionCompiler'
-    | 'language.python.Command'
-    | 'general.retainWebviewContext'
-    | 'general.autoShowJudge'
-    | 'general.defaultLanguageTemplateFileLocation';
+    | "general.saveLocation"
+    | "general.defaultLanguage"
+    | "general.timeOut"
+    | "general.firstTime"
+    | "general.useShortCodeForcesName"
+    | "general.menuChoices"
+    | "language.c.Args"
+    | "language.c.SubmissionCompiler"
+    | "language.cpp.Args"
+    | "language.cpp.SubmissionCompiler"
+    | "language.rust.Args"
+    | "language.rust.SubmissionCompiler"
+    | "language.java.Args"
+    | "language.java.SubmissionCompiler"
+    | "language.python.Args"
+    | "language.python.SubmissionCompiler"
+    | "language.python.Command"
+    | "general.retainWebviewContext"
+    | "general.autoShowJudge"
+    | "general.defaultLanguageTemplateFileLocation";
 
 export function getAutoShowJudgePref(): boolean {
-    let x:
-        | boolean
-        | undefined = vscode.workspace
+    const x: boolean | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("autoShowJudge");
     return x ?? true;
 }
 
-export function getRetainWebviewContextPref(): boolean { 
-    let x:
-        | boolean
-        | undefined = vscode.workspace
+export function getRetainWebviewContextPref(): boolean {
+    const x: boolean | undefined = vscode.workspace
         .getConfiguration("acmx.configuration", null)
         .get("retainWebviewContext");
     return x ?? false;
@@ -48,7 +44,7 @@ export type Language = {
     skipCompile: boolean;
 };
 
-export type LangNames = 'python' | 'c' | 'cpp' | 'rust' | 'java';
+export type LangNames = "python" | "c" | "cpp" | "rust" | "java";
 
 export type TestCase = {
     input: string;
@@ -86,7 +82,7 @@ export type Run = {
 export type RunResult = {
     pass: boolean | null;
     id: number;
-    verdictname : string;
+    verdictname: string;
 } & Run;
 
 export type WebviewMessageCommon = {
@@ -94,50 +90,50 @@ export type WebviewMessageCommon = {
 };
 
 export type RunSingleCommand = {
-    command: 'run-single-and-save';
+    command: "run-single-and-save";
     id: number;
 } & WebviewMessageCommon;
 
 export type RunAllCommand = {
-    command: 'run-all-and-save';
+    command: "run-all-and-save";
 } & WebviewMessageCommon;
 
 export type OnlineJudgeEnv = {
-    command: 'online-judge-env';
+    command: "online-judge-env";
     value: boolean;
 };
 
 export type KillRunningCommand = {
-    command: 'kill-running';
+    command: "kill-running";
 } & WebviewMessageCommon;
 
 export type SaveCommand = {
-    command: 'save';
+    command: "save";
 } & WebviewMessageCommon;
 
 export type DeleteTcsCommand = {
-    command: 'delete-tcs';
+    command: "delete-tcs";
     id: number | undefined;
 } & WebviewMessageCommon;
 
 export type SubmitCf = {
-    command: 'submitCf';
+    command: "submitCf";
 } & WebviewMessageCommon;
 
 export type SubmitKattis = {
-    command: 'submitKattis';
+    command: "submitKattis";
 } & WebviewMessageCommon;
 
 export type GetInitialProblem = {
-    command: 'get-initial-problem';
+    command: "get-initial-problem";
 };
 
 export type CreateLocalProblem = {
-    command: 'create-local-problem';
+    command: "create-local-problem";
 };
 
 export type SelectCase = {
-    command: 'select-case';
+    command: "select-case";
     id: number;
 } & WebviewMessageCommon;
 
@@ -155,37 +151,37 @@ export type WebviewToVSEvent =
     | SelectCase;
 
 export type RunningCommand = {
-    command: 'running';
+    command: "running";
     id: number;
 } & WebviewMessageCommon;
 
 export type ResultCommand = {
-    command: 'run-single-result';
+    command: "run-single-result";
     result: RunResult;
 } & WebviewMessageCommon;
 
 export type CompilingStartCommand = {
-    command: 'compiling-start';
+    command: "compiling-start";
 };
 
 export type CompilingStopCommand = {
-    command: 'compiling-stop';
+    command: "compiling-stop";
 };
 
 export type RunAllInWebViewCommand = {
-    command: 'run-all';
+    command: "run-all";
 };
 
 export type WaitingForSubmitCommand = {
-    command: 'waiting-for-submit';
+    command: "waiting-for-submit";
 };
 
 export type SubmitFinishedCommand = {
-    command: 'submit-finished';
+    command: "submit-finished";
 };
 
 export type NewProblemCommand = {
-    command: 'new-problem';
+    command: "new-problem";
     problem: Problem | undefined;
 };
 
