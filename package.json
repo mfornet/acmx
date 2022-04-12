@@ -416,7 +416,6 @@
         "@types/express": "^4.16.4",
         "@types/fs-extra": "^8.1.0",
         "@types/glob": "^7.1.1",
-        "@types/jest": "^25.2.3",
         "@types/md5-file": "^4.0.0",
         "@types/mocha": "^7.0.2",
         "@types/node": "^13.13.42",
