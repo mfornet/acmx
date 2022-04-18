@@ -50,7 +50,7 @@ import {
     checkLaunchWebview,
 } from "./webview/editorChange";
 
-import { getRetainWebviewContextPref } from "./webview/types";
+import { getAutoOpen, getRetainWebviewContextPref } from "./webview/types";
 
 import JudgeViewProvider from "./webview/JudgeView";
 import { RunTestCases } from "./webview/core";
@@ -62,10 +62,7 @@ export const getJudgeViewProvider = () => {
 };
 
 function openFolder(path: string) {
-    const isAutoOpen: boolean | undefined = vscode.workspace
-        .getConfiguration("acmx.configuration", null)
-        .get("autoOpen");
-    if (isAutoOpen === undefined || isAutoOpen) {
+    if (getAutoOpen()) {
         vscode.commands.executeCommand(
             "vscode.openFolder",
             vscode.Uri.file(path)

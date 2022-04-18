@@ -4,6 +4,7 @@ import sanitize from "sanitize-filename";
 import express from "express";
 import bodyParser = require("body-parser");
 import { debug } from "./utils";
+import { getAutoOpen } from "./webview/types";
 
 export class CompanionConfig {
     name: string;
@@ -65,14 +66,19 @@ export function startCompetitiveCompanionService() {
             ""
         );
 
-        await vscode.commands
-            .executeCommand("vscode.openFolder", vscode.Uri.file(contestPath))
-            .then(async () => {
-                await vscode.commands.executeCommand(
-                    "vscode.open",
-                    vscode.Uri.file(mainSolution)
-                );
-            });
+        if (getAutoOpen()) {
+            await vscode.commands
+                .executeCommand(
+                    "vscode.openFolder",
+                    vscode.Uri.file(contestPath)
+                )
+                .then(async () => {
+                    await vscode.commands.executeCommand(
+                        "vscode.open",
+                        vscode.Uri.file(mainSolution)
+                    );
+                });
+        }
     });
 
     app.listen(port, (err: any) => {
