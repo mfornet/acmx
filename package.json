@@ -173,6 +173,12 @@
                         "default": false,
                         "description": "Whether to retain webview context (may case rendering issues).",
                         "scope": "resource"
+                    },
+                    "acmx.configuration.autoOpen": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to open the folder after a problem is added.",
+                        "scope": "resource"
                     }
                 }
             }

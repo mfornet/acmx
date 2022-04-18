@@ -61,6 +61,18 @@ export const getJudgeViewProvider = () => {
     return judgeViewProvider;
 };
 
+function openFolder(path: string) {
+    const isAutoOpen: boolean | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("autoOpen");
+    if (isAutoOpen === undefined || isAutoOpen) {
+        vscode.commands.executeCommand(
+            "vscode.openFolder",
+            vscode.Uri.file(path)
+        );
+    }
+}
+
 // Create a new problem
 export async function addProblem() {
     // Use default site when creating a problem from the vscode.
@@ -80,10 +92,7 @@ export async function addProblem() {
 
     const problemPath = newProblemFromId(path, site, id);
 
-    await vscode.commands.executeCommand(
-        "vscode.openFolder",
-        vscode.Uri.file(problemPath)
-    );
+    openFolder(problemPath);
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
@@ -138,10 +147,7 @@ async function addContest() {
 
     const contestPath = await newContestFromId(path!, site, id);
 
-    vscode.commands.executeCommand(
-        "vscode.openFolder",
-        vscode.Uri.file(contestPath)
-    );
+    openFolder(contestPath);
 }
 
 async function debugTestCase(path: string, tcId: string) {
