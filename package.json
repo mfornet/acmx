@@ -399,7 +399,7 @@
         "lint": "eslint src/ --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
         "pretest": "npm run compile && npm run lint",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/test/runTest.js",
         "webpack-production": "webpack --mode production",
         "webpack-frontend-production": "webpack --mode production --config ./webpack.frontend.config.js",
         "vscode:prepublish": "npm run webpack-frontend-production && npm run webpack-production",
