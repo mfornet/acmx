@@ -37,6 +37,13 @@ export function getRetainWebviewContextPref(): boolean {
     return x ?? false;
 }
 
+export function getAutoOpen(): boolean {
+    const x: boolean | undefined = vscode.workspace
+        .getConfiguration("acmx.configuration", null)
+        .get("autoOpen");
+    return x ?? true;
+}
+
 export type Language = {
     name: LangNames;
     compiler: string;

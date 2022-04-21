@@ -4,7 +4,7 @@
     "description": "Competitive Programming made simple",
     "icon": "images/logo.png",
     "publisher": "marx24",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "license": "MIT",
     "keywords": [
         "acm",
@@ -172,6 +172,12 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Whether to retain webview context (may case rendering issues).",
+                        "scope": "resource"
+                    },
+                    "acmx.configuration.autoOpen": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Whether to open the folder after a problem is added.",
                         "scope": "resource"
                     }
                 }
@@ -393,7 +399,7 @@
         "lint": "eslint src/ --ext .ts,.tsx",
         "watch": "tsc -watch -p ./",
         "pretest": "npm run compile && npm run lint",
-        "test": "node ./out/test/runTest.js",
+        "test": "node ./dist/test/runTest.js",
         "webpack-production": "webpack --mode production",
         "webpack-frontend-production": "webpack --mode production --config ./webpack.frontend.config.js",
         "vscode:prepublish": "npm run webpack-frontend-production && npm run webpack-production",

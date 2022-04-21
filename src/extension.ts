@@ -50,7 +50,7 @@ import {
     checkLaunchWebview,
 } from "./webview/editorChange";
 
-import { getRetainWebviewContextPref } from "./webview/types";
+import { getAutoOpen, getRetainWebviewContextPref } from "./webview/types";
 
 import JudgeViewProvider from "./webview/JudgeView";
 import { RunTestCases } from "./webview/core";
@@ -60,6 +60,15 @@ let judgeViewProvider: JudgeViewProvider;
 export const getJudgeViewProvider = () => {
     return judgeViewProvider;
 };
+
+function openFolder(path: string) {
+    if (getAutoOpen()) {
+        vscode.commands.executeCommand(
+            "vscode.openFolder",
+            vscode.Uri.file(path)
+        );
+    }
+}
 
 // Create a new problem
 export async function addProblem() {
@@ -80,10 +89,7 @@ export async function addProblem() {
 
     const problemPath = newProblemFromId(path, site, id);
 
-    await vscode.commands.executeCommand(
-        "vscode.openFolder",
-        vscode.Uri.file(problemPath)
-    );
+    openFolder(problemPath);
 }
 
 function parseNumberOfProblems(numberOfProblems: string | undefined) {
@@ -138,10 +144,7 @@ async function addContest() {
 
     const contestPath = await newContestFromId(path!, site, id);
 
-    vscode.commands.executeCommand(
-        "vscode.openFolder",
-        vscode.Uri.file(contestPath)
-    );
+    openFolder(contestPath);
 }
 
 async function debugTestCase(path: string, tcId: string) {
